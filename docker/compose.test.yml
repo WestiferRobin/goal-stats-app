@@ -1,0 +1,9 @@
+services:
+  app-under-test:
+    image: ${APP_TEST_IMAGE:?Set APP_TEST_IMAGE}
+    init: true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.status===200?0:1)).catch(()=>process.exit(1))"]
+      interval: 2s
+      timeout: 5s
+      retries: 30

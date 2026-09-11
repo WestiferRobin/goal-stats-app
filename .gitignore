@@ -148,3 +148,8 @@ next-env.d.ts
 .DS_Store
 *.pem
 /build/
+
+# Container workflow validation evidence
+artifacts/
+test-results/
+playwright-report/
