@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Team Squared",
-  description: "Football analytics and predictions from Team Squared.",
+  title: "GoalStats",
+  description: "GoalStats is a football analytics and prediction project. This UI is a development foundation.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

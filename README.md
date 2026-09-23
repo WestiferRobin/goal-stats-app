@@ -1,4 +1,4 @@
-# Team Squared App
+# GoalStats App
 
 The project's Next.js/React frontend. This repository owns the user interface;
 product services own backend behavior and migrations. `RoadToTheFinal` is a legacy
@@ -6,6 +6,10 @@ reference, and `team-squared-service` is a service template/reference.
 
 The current scaffold does not call a backend. No API URL, database, mock backend,
 or other repository is required to run or test it.
+
+The landing page is an honest development foundation for the GoalStats football
+analytics/prediction project. Standalone UI work can begin here. The thin root
+route renders the Home feature; Home will also own future Item + Action behavior.
 
 ## Start here
 
@@ -59,6 +63,7 @@ There are no migration or invented integration targets.
 
 ## More detail
 
+- [Architecture](docs/ARCHITECTURE.md): framework/feature ownership and server-first conventions.
 - [Development](docs/DEVELOPMENT.md): configuration, containers, raw tools, and parent reuse.
 - [Testing](docs/TESTING.md): source-test discovery, E2E ownership, and failure behavior.
 

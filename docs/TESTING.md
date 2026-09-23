@@ -24,8 +24,9 @@ There is no separate integration layer and no migration target.
 Vitest includes `src/**/*.{test,spec}.{ts,tsx,js,jsx,mts,mjs,cts,cjs}` and excludes
 browser tests under tests/e2e. New source tests matching the pattern are discovered
 automatically; no Makefile edits are needed. Missing tests fail rather than silently
-passing. The initial Home component checks cover accessible guidance and safe
-external-action link behavior; they do not invent business features or assert styles.
+passing. Home component checks live beside `HomeView` in `src/features/home/components`.
+They cover GoalStats identity, purpose, development status and accessible structure;
+they do not invent business features or assert styles.
 
 Tests run in a network-disabled tooling container. The lockfile is installed while
 building the image, before the test process starts. Host Node/npm is not used.
@@ -38,8 +39,8 @@ isolated app and run tests/e2e with Chromium. No host ports are published, and n
 LOCAL/DEV state, database, backend, or other repository is used. Playwright's base
 URL is explicitly set to the test network's app-under-test:3000.
 
-The initial browser checks verify the rendered page/title without browser runtime
-errors and that the built public logo actually loads. This is frontend scaffold
+The browser checks verify the rendered page/title without browser runtime errors,
+the built GoalStats icon, and narrow/wide layouts. This is frontend scaffold
 coverage, not proof of frontend/backend integration. Future full-stack checks belong
 in the dev repository unless the app deliberately owns a mock/fixture contract.
 
@@ -66,7 +67,7 @@ With compatible host tooling installed:
 
 ```bash
 npm run test:unit
-npm run test:unit -- src/app/page.test.tsx
+npm run test:unit -- src/features/home/components/home-view.test.tsx
 npm run test:e2e
 ```
 
