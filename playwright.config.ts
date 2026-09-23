@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  testMatch: process.env.APP_E2E_MODE === "live" ? "live-home.spec.ts" : "home.spec.ts",
   forbidOnly: true,
   retries: 0,
   workers: 1,

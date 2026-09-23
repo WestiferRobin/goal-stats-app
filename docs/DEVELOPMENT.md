@@ -43,11 +43,39 @@ The normal `npm start` script remains available for advanced host use.
 
 ## Ports, projects, and configuration
 
-The scaffold has no application env variables or backend API URL to configure.
-Setup consequently creates no .env.local/.env.dev files. Existing dotenv files are
-untouched, excluded from images, and not automatically injected into containers.
-The existing Next Google Fonts are fetched at build/dev compilation time and
-served through Next's generated assets; internet access is needed for those fetches.
+`HOME_API_BASE_URL` is read and validated on the server at runtime: nonempty
+HTTP/HTTPS URL, no credentials, query or fragment. Missing/invalid configuration
+produces recoverable Home UI; builds do not contact Flask. No `NEXT_PUBLIC_*` URL.
+
+Host Next loads `.env.local` using normal Next behavior (copy the nonsecret
+`.env.example` if desired). Docker workflows explicitly receive the shell's
+`HOME_API_BASE_URL`; they do not source dotenv files or inject secrets automatically.
+The existing Google Font build downloads still require internet access.
+
+| App location / Template mode | Home URL |
+| --- | --- |
+| Host Next / Template LOCAL | `http://127.0.0.1:5100` |
+| Host Next / Template DEV | `http://127.0.0.1:5200` |
+| Host Next / Template direct host | `http://127.0.0.1:5300` |
+| Docker Desktop App / host-published Template | `http://host.docker.internal:<port>` |
+| Disposable test network | `http://template:8000` (owned service DNS) |
+
+Do not assume Linux provides Docker Desktop host DNS. Supply an explicitly reachable
+backend address/network for that environment; this App does not configure a host gateway.
+
+Start and migrate the frozen Template using its own documented workflow first.
+The App does not start a backend or require Parent orchestration. For Docker Desktop:
+
+```bash
+HOME_API_BASE_URL=http://host.docker.internal:5100 make run
+HOME_API_BASE_URL=http://host.docker.internal:5200 make run ENV=dev
+```
+
+Presenter journey: open `/`, create a uniquely named Item, check `?item=<uuid>`,
+add `First action` with type `create`, then reload to see persistence. Action types
+label records: `delete` does not delete an Item. Submit a whitespace-only name for
+a safe error. Stop the selected backend and reload to demonstrate recovery; restart
+it and retry. Never use developer data for automated live tests.
 
 Standalone defaults are app-local:3000 and app-dev:13000. Each app listens on
 container port 3000; these are independent host port mappings. Override explicitly:
@@ -62,11 +90,6 @@ APP_PORT must be 1–65535. PROJECT must match app-local[-suffix] or app-dev[-su
 for the selected ENV. Reuse the same values for lifecycle commands. The helper uses
 an explicit empty Compose env file, so an unrelated root .env cannot silently change
 the stack. It never starts or stops service/dev repositories.
-
-When backend integration is implemented, document the real application configuration
-then. Browser-visible Next public variables are not secret storage, and values baked
-into a frontend build must be provided at build time. No speculative API variable or
-team-squared-dev hostname is introduced here.
 
 ## Advanced npm and Docker tooling
 
@@ -100,7 +123,7 @@ docker run --rm app-tooling npm run typecheck
 - Readiness: HTTP GET / returns 200; healthcheck uses container Node fetch.
 - LOCAL: development target, src/public mounts, isolated writable .next cache.
 - DEV: runtime target, NODE_ENV=production, no source mounts.
-- API URL: none currently required or consumed.
+- API URL: server-only `HOME_API_BASE_URL`, supplied at runtime.
 - Tests: source npm run test:unit; isolated browser npm run test:e2e.
 
 A future parent supplies its project/network/host-port mapping and reuses these

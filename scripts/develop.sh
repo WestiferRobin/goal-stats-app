@@ -14,7 +14,7 @@ if [[ "$action" == setup ]]; then
   (( BASH_REMATCH[1] > 3 || (BASH_REMATCH[1] == 3 && BASH_REMATCH[2] >= 81) )) || fail 'GNU Make 3.81+ is required.'
   docker compose version || fail 'Docker Compose v2+ is required.'
   docker info >/dev/null || fail 'Start Docker Engine/Desktop, then retry.'
-  echo 'No env files are required by this scaffold. Existing configuration is untouched.'
+  echo 'Setup preserves configuration. Export HOME_API_BASE_URL to enable live Home; otherwise Home shows a recoverable unavailable state.'
   echo 'Setup complete; no services started. Next: make run'
   exit 0
 fi

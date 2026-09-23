@@ -5,7 +5,7 @@ ENV ?= local
 E2E ?= false
 PROJECT ?=
 export ENV E2E PROJECT
-.PHONY: help setup build run stop logs unit test
+.PHONY: help setup build run stop logs unit test test-home
 help:
 	@printf '%s\n' \
 	  'SETUP' \
@@ -20,6 +20,7 @@ help:
 	  '  make unit                    Source unit/component tests only' \
 	  '  make test [E2E=false]        Source unit/component tests; default false' \
 	  '  make test E2E=true           Source tests, then isolated browser E2E' \
+	  '  make test-home               Disposable live demo; requires TEMPLATE_SOURCE' \
 	  '' 'ENV defaults to local. LOCAL: source-mounted developer container + HMR.' \
 	  'DEV: built container + production-style startup. No host Node required.' \
 	  'Advanced npm/Docker commands and port overrides: docs/DEVELOPMENT.md.'
@@ -27,3 +28,6 @@ setup build run stop logs:
 	@bash scripts/develop.sh "$@" "$${ENV}" "$${PROJECT}"
 unit test:
 	@bash scripts/test.sh "$@" "$${E2E}"
+
+test-home:
+	@bash scripts/test-home.sh

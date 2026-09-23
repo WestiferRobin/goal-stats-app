@@ -4,12 +4,14 @@ The project's Next.js/React frontend. This repository owns the user interface;
 product services own backend behavior and migrations. `RoadToTheFinal` is a legacy
 reference, and `team-squared-service` is a service template/reference.
 
-The current scaffold does not call a backend. No API URL, database, mock backend,
-or other repository is required to run or test it.
+Home is a live Item + Action reference demo backed by the frozen Flask Template.
+It lists and creates records and selects an Item using `?item=<uuid>`. It does not
+implement football analytics, Auth, or update/delete UI. **AUTH BACKEND NOT READY.**
 
-The landing page is an honest development foundation for the GoalStats football
-analytics/prediction project. Standalone UI work can begin here. The thin root
-route renders the Home feature; Home will also own future Item + Action behavior.
+The App builds and starts independently. Without a configured/reachable backend,
+the GoalStats shell shows a safe, recoverable unavailable state. To run the live demo,
+start and migrate Template separately, then pass `HOME_API_BASE_URL` to the App.
+See [Development](docs/DEVELOPMENT.md) for host/container URLs and presenter steps.
 
 ## Start here
 
@@ -25,7 +27,7 @@ make run
 ```
 
 Open **http://127.0.0.1:3000**. LOCAL is a source-mounted developer container with
-Next.js hot reload. Setup only checks tools: this scaffold needs no env files and
+Next.js hot reload. Setup only checks tools: the App requires no generated env files and
 existing developer configuration is preserved. Run builds/starts the container,
 waits for HTTP readiness, and returns while it stays running.
 
@@ -59,7 +61,7 @@ make stop ENV=dev
 
 ENV defaults to local. Unsupported ENV/E2E values fail clearly. Stop targets only
 the selected standalone app project and preserves its development build cache.
-There are no migration or invented integration targets.
+App has no migration target. `make test-home` owns the disposable live Home checks.
 
 ## More detail
 

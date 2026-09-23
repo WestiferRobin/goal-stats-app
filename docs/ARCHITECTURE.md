@@ -1,54 +1,50 @@
 # GoalStats App architecture
 
-## Start with the owner
+Home owns the Item + Action reference demo. Flask Template is the business,
+validation and persistence authority; this is not football product functionality.
 
-| Responsibility | Owner |
+| Responsibility | Location |
 | --- | --- |
-| Routes, layouts, metadata, Next special files and global CSS | `src/app` |
-| Home presentation | `src/features/home/components` |
-| Future Item + Action behavior | `src/features/home` |
-| Future Login + Register behavior | `src/features/auth` |
+| Route/search parameter interpretation, loading/error boundary, metadata, global CSS | `src/app` |
+| Home UI and native forms | `features/home/components` |
+| Item/Action contracts and create Server Actions | `features/home/domain` |
+| Flask paths, wire JSON and focused runtime decoders | `features/home/api` |
+| Generic server HTTP mechanics and safe failure classification | `lib/api` |
+| Server-only runtime URL configuration | `lib/env/server.ts` |
 
-`app/page.tsx` is a thin Server Component that renders `HomeView`. The feature
-owns the landing page and its colocated component tests. Browser checks remain in
-`tests/e2e`. Global CSS stays in `app/globals.css`, imported by the root layout.
+Reads: Server Component → Home API → shared HTTP client → Flask.
+Writes: native form → Home Server Action → Home API → shared HTTP client → Flask.
+`domain/actions.ts` contains exactly `createItem` and `createAction`, both Next
+Server Actions. Other domain modules are not automatically Server Actions.
 
-## Feature convention
+The root page validates `?item=<uuid>` and passes selection to HomeView. `connection()`
+keeps live reads out of production builds. Mutable reads explicitly use `no-store`.
+Create operations revalidate `/` and redirect using validated IDs, never Flask Location.
+Expected validation, configuration, network and contract failures become safe Home/form
+state; unexpected programming failures reach `app/error.tsx`. Uncertain mutations tell
+users to reload and check before retrying; the HTTP client never retries automatically.
 
-- `components/`: feature UI and its behavioral tests.
-- `api/`: Flask endpoint knowledge, request/response handling and boundary tests.
-- `domain/`: feature contracts and operations; `actions.ts` here means domain
-  operations, not automatically Next Server Actions or a `"use server"` directive.
-- `server/`: feature-specific server-only plumbing.
+Server Components are the default. Only forms needing `useActionState` and the error
+boundary use `"use client"`. API/environment modules enforce `server-only`. Never pass
+backend URLs or raw errors to browser components. No browser fetch to Flask is needed.
 
-Only Home components exist today. The static landing page needs no domain types
-or actions. Home `api/` and `domain/` are deferred to real Item/Action integration
-in Prompt 2; Auth is deferred to Prompt 3. Do not create empty folders, fake types,
-placeholder operations, or separate Item and Action features.
+Dependencies point `app → features → lib`. Features never import `app`; `lib` never
+imports features. Home and future Auth must not import each other's internals. Use
+explicit imports, not barrels. No global store, provider stack, schemas hierarchy,
+generated DTOs or speculative infrastructure. No `app/api`: add a Route Handler only
+for an actual independent browser/external HTTP consumer (selective BFF).
 
-## Rendering and dependencies
+Shared UI belongs in `components/ui` only once domain-neutral reuse justifies it;
+none is needed today. Feature-specific server plumbing belongs in that feature's
+`server` directory only when a real responsibility arises.
 
-Use **Server Components by default**. Add `"use client"` only at a boundary that
-needs event handlers, interactive state, effects, browser APIs or client-only
-libraries. Presentation alone is not a reason. HomeView needs no client state.
+## Auth dependency
 
-Current direction: `app → features`.
+**AUTH BACKEND NOT READY.** No Login/Register routes, Auth API, session module or
+User URL configuration exists. Do not infer an Auth contract from the User repository's
+name. Backend work must first establish approved Register/Login paths/methods,
+requests/responses, validation/errors, account persistence/password verification,
+session/token semantics, session verification, OpenAPI/tests and a disposable Auth
+test strategy. Auth is Working Demo Prompt 2; do not invent frontend contracts.
 
-Future direction: `app → features → lib / shared UI`; feature API code may use
-shared HTTP infrastructure to call Flask. Shared UI renders presentation and does
-not call Flask. Flask remains the authoritative REST/business backend.
-
-Features never import from `app`. Future `lib` and `components/ui` must not import
-features. Home and Auth must not import each other's internals. Use explicit
-imports with the existing `@/*` alias for `src/*`; no barrels are needed.
-
-Shared UI or infrastructure requires actual reuse. No shared UI, API client,
-environment module, BFF route, auth/session layer, global state provider or extra
-Next boundary file is needed for this static page. Add a layer with its first real
-consumer, not to complete a diagram.
-
-## Review a change
-
-Keep implementation in its feature, update behavior/content assertions instead
-of deleting tests, and run the existing unit, lint, typecheck, build and affected
-browser checks. See [Development](DEVELOPMENT.md) and [Testing](TESTING.md).
+Keep tests beside their owner; browser tests stay in `tests/e2e`. See TESTING.md.

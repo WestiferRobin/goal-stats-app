@@ -5,6 +5,8 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: runtime
+    environment:
+      HOME_API_BASE_URL: ${HOME_API_BASE_URL:-}
     init: true
     ports:
       - "127.0.0.1:${APP_PORT:-13000}:3000"
