@@ -1,0 +1,2497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Road to the Final</title>
+
+    <link
+        rel="stylesheet"
+        href="/demo/style.css"
+    >
+</head>
+
+<body>
+
+<div class="app-container">
+<p class="message" role="status">Demo preview — illustrative predictions, not live match data. Controls are disabled in this static preview.</p>
+
+    <header class="app-header">
+        <h1>Road to the Final</h1>
+
+        <p class="subtitle">
+            Live AI football prediction and match analysis
+        </p>
+    </header>
+
+    
+
+    <form method="POST">
+
+        <section class="card" id="match-selection">
+            <div class="section-heading">
+                <div>
+                    <p class="section-kicker">
+                        Match Setup
+                    </p>
+
+                    <h2>Select Match</h2>
+                </div>
+            </div>
+
+            <div class="grid">
+
+                <div>
+                    <label for="team1">
+                        Team 1
+                    </label>
+
+                    <select disabled
+                        id="team1"
+                        name="team1"
+                    >
+                        
+                            <option
+                                value="Spain"
+                                
+                                    selected
+                                
+                            >
+                                Spain
+                            </option>
+                        
+                            <option
+                                value="England"
+                                
+                            >
+                                England
+                            </option>
+                        
+                            <option
+                                value="United States"
+                                
+                            >
+                                United States
+                            </option>
+                        
+                            <option
+                                value="Germany"
+                                
+                            >
+                                Germany
+                            </option>
+                        
+                            <option
+                                value="Sweden"
+                                
+                            >
+                                Sweden
+                            </option>
+                        
+                            <option
+                                value="France"
+                                
+                            >
+                                France
+                            </option>
+                        
+                            <option
+                                value="Japan"
+                                
+                            >
+                                Japan
+                            </option>
+                        
+                            <option
+                                value="Canada"
+                                
+                            >
+                                Canada
+                            </option>
+                        
+                            <option
+                                value="Brazil"
+                                
+                            >
+                                Brazil
+                            </option>
+                        
+                            <option
+                                value="Netherlands"
+                                
+                            >
+                                Netherlands
+                            </option>
+                        
+                            <option
+                                value="Australia"
+                                
+                            >
+                                Australia
+                            </option>
+                        
+                            <option
+                                value="Norway"
+                                
+                            >
+                                Norway
+                            </option>
+                        
+                            <option
+                                value="Denmark"
+                                
+                            >
+                                Denmark
+                            </option>
+                        
+                            <option
+                                value="Italy"
+                                
+                            >
+                                Italy
+                            </option>
+                        
+                            <option
+                                value="China PR"
+                                
+                            >
+                                China PR
+                            </option>
+                        
+                            <option
+                                value="Iceland"
+                                
+                            >
+                                Iceland
+                            </option>
+                        
+                            <option
+                                value="South Korea"
+                                
+                            >
+                                South Korea
+                            </option>
+                        
+                            <option
+                                value="Austria"
+                                
+                            >
+                                Austria
+                            </option>
+                        
+                            <option
+                                value="Belgium"
+                                
+                            >
+                                Belgium
+                            </option>
+                        
+                            <option
+                                value="Portugal"
+                                
+                            >
+                                Portugal
+                            </option>
+                        
+                            <option
+                                value="Switzerland"
+                                
+                            >
+                                Switzerland
+                            </option>
+                        
+                            <option
+                                value="Colombia"
+                                
+                            >
+                                Colombia
+                            </option>
+                        
+                            <option
+                                value="New Zealand"
+                                
+                            >
+                                New Zealand
+                            </option>
+                        
+                            <option
+                                value="Republic of Ireland"
+                                
+                            >
+                                Republic of Ireland
+                            </option>
+                        
+                            <option
+                                value="Argentina"
+                                
+                            >
+                                Argentina
+                            </option>
+                        
+                            <option
+                                value="Nigeria"
+                                
+                            >
+                                Nigeria
+                            </option>
+                        
+                            <option
+                                value="Costa Rica"
+                                
+                            >
+                                Costa Rica
+                            </option>
+                        
+                            <option
+                                value="Jamaica"
+                                
+                            >
+                                Jamaica
+                            </option>
+                        
+                            <option
+                                value="Zambia"
+                                
+                            >
+                                Zambia
+                            </option>
+                        
+                            <option
+                                value="Morocco"
+                                
+                            >
+                                Morocco
+                            </option>
+                        
+                            <option
+                                value="South Africa"
+                                
+                            >
+                                South Africa
+                            </option>
+                        
+                            <option
+                                value="Philippines"
+                                
+                            >
+                                Philippines
+                            </option>
+                        
+                    </select>
+                </div>
+
+                <div>
+                    <label for="team2">
+                        Team 2
+                    </label>
+
+                    <select disabled
+                        id="team2"
+                        name="team2"
+                    >
+                        
+                            <option
+                                value="Spain"
+                                
+                            >
+                                Spain
+                            </option>
+                        
+                            <option
+                                value="England"
+                                
+                                    selected
+                                
+                            >
+                                England
+                            </option>
+                        
+                            <option
+                                value="United States"
+                                
+                            >
+                                United States
+                            </option>
+                        
+                            <option
+                                value="Germany"
+                                
+                            >
+                                Germany
+                            </option>
+                        
+                            <option
+                                value="Sweden"
+                                
+                            >
+                                Sweden
+                            </option>
+                        
+                            <option
+                                value="France"
+                                
+                            >
+                                France
+                            </option>
+                        
+                            <option
+                                value="Japan"
+                                
+                            >
+                                Japan
+                            </option>
+                        
+                            <option
+                                value="Canada"
+                                
+                            >
+                                Canada
+                            </option>
+                        
+                            <option
+                                value="Brazil"
+                                
+                            >
+                                Brazil
+                            </option>
+                        
+                            <option
+                                value="Netherlands"
+                                
+                            >
+                                Netherlands
+                            </option>
+                        
+                            <option
+                                value="Australia"
+                                
+                            >
+                                Australia
+                            </option>
+                        
+                            <option
+                                value="Norway"
+                                
+                            >
+                                Norway
+                            </option>
+                        
+                            <option
+                                value="Denmark"
+                                
+                            >
+                                Denmark
+                            </option>
+                        
+                            <option
+                                value="Italy"
+                                
+                            >
+                                Italy
+                            </option>
+                        
+                            <option
+                                value="China PR"
+                                
+                            >
+                                China PR
+                            </option>
+                        
+                            <option
+                                value="Iceland"
+                                
+                            >
+                                Iceland
+                            </option>
+                        
+                            <option
+                                value="South Korea"
+                                
+                            >
+                                South Korea
+                            </option>
+                        
+                            <option
+                                value="Austria"
+                                
+                            >
+                                Austria
+                            </option>
+                        
+                            <option
+                                value="Belgium"
+                                
+                            >
+                                Belgium
+                            </option>
+                        
+                            <option
+                                value="Portugal"
+                                
+                            >
+                                Portugal
+                            </option>
+                        
+                            <option
+                                value="Switzerland"
+                                
+                            >
+                                Switzerland
+                            </option>
+                        
+                            <option
+                                value="Colombia"
+                                
+                            >
+                                Colombia
+                            </option>
+                        
+                            <option
+                                value="New Zealand"
+                                
+                            >
+                                New Zealand
+                            </option>
+                        
+                            <option
+                                value="Republic of Ireland"
+                                
+                            >
+                                Republic of Ireland
+                            </option>
+                        
+                            <option
+                                value="Argentina"
+                                
+                            >
+                                Argentina
+                            </option>
+                        
+                            <option
+                                value="Nigeria"
+                                
+                            >
+                                Nigeria
+                            </option>
+                        
+                            <option
+                                value="Costa Rica"
+                                
+                            >
+                                Costa Rica
+                            </option>
+                        
+                            <option
+                                value="Jamaica"
+                                
+                            >
+                                Jamaica
+                            </option>
+                        
+                            <option
+                                value="Zambia"
+                                
+                            >
+                                Zambia
+                            </option>
+                        
+                            <option
+                                value="Morocco"
+                                
+                            >
+                                Morocco
+                            </option>
+                        
+                            <option
+                                value="South Africa"
+                                
+                            >
+                                South Africa
+                            </option>
+                        
+                            <option
+                                value="Philippines"
+                                
+                            >
+                                Philippines
+                            </option>
+                        
+                    </select>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ================================================================
+SECTION 05: HEAD-TO-HEAD
+PURPOSE:
+Displays historical results between the two selected teams.
+
+RECENT-MEETING ORDER:
+Home Team → Home-Away Score → Away Team
+
+Example:
+Spain → 6-1 → Argentina
+================================================================ -->
+
+<section
+    class="card h2h-card"
+    id="head-to-head"
+>
+
+    <div class="section-heading">
+
+        <div>
+            <p class="section-kicker">
+                Pre-Match Intelligence
+            </p>
+
+            <h2>Head-to-Head</h2>
+        </div>
+
+        <span class="info-chip">
+            
+                Historical comparison
+            
+        </span>
+
+    </div>
+
+
+    
+
+        <!-- ============================================================
+        SECTION 05F: UNAVAILABLE STATE
+        ============================================================ -->
+
+        <div class="h2h-unavailable">
+
+            <h3>
+                Head-to-head data is currently unavailable
+            </h3>
+
+            <p>
+                No cached head-to-head data is available.
+                Press Refresh Match Insights to load it.
+                Existing predictions and live analysis
+                will continue to work.
+            </p>
+
+        </div>
+
+    
+
+</section>
+
+
+        <!-- ================================================================
+SECTION 06: RECENT FORM AND FIFA RANKINGS
+================================================================ -->
+
+<section
+    class="card"
+    id="team-comparison"
+>
+
+    <div class="section-heading">
+
+        <div>
+            <p class="section-kicker">
+                Team Comparison
+            </p>
+
+            <h2>Recent Form & FIFA Rankings</h2>
+        </div>
+
+        <span class="info-chip">
+            Last 5 matches
+        </span>
+
+    </div>
+
+
+    <div class="comparison-dashboard-grid">
+
+        <article class="comparison-team-card">
+
+            <div class="comparison-team-header">
+
+                <div>
+                    <span class="comparison-team-label">
+                        Team 1
+                    </span>
+
+                    <h3>
+                        Spain
+                    </h3>
+                </div>
+
+                
+
+            </div>
+
+
+            <div class="ranking-summary">
+
+                <div class="ranking-position">
+                    <span>
+                        FIFA Rank
+                    </span>
+
+                    <strong>
+                        
+                            #1
+                        
+                    </strong>
+                </div>
+
+                <div class="ranking-points">
+                    <span>
+                        Ranking Points
+                    </span>
+
+                    <strong>
+                        
+                            Not available
+                        
+                    </strong>
+                </div>
+
+            </div>
+
+
+            
+                <p class="ranking-date">
+                    Ranking updated:
+                    September 2026
+                </p>
+            
+
+
+            
+
+                <p class="empty-state">
+                    Recent-form data is currently unavailable.
+                </p>
+
+            
+
+        </article>
+
+
+        <article class="comparison-team-card">
+
+            <div class="comparison-team-header">
+
+                <div>
+                    <span class="comparison-team-label">
+                        Team 2
+                    </span>
+
+                    <h3>
+                        England
+                    </h3>
+                </div>
+
+                
+
+            </div>
+
+
+            <div class="ranking-summary">
+
+                <div class="ranking-position">
+                    <span>
+                        FIFA Rank
+                    </span>
+
+                    <strong>
+                        
+                            #2
+                        
+                    </strong>
+                </div>
+
+                <div class="ranking-points">
+                    <span>
+                        Ranking Points
+                    </span>
+
+                    <strong>
+                        
+                            Not available
+                        
+                    </strong>
+                </div>
+
+            </div>
+
+
+            
+                <p class="ranking-date">
+                    Ranking updated:
+                    September 2026
+                </p>
+            
+
+
+            
+
+                <p class="empty-state">
+                    Recent-form data is currently unavailable.
+                </p>
+
+            
+
+        </article>
+
+    </div>
+
+</section>
+
+
+        <!-- ================================================================
+        SECTION 07: LIVE SCOREBOARD
+        ================================================================ -->
+
+        <section
+            class="card live-score-card"
+            id="live-score"
+        >
+
+            <p class="section-kicker">
+                Live Match
+            </p>
+
+            <div class="scoreboard">
+
+                <div class="score-team score-team-left">
+
+                    <div class="score-team-identity">
+
+                        
+
+                        <span class="score-team-name">
+                            Spain
+                        </span>
+
+                    </div>
+
+                    <strong class="score-number">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="score-center">
+
+                    
+
+                        <span class="live-badge status-not-started">
+                            PRE-MATCH
+                        </span>
+
+                    
+
+
+                    <strong class="match-minute">
+
+                        
+
+                            Not Started
+
+                        
+
+                    </strong>
+
+                </div>
+
+
+                <div class="score-team score-team-right">
+
+                    <strong class="score-number">
+                        0
+                    </strong>
+
+                    <div
+                        class="
+                            score-team-identity
+                            score-team-identity-right
+                        "
+                    >
+
+                        <span class="score-team-name">
+                            England
+                        </span>
+
+                        
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+        <!-- ================================================================
+        SECTION 08: WIN PROBABILITY
+        ================================================================ -->
+
+        <section class="card" id="win-probability">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Prediction
+                    </p>
+
+                    <h2>Win Probability</h2>
+                </div>
+
+            </div>
+
+            <div class="probability-summary">
+
+                <div>
+                    <span>
+                        Spain
+                    </span>
+
+                    <strong>
+                        37.1%
+                    </strong>
+                </div>
+
+                <div class="draw-summary">
+                    <span>
+                        Draw
+                    </span>
+
+                    <strong>
+                        26.4%
+                    </strong>
+                </div>
+
+                <div>
+                    <span>
+                        England
+                    </span>
+
+                    <strong>
+                        36.5%
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="stacked-probability-bar">
+
+                <div
+                    class="stack-segment team1-bar"
+                    style="width: 37.074041064032976%;"
+                    title="Spain 37.074041064032976%"
+                ></div>
+
+                <div
+                    class="stack-segment draw-bar"
+                    style="width: 26.390886112362143%;"
+                    title="Draw 26.390886112362143%"
+                ></div>
+
+                <div
+                    class="stack-segment team2-bar"
+                    style="width: 36.535072823604885%;"
+                    title="England 36.535072823604885%"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 09: LIVE MOMENTUM
+        ================================================================ -->
+
+        <section class="card" id="live-momentum">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Current Match Flow
+                    </p>
+
+                    <h2>Live Momentum</h2>
+                </div>
+
+                <span class="info-chip">
+                    Current pressure, not final outcome
+                </span>
+
+            </div>
+
+            <div class="two-team-values">
+
+                <span>
+                    Spain
+
+                    <strong>
+                        50.0%
+                    </strong>
+                </span>
+
+                <span>
+                    England
+
+                    <strong>
+                        50.0%
+                    </strong>
+                </span>
+
+            </div>
+
+            <div class="momentum-bar">
+
+                <div
+                    class="momentum-team1"
+                    style="width: 50.0%;"
+                ></div>
+
+                <div
+                    class="momentum-team2"
+                    style="width: 50.0%;"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 10: ATTACK PRESSURE
+        ================================================================ -->
+
+        <section class="card" id="attack-pressure">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Attacking Threat
+                    </p>
+
+                    <h2>Attack Pressure</h2>
+                </div>
+
+            </div>
+
+            <div class="pressure-comparison">
+
+                <div class="pressure-team">
+
+                    <span>
+                        Spain
+                    </span>
+
+                    <strong class="pressure-score">
+                        0.0
+                    </strong>
+
+                    <small>
+                        0
+                        calculated dangerous attacks
+                    </small>
+
+                </div>
+
+                <div class="pressure-divider">
+                    vs
+                </div>
+
+                <div class="pressure-team pressure-team-right">
+
+                    <span>
+                        England
+                    </span>
+
+                    <strong class="pressure-score">
+                        0.0
+                    </strong>
+
+                    <small>
+                        0
+                        calculated dangerous attacks
+                    </small>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 11: MATCH STATISTICS
+        ================================================================ -->
+
+        <section class="card" id="match-statistics">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Live Data
+                    </p>
+
+                    <h2>Match Statistics</h2>
+                </div>
+
+            </div>
+
+            <div class="stats-header">
+
+                <strong>
+                    Spain
+                </strong>
+
+                <span>
+                    Statistic
+                </span>
+
+                <strong>
+                    England
+                </strong>
+
+            </div>
+
+            <div class="comparison-stats">
+
+                <div class="comparison-stat-row">
+
+                    <strong>
+                        50%
+                    </strong>
+
+                    <span>
+                        Possession
+                    </span>
+
+                    <strong>
+                        50%
+                    </strong>
+
+                </div>
+
+                <div class="comparison-stat-row">
+
+                    <strong>
+                        0
+                    </strong>
+
+                    <span>
+                        Shots
+                    </span>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="comparison-stat-row">
+
+                    <strong>
+                        0
+                    </strong>
+
+                    <span>
+                        Shots on Target
+                    </span>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="comparison-stat-row">
+
+                    <strong>
+                        0
+                    </strong>
+
+                    <span>
+                        Big Chances
+                    </span>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="comparison-stat-row">
+
+                    <strong>
+                        0
+                    </strong>
+
+                    <span>
+                        Blocked Shots
+                    </span>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="comparison-stat-row">
+
+                    <strong>
+                        0
+                    </strong>
+
+                    <span>
+                        Saves
+                    </span>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="comparison-stat-row">
+
+                    <strong>
+                        0
+                    </strong>
+
+                    <span>
+                        Corners
+                    </span>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="comparison-stat-row">
+
+                    <strong>
+                        <span class="yellow-card-marker"></span>
+
+                        0
+
+                        &nbsp;
+
+                        <span class="red-card-marker"></span>
+
+                        0
+                    </strong>
+
+                    <span>
+                        Cards
+                    </span>
+
+                    <strong>
+                        <span class="yellow-card-marker"></span>
+
+                        0
+
+                        &nbsp;
+
+                        <span class="red-card-marker"></span>
+
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 12: EVENT TIMELINE
+        ================================================================ -->
+
+        <section class="card" id="event-timeline">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Match Story
+                    </p>
+
+                    <h2>Event Timeline</h2>
+                </div>
+
+            </div>
+
+            
+
+                <p class="empty-state">
+                    No match events are available yet.
+                    Use the live-feed button or load one
+                    of the demo matchups.
+                </p>
+
+            
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 13: MOST LIKELY SCORELINES
+        ================================================================ -->
+
+        <section class="card" id="most-likely-scores">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Score Model
+                    </p>
+
+                    <h2>Most Likely Scores</h2>
+                </div>
+
+            </div>
+
+            <div class="scoreline-list">
+
+                
+
+                    <div class="scoreline-row">
+
+                        <span>
+                            Spain
+
+                            1
+
+                            -
+
+                            1
+
+                            England
+                        </span>
+
+                        <strong>
+                            12.55%
+                        </strong>
+
+                    </div>
+
+                
+
+                    <div class="scoreline-row">
+
+                        <span>
+                            Spain
+
+                            1
+
+                            -
+
+                            0
+
+                            England
+                        </span>
+
+                        <strong>
+                            9.70%
+                        </strong>
+
+                    </div>
+
+                
+
+                    <div class="scoreline-row">
+
+                        <span>
+                            Spain
+
+                            0
+
+                            -
+
+                            1
+
+                            England
+                        </span>
+
+                        <strong>
+                            9.61%
+                        </strong>
+
+                    </div>
+
+                
+
+                    <div class="scoreline-row">
+
+                        <span>
+                            Spain
+
+                            2
+
+                            -
+
+                            1
+
+                            England
+                        </span>
+
+                        <strong>
+                            8.19%
+                        </strong>
+
+                    </div>
+
+                
+
+                    <div class="scoreline-row">
+
+                        <span>
+                            Spain
+
+                            1
+
+                            -
+
+                            2
+
+                            England
+                        </span>
+
+                        <strong>
+                            8.12%
+                        </strong>
+
+                    </div>
+
+                
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 14: POISSON EXPECTED GOALS
+        ================================================================ -->
+
+        <section class="card" id="poisson-expected-goals">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Poisson Model
+                    </p>
+
+                    <h2>Poisson Expected Goals</h2>
+                </div>
+
+            </div>
+
+            <div class="expected-goals-grid">
+
+                <div class="expected-goals-team">
+
+                    <span>
+                        Spain
+                    </span>
+
+                    <strong>
+                        1.31
+                    </strong>
+
+                    <small>
+                        Expected goals remaining
+                    </small>
+
+                </div>
+
+                <div class="expected-goals-team">
+
+                    <span>
+                        England
+                    </span>
+
+                    <strong>
+                        1.29
+                    </strong>
+
+                    <small>
+                        Expected goals remaining
+                    </small>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 15: PREDICTION REASONS
+        ================================================================ -->
+
+        <section class="card" id="prediction-reasons">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Model Explanation
+                    </p>
+
+                    <h2>Why This Prediction?</h2>
+                </div>
+
+            </div>
+
+            <ul class="reason-list">
+
+                
+
+                    <li>
+                        No major live events yet. The prediction is based on team ratings and the Poisson model.
+                    </li>
+
+                
+
+            </ul>
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 16: CONFIDENCE AND MATCH DIFFICULTY
+        ================================================================ -->
+
+        <section
+            class="analytics-grid"
+            id="supporting-analytics"
+        >
+
+            <div class="card compact-card">
+
+                <p class="section-kicker">
+                    Confidence
+                </p>
+
+                <h2>
+                    Prediction Confidence
+                </h2>
+
+                <div class="confidence-header">
+
+                    <span>
+                        Low
+                    </span>
+
+                    <span>
+                        0.7%
+                    </span>
+
+                </div>
+
+                <div class="progress-track">
+
+                    <div
+                        class="progress-fill confidence-low"
+                        style="width: 0.6737103005351117%;"
+                    ></div>
+
+                </div>
+
+                <p class="small-description">
+                    Measures how far the leading outcome
+                    is ahead of the second-most likely outcome.
+                </p>
+
+            </div>
+
+
+            <div class="card compact-card">
+
+                <p class="section-kicker">
+                    Competitiveness
+                </p>
+
+                <h2>
+                    Match Difficulty
+                </h2>
+
+                <div class="difficulty-stars">
+
+                    
+
+                        
+
+                            <span class="active-star">
+                                ★
+                            </span>
+
+                        
+
+                    
+
+                        
+
+                            <span class="active-star">
+                                ★
+                            </span>
+
+                        
+
+                    
+
+                        
+
+                            <span class="active-star">
+                                ★
+                            </span>
+
+                        
+
+                    
+
+                        
+
+                            <span class="active-star">
+                                ★
+                            </span>
+
+                        
+
+                    
+
+                        
+
+                            <span class="active-star">
+                                ★
+                            </span>
+
+                        
+
+                    
+
+                </div>
+
+                <p class="difficulty-label">
+                    Extremely Even Match
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 17: MOST LIKELY OUTCOME
+        ================================================================ -->
+
+        <section
+            class="winner"
+            id="most-likely-outcome"
+        >
+
+            <p class="winner-heading">
+                Most Likely Outcome
+            </p>
+
+            <p class="winner-result">
+
+                Spain Win
+
+                —
+
+                37.07%
+
+            </p>
+
+            <p>
+                Most likely score:
+
+                Spain
+
+                1
+
+                -
+
+                1
+
+                England
+            </p>
+
+            <div class="advance-grid">
+
+                <span>
+                    Spain advance:
+
+                    <strong>
+                        50.3%
+                    </strong>
+                </span>
+
+                <span>
+                    England advance:
+
+                    <strong>
+                        49.7%
+                    </strong>
+                </span>
+
+            </div>
+
+        </section>
+        <!-- ================================================================
+        SECTION 18: MANUAL LIVE MATCH CONTROLS
+        ================================================================ -->
+
+        <section class="card" id="manual-live-data">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Manual Controls
+                    </p>
+
+                    <h2>
+                        Live Match Data
+                    </h2>
+                </div>
+
+                <span class="info-chip">
+                    Used when live API data is unavailable
+                </span>
+
+            </div>
+
+            <label for="match_minute">
+                Match Minute
+            </label>
+
+            <input disabled
+                id="match_minute"
+                type="number"
+                name="match_minute"
+                min="0"
+                max="120"
+                value="0"
+            >
+
+            <div class="grid manual-team-grid">
+
+                <div class="manual-team-column">
+
+                    <h3>
+                        Spain
+                    </h3>
+
+                    <label for="team1_goals">
+                        Goals
+                    </label>
+
+                    <input disabled
+                        id="team1_goals"
+                        type="number"
+                        name="team1_goals"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team1_total_shots">
+                        Total Shots
+                    </label>
+
+                    <input disabled
+                        id="team1_total_shots"
+                        type="number"
+                        name="team1_total_shots"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team1_shots">
+                        Shots on Target
+                    </label>
+
+                    <input disabled
+                        id="team1_shots"
+                        type="number"
+                        name="team1_shots"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team1_big_chances">
+                        Big Chances
+                    </label>
+
+                    <input disabled
+                        id="team1_big_chances"
+                        type="number"
+                        name="team1_big_chances"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team1_defender_blocks">
+                        Blocked Shots
+                    </label>
+
+                    <input disabled
+                        id="team1_defender_blocks"
+                        type="number"
+                        name="team1_defender_blocks"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team1_goalkeeper_saves">
+                        Saves
+                    </label>
+
+                    <input disabled
+                        id="team1_goalkeeper_saves"
+                        type="number"
+                        name="team1_goalkeeper_saves"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team1_corners">
+                        Corners
+                    </label>
+
+                    <input disabled
+                        id="team1_corners"
+                        type="number"
+                        name="team1_corners"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team1_yellow_cards">
+                        Yellow Cards
+                    </label>
+
+                    <input disabled
+                        id="team1_yellow_cards"
+                        type="number"
+                        name="team1_yellow_cards"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team1_red_cards">
+                        Red Cards
+                    </label>
+
+                    <input disabled
+                        id="team1_red_cards"
+                        type="number"
+                        name="team1_red_cards"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label class="checkbox">
+
+                        <input disabled
+                            type="checkbox"
+                            name="team1_bad_star"
+                        >
+
+                        Star player bad game
+
+                    </label>
+
+                </div>
+
+
+                <div class="manual-team-column">
+
+                    <h3>
+                        England
+                    </h3>
+
+                    <label for="team2_goals">
+                        Goals
+                    </label>
+
+                    <input disabled
+                        id="team2_goals"
+                        type="number"
+                        name="team2_goals"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team2_total_shots">
+                        Total Shots
+                    </label>
+
+                    <input disabled
+                        id="team2_total_shots"
+                        type="number"
+                        name="team2_total_shots"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team2_shots">
+                        Shots on Target
+                    </label>
+
+                    <input disabled
+                        id="team2_shots"
+                        type="number"
+                        name="team2_shots"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team2_big_chances">
+                        Big Chances
+                    </label>
+
+                    <input disabled
+                        id="team2_big_chances"
+                        type="number"
+                        name="team2_big_chances"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team2_defender_blocks">
+                        Blocked Shots
+                    </label>
+
+                    <input disabled
+                        id="team2_defender_blocks"
+                        type="number"
+                        name="team2_defender_blocks"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team2_goalkeeper_saves">
+                        Saves
+                    </label>
+
+                    <input disabled
+                        id="team2_goalkeeper_saves"
+                        type="number"
+                        name="team2_goalkeeper_saves"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team2_corners">
+                        Corners
+                    </label>
+
+                    <input disabled
+                        id="team2_corners"
+                        type="number"
+                        name="team2_corners"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team2_yellow_cards">
+                        Yellow Cards
+                    </label>
+
+                    <input disabled
+                        id="team2_yellow_cards"
+                        type="number"
+                        name="team2_yellow_cards"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label for="team2_red_cards">
+                        Red Cards
+                    </label>
+
+                    <input disabled
+                        id="team2_red_cards"
+                        type="number"
+                        name="team2_red_cards"
+                        min="0"
+                        value="0"
+                    >
+
+                    <label class="checkbox">
+
+                        <input disabled
+                            type="checkbox"
+                            name="team2_bad_star"
+                        >
+
+                        Star player bad game
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <label for="team1_possession">
+                Spain Possession %
+            </label>
+
+            <input disabled
+                id="team1_possession"
+                type="number"
+                name="team1_possession"
+                min="0"
+                max="100"
+                value="50"
+            >
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 19: MONTE CARLO SETTINGS
+        ================================================================ -->
+
+        <div class="simulation-control">
+
+            <label for="simulation_count">
+                Monte Carlo simulations
+            </label>
+
+            <select disabled
+                id="simulation_count"
+                name="simulation_count"
+            >
+
+                <option value="10000" selected>
+                    10,000 runs
+                </option>
+
+                <option value="25000">
+                    25,000 runs
+                </option>
+
+                <option value="50000">
+                    50,000 runs
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- ================================================================
+SECTION 20: ACTION BUTTONS
+PURPOSE:
+Runs manual updates, live-feed updates, cached insight refreshes,
+match resets, and tournament simulations.
+================================================================ -->
+
+<div class="button-grid">
+
+    <button disabled
+        type="submit"
+        name="action"
+        value="manual"
+    >
+        Update Prediction
+    </button>
+
+    <button disabled
+        type="submit"
+        name="action"
+        value="live_feed"
+        class="secondary"
+    >
+        Update From Live Feed
+    </button>
+
+    <button disabled
+        type="submit"
+        name="action"
+        value="refresh_insights"
+        class="insights-button"
+    >
+        Refresh Match Insights
+    </button>
+
+    <button disabled
+        type="submit"
+        name="action"
+        value="reset_timeline"
+        class="danger-button"
+    >
+        Reset Match Stats
+    </button>
+
+    <button disabled
+        type="submit"
+        name="action"
+        value="simulate_tournament"
+        class="tournament-button"
+    >
+        Simulate Tournament
+    </button>
+
+</div>
+
+
+        <!-- ================================================================
+        SECTION 21: xG AND POSSESSION CHARTS
+        ================================================================ -->
+
+        <section class="card" id="match-charts">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Match Intelligence
+                    </p>
+
+                    <h2>
+                        xG & Possession Trends
+                    </h2>
+                </div>
+
+                <span class="info-chip">
+                    Snapshots by match minute
+                </span>
+
+            </div>
+
+            
+
+                <p class="empty-state">
+                    Update the match to begin plotting xG
+                    and possession movement.
+                </p>
+
+            
+
+        </section>
+
+
+        <!-- ================================================================
+        SECTION 22: PROBABILITY HISTORY
+        ================================================================ -->
+
+        <section class="card" id="probability-history">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-kicker">
+                        Model History
+                    </p>
+
+                    <h2>
+                        Win Probability Timeline
+                    </h2>
+                </div>
+
+            </div>
+
+            
+
+                <p class="empty-state">
+                    Update the match to begin recording
+                    probability changes.
+                </p>
+
+            
+
+        </section>
+
+    </form>
+
+
+    <!-- ================================================================
+    SECTION 23: MONTE CARLO TOURNAMENT RESULTS
+    ================================================================ -->
+
+    
+
+</div>
+
+
+<!-- ================================================================
+SECTION 24: xG AND POSSESSION CHART SCRIPT
+================================================================ -->
+
+<script>
+
+(function () {
+
+    const source = document.getElementById(
+        "match-chart-data"
+    );
+
+    if (!source) {
+        return;
+    }
+
+    const rows = JSON.parse(
+        source.textContent || "[]"
+    );
+
+    if (!rows.length) {
+        return;
+    }
+
+
+    function drawLineChart(
+        canvasId,
+        series,
+        maxY,
+        suffix
+    ) {
+
+        const canvas = document.getElementById(
+            canvasId
+        );
+
+        if (!canvas) {
+            return;
+        }
+
+        const ratio = (
+            window.devicePixelRatio || 1
+        );
+
+        const width = (
+            canvas.clientWidth || 420
+        );
+
+        const height = 250;
+
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+
+        const context = canvas.getContext(
+            "2d"
+        );
+
+        context.scale(
+            ratio,
+            ratio
+        );
+
+        const padding = {
+            left: 42,
+            right: 16,
+            top: 18,
+            bottom: 34
+        };
+
+        const chartWidth = (
+            width
+            - padding.left
+            - padding.right
+        );
+
+        const chartHeight = (
+            height
+            - padding.top
+            - padding.bottom
+        );
+
+        context.font = "12px Arial";
+        context.strokeStyle = "#303640";
+        context.fillStyle = "#aab2bf";
+        context.lineWidth = 1;
+
+
+        for (
+            let markerIndex = 0;
+            markerIndex <= 4;
+            markerIndex += 1
+        ) {
+
+            const yPosition = (
+                padding.top
+                + chartHeight
+                - (
+                    chartHeight
+                    * markerIndex
+                    / 4
+                )
+            );
+
+            context.beginPath();
+
+            context.moveTo(
+                padding.left,
+                yPosition
+            );
+
+            context.lineTo(
+                width - padding.right,
+                yPosition
+            );
+
+            context.stroke();
+
+            const markerValue = (
+                maxY
+                * markerIndex
+                / 4
+            );
+
+            context.fillText(
+                markerValue.toFixed(
+                    maxY <= 5 ? 1 : 0
+                ) + suffix,
+                4,
+                yPosition + 4
+            );
+        }
+
+
+        const colors = [
+            "#2f80ed",
+            "#9b6de3"
+        ];
+
+
+        series.forEach(
+            function (
+                currentSeries,
+                seriesIndex
+            ) {
+
+                context.strokeStyle = (
+                    colors[seriesIndex]
+                );
+
+                context.lineWidth = 3;
+
+                context.beginPath();
+
+
+                rows.forEach(
+                    function (
+                        row,
+                        rowIndex
+                    ) {
+
+                        const xPosition = (
+                            padding.left
+                            + (
+                                rows.length === 1
+                                ? chartWidth / 2
+                                : (
+                                    chartWidth
+                                    * rowIndex
+                                    / (
+                                        rows.length - 1
+                                    )
+                                )
+                            )
+                        );
+
+                        const currentValue = Math.min(
+                            Number(
+                                row[
+                                    currentSeries.key
+                                ]
+                            ) || 0,
+                            maxY
+                        );
+
+                        const yPosition = (
+                            padding.top
+                            + chartHeight
+                            - (
+                                currentValue
+                                / maxY
+                                * chartHeight
+                            )
+                        );
+
+                        if (rowIndex === 0) {
+
+                            context.moveTo(
+                                xPosition,
+                                yPosition
+                            );
+
+                        } else {
+
+                            context.lineTo(
+                                xPosition,
+                                yPosition
+                            );
+
+                        }
+
+                    }
+                );
+
+                context.stroke();
+
+                context.fillStyle = (
+                    colors[seriesIndex]
+                );
+
+                context.fillText(
+                    currentSeries.label,
+                    padding.left
+                    + seriesIndex * 150,
+                    12
+                );
+
+            }
+        );
+
+
+        context.fillStyle = "#aab2bf";
+
+
+        rows.forEach(
+            function (
+                row,
+                rowIndex
+            ) {
+
+                if (
+                    rowIndex === 0
+                    || rowIndex === rows.length - 1
+                    || rowIndex % 3 === 0
+                ) {
+
+                    const xPosition = (
+                        padding.left
+                        + (
+                            rows.length === 1
+                            ? chartWidth / 2
+                            : (
+                                chartWidth
+                                * rowIndex
+                                / (
+                                    rows.length - 1
+                                )
+                            )
+                        )
+                    );
+
+                    context.fillText(
+                        String(
+                            row.minute
+                        ) + "'",
+                        xPosition - 8,
+                        height - 10
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    const xgMaximum = (
+        Math.max(
+            3,
+            ...rows.flatMap(
+                function (row) {
+
+                    return [
+                        Number(
+                            row.team1_xg
+                        ) || 0,
+
+                        Number(
+                            row.team2_xg
+                        ) || 0
+                    ];
+
+                }
+            )
+        )
+        + 0.5
+    );
+
+
+    drawLineChart(
+
+        "xgChart",
+
+        [
+            {
+                key: "team1_xg",
+                label: rows[0].team1_name
+            },
+
+            {
+                key: "team2_xg",
+                label: rows[0].team2_name
+            }
+        ],
+
+        xgMaximum,
+
+        ""
+
+    );
+
+
+    drawLineChart(
+
+        "possessionChart",
+
+        [
+            {
+                key: "team1_possession",
+                label: rows[0].team1_name
+            },
+
+            {
+                key: "team2_possession",
+                label: rows[0].team2_name
+            }
+        ],
+
+        100,
+
+        "%"
+
+    );
+
+})();
+
+</script>
+
+</body>
+</html>

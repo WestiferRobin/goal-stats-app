@@ -1,0 +1,11 @@
+name: goalstats-stuff
+services:
+  https:
+    image: caddy:2-alpine
+    ports:
+      - "127.0.0.1:443:443"
+    volumes:
+      - ./Caddyfile.stuff:/etc/caddy/Caddyfile:ro
+      - stuff-tls:/data
+volumes:
+  stuff-tls:

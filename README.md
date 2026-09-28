@@ -15,6 +15,29 @@ See [Development](docs/DEVELOPMENT.md) for host/container URLs and presenter ste
 
 ## Start here
 
+The football preview is at **http://localhost:3000/demo** when the app is running.
+It serves `src/demo/index.html` and `src/demo/style.css` directly, outside React.
+The original Flask template is preserved as `src/demo/index.jinja.html`; the HTML
+is a rendered static snapshot with illustrative predictions and disabled controls.
+The existing React application remains at `/`.
+
+Optionally expose the running app at **https://localhost/demo**:
+
+```bash
+docker compose -f docker/compose.stuff.yml up -d --wait
+```
+
+This local HTTPS proxy forwards to the app on host port 3000. Caddy creates a local
+certificate. To trust it on macOS, export the CA and add it to your login keychain
+with SSL trust using Keychain Access:
+
+```bash
+docker compose -f docker/compose.stuff.yml cp https:/data/caddy/pki/authorities/local/root.crt /tmp/goalstats-local-ca.crt
+open /tmp/goalstats-local-ca.crt
+```
+
+Stop the proxy with `docker compose -f docker/compose.stuff.yml down`.
+
 Use Git, running Docker Engine/Desktop with Compose v2+, and GNU Make 3.81+ in a
 Bash-compatible macOS/Linux shell. Host Node/npm is optional. No command installs
 system software. Internet access is needed for initial images, npm dependencies,
