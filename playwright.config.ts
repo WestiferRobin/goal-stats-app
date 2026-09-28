@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testMatch: process.env.APP_E2E_MODE === "live" ? "live-home.spec.ts" : "home.spec.ts",
+  testMatch: process.env.APP_E2E_MODE === "demo" ? "demo.spec.ts" : process.env.APP_E2E_MODE === "live" ? "live-home.spec.ts" : "home.spec.ts",
   forbidOnly: true,
   retries: 0,
   workers: 1,
@@ -11,5 +11,5 @@ export default defineConfig({
     baseURL: process.env.APP_TEST_BASE_URL ?? "http://127.0.0.1:3000",
     trace: "retain-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) } }],
 });

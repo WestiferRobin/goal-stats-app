@@ -1871,3 +1871,11 @@ SECTION 19L: RESPONSIVE LAYOUT
         grid-column: 3;
     }
 }
+/* Connected demo controls and saved history. */
+button:disabled { opacity: .55; cursor: not-allowed; }
+#retry-connection { margin-bottom: 1rem; }
+.demo-table-scroll { overflow-x: auto; }
+#tournament-results table { width: 100%; border-collapse: collapse; }
+#tournament-results th, #tournament-results td { padding: .65rem; text-align: left; }
+#match-charts svg { display: block; width: 100%; max-width: 700px; }
+[hidden] { display: none !important; }

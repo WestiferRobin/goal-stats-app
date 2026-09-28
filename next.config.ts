@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/demo": ["./src/demo/index.html"],
     "/demo/style.css": ["./src/demo/style.css"],
+    "/demo/demo.js": ["./src/demo/demo.js"],
   },
 };
 

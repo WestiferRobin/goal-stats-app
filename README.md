@@ -17,9 +17,37 @@ See [Development](docs/DEVELOPMENT.md) for host/container URLs and presenter ste
 
 The football preview is at **http://localhost:3000/demo** when the app is running.
 It serves `src/demo/index.html` and `src/demo/style.css` directly, outside React.
-The original Flask template is preserved as `src/demo/index.jinja.html`; the HTML
-is a rendered static snapshot with illustrative predictions and disabled controls.
+The original Flask template is preserved as `src/demo/index.jinja.html`.
+`src/demo/demo.js` connects the controls through `/api/football/*` to the football
+JSON API in `template-goalstats-service`. Without a connection, the initial
+values are explicitly labeled as a static preview.
 The existing React application remains at `/`.
+
+Set the server-only backend origin in `.env.local` and restart Next if needed:
+
+```dotenv
+FOOTBALL_API_BASE_URL=http://127.0.0.1:5300
+```
+
+Use the backend's actual port (5300 for host startup, 5100 for Docker LOCAL).
+For Next running inside Docker Desktop, pass
+`FOOTBALL_API_BASE_URL=http://host.docker.internal:5300` to `make run`.
+Start/migrate the backend and import its football datasets following its
+`docs/service/football.md`. The proxy appends `/api/v1`; do not include that suffix.
+`HOME_API_BASE_URL` continues to configure only the original Item/Action demo.
+
+For Vercel, set `FOOTBALL_API_BASE_URL` to your deployed Flask HTTPS origin and
+redeploy. Vercel cannot reach the Flask process on your Mac via localhost.
+`API_FOOTBALL_KEY` belongs only on the Flask server. Live refresh uses the provider
+only when clicked; unavailable/cached results are labeled. Manual predictions
+need no provider key. The proxy exposes only the listed football endpoints.
+
+Update Prediction calculates without saving; Save Snapshot writes a shared match
+record. Reset Current Inputs does not delete records. Timelines show the latest
+50 saved snapshots for a team pair, not a unique fixture or private user history.
+Tournaments use all imported teams in ranking order and 1,000–2,000 simulations.
+Attack pressure, match difficulty, and star-player modifiers are not connected;
+insights use undated imported history, not verified recent form.
 
 Optionally expose the running app at **https://localhost/demo**:
 
