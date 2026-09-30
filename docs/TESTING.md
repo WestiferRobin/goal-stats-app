@@ -2,10 +2,10 @@
 
 ## Established layers
 
-This scaffold originally had no tests or runners. This change establishes Vitest
-with Testing Library/jsdom for source tests and Playwright/Chromium for browser
-E2E. These are new tooling, not a migration from an existing runner. npm remains the
-package manager; the lockfile records the required dependency additions/repair.
+Vitest covers source code, including React components, server requests, Server
+Actions, and the football proxy. Testing Library/jsdom supports React UI tests;
+Playwright covers browser behavior. Use Node 22 for raw host commands or the
+container workflow below.
 
 ```bash
 make unit
@@ -104,3 +104,51 @@ visual review; they contain only disposable demo records. Container resources ar
 still removed automatically.
 The disposable Template container sets `XDG_RUNTIME_DIR=/tmp` so Gunicorn's
 control socket has a writable container-local directory; backend sources stay frozen.
+
+## Football demo and React migration checks
+
+The football proxy unit tests live beside
+`src/app/api/football/[...path]/route.ts`. They cover allowed paths/methods, request
+forwarding, snapshot Location rewriting, malformed and cross-origin writes, missing
+configuration, and sanitizing upstream failures.
+
+The football browser suite is selected explicitly; it is not the default Home suite.
+With a frontend already running at port 3000:
+
+```bash
+npx playwright install chromium
+APP_E2E_MODE=demo npm run test:e2e
+```
+
+To use an installed Chrome browser instead of downloading Chromium:
+
+```bash
+APP_E2E_MODE=demo PLAYWRIGHT_CHANNEL=chrome npm run test:e2e
+```
+
+Set `APP_TEST_BASE_URL` to target a different isolated frontend address. The tests
+intercept football API requests in the browser; they do not write backend records.
+They cover form-to-API field mapping, probability formatting, cached-live labels,
+snapshot save/load UI, reset behavior, charts, and unavailable-backend recovery.
+This verifies browser behavior with fixtures, not real Flask integration or provider
+access. `make test-home` still targets the historical frozen Item/Action backend;
+it does not certify the new football API.
+
+For React work, add component tests beside the new football components and retain
+browser coverage of the actual React route. Cover changed-input versus calculated
+state, loading/errors, team changes during requests, units, and duplicate-submit
+prevention. Update the test target when the product route is established rather
+than assuming `/demo` has already become React.
+
+Typical frontend checks:
+
+```bash
+npm run lint
+npm run typecheck
+npm run test:unit
+VERCEL=1 npm run build
+```
+
+The Vercel-flagged local build checks that configuration branch; it does not run
+Vercel's deployment adapter. Use `npm run build` to check the standalone/Docker
+configuration. Neither command proves production backend connectivity.

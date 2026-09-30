@@ -1,17 +1,35 @@
 # GoalStats App
 
-The project's Next.js/React frontend. This repository owns the user interface;
-product services own backend behavior and migrations. `RoadToTheFinal` is a legacy
-reference, and `team-squared-service` is a service template/reference.
+GoalStats uses **React with Next.js** for the frontend and a separate Flask backend
+for football calculations and persistence. New product UI work belongs in React.
 
-Home is a live Item + Action reference demo backed by the frozen Flask Template.
-It lists and creates records and selects an Item using `?item=<uuid>`. It does not
-implement football analytics, Auth, or update/delete UI. **AUTH BACKEND NOT READY.**
+## Read this first
 
-The App builds and starts independently. Without a configured/reachable backend,
-the GoalStats shell shows a safe, recoverable unavailable state. To run the live demo,
-start and migrate Template separately, then pass `HOME_API_BASE_URL` to the App.
-See [Development](docs/DEVELOPMENT.md) for host/container URLs and presenter steps.
+| What you need | Read |
+| --- | --- |
+| Find your view, Phase 1 scope, and feature folder | [Feature map](src/features/README.md) |
+| Understand the repositories, request flow, and React implementation plan | [Architecture](docs/ARCHITECTURE.md) |
+| Start the frontend and backend locally, configure URLs, or troubleshoot | [Development](docs/DEVELOPMENT.md) |
+| Run checks and understand what the tests cover | [Testing](docs/TESTING.md) |
+
+The available routes are:
+
+| Route | Current implementation | Purpose |
+| --- | --- | --- |
+| `/` | React, `src/app/page.tsx` and `src/features/home` | Preserved Item/Action reference application |
+| `/demo` | HTML/CSS and browser JavaScript in `src/demo`, served by Next route handlers | Working football proof of concept and reference for the React screen |
+| `/matches`, `/predictions`, `/teams`, `/analytics` | React view scaffolds in their feature folders | Starting points for product implementation; currently under construction |
+| `/api/football/*` | Next.js server route handler | Forwards approved football requests to Flask |
+
+**The football screen has not been converted to React yet.** Hosting `/demo` inside
+Next.js does not make its HTML a React component. Keep it usable as a reference
+while building React components against the existing football API. The new React routes provide view scaffolds for that transition; they do not yet
+implement the demo’s functionality.
+
+`template-goalstats-service` now contains the football backend despite its historical
+name. `RoadToTheFinal` is the original model/design reference and is not needed at
+runtime. The Item/Action demonstration and football screen use separate server-side
+URL settings. Authentication is not implemented in this frontend.
 
 ## Start here
 
