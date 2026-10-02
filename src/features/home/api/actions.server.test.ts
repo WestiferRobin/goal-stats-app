@@ -5,7 +5,7 @@ const itemId = "11111111-1111-4111-8111-111111111111";
 const action = { id: "22222222-2222-4222-8222-222222222222", itemId, name: "First action", type: "create", createdAt: "2026-09-23T10:00:00Z", updatedAt: "2026-09-23T10:00:00+00:00" };
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 function respond(value: unknown, status = 200) {
-  vi.stubEnv("HOME_API_BASE_URL", "http://template:8000");
+  vi.stubEnv("SERVICE_API_BASE_URL", "http://template:8000");
   const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } }));
   vi.stubGlobal("fetch", fetchMock); return fetchMock;
 }

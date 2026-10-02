@@ -15,7 +15,7 @@ test(`live Home: ${phase}`, async ({ page }) => {
     await expect(page.getByRole("main").getByRole("alert")).toContainText("Home service is unavailable");
     await page.getByRole("button", { name: "Retry Home" }).click();
     await expect(page.getByRole("heading", { name: "GoalStats" })).toBeVisible();
-    expect(await page.content()).not.toMatch(/http:\/\/template|ECONNREFUSED|API network failure|HOME_API_BASE_URL/);
+    expect(await page.content()).not.toMatch(/http:\/\/service|ECONNREFUSED|API network failure|SERVICE_API_BASE_URL/);
   } else {
     if (phase === "create") {
       await expect(page.getByText("No items yet. Create the first item below.")).toBeVisible();

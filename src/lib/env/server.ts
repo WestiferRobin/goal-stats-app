@@ -3,7 +3,7 @@ import { ApiError } from "../api/error";
 
 export function homeApiBaseUrl(): string {
   try {
-    const raw = process.env.HOME_API_BASE_URL?.trim();
+    const raw = process.env.SERVICE_API_BASE_URL?.trim();
     if (!raw) throw new Error();
     const url = new URL(raw);
     if (!["http:", "https:"].includes(url.protocol) || url.username || url.password ||

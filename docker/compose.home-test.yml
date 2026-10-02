@@ -21,8 +21,8 @@ services:
       interval: 1s
       timeout: 3s
       retries: 40
-  template:
-    image: ${HOME_TEST_TEMPLATE_IMAGE:?Owned Template image required}
+  service:
+    image: ${HOME_TEST_SERVICE_IMAGE:?Owned service image required}
     environment:
       # Container-local control socket; frozen image user has no writable home.
       XDG_RUNTIME_DIR: /tmp
@@ -38,7 +38,7 @@ services:
     image: ${APP_TEST_IMAGE:?Owned App image required}
     init: true
     environment:
-      HOME_API_BASE_URL: http://template:8000
+      SERVICE_API_BASE_URL: http://service:8000
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.status===200?0:1)).catch(()=>process.exit(1))"]
       interval: 2s

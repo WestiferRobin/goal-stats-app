@@ -4,7 +4,7 @@ import { createItemRecord, decodeItem, listItems } from "./items.server";
 const item = { id: "11111111-1111-4111-8111-111111111111", name: "Demo", status: "active", createdAt: "2026-09-23T10:00:00+00:00", updatedAt: "2026-09-23T10:00:00Z" };
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 function respond(value: unknown, status = 200, media = "application/json") {
-  vi.stubEnv("HOME_API_BASE_URL", "http://template:8000");
+  vi.stubEnv("SERVICE_API_BASE_URL", "http://template:8000");
   const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(value), { status, headers: { "Content-Type": media, Location: `/items/${item.id}` } }));
   vi.stubGlobal("fetch", fetchMock); return fetchMock;
 }

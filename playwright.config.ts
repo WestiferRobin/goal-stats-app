@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testMatch: process.env.APP_E2E_MODE === "demo" ? "demo.spec.ts" : process.env.APP_E2E_MODE === "live" ? "live-home.spec.ts" : "home.spec.ts",
+  testMatch: process.env.APP_E2E_MODE === "demo" ? "demo.spec.ts" : process.env.APP_E2E_MODE === "live" ? "live-home.spec.ts" : process.env.APP_E2E_MODE === "football-live" ? "live-football.spec.ts" : "home.spec.ts",
   forbidOnly: true,
   retries: 0,
   workers: 1,

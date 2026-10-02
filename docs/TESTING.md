@@ -1,154 +1,19 @@
 # Testing
 
-## Established layers
+Run `make test` from the repository root. It builds a tooling container and runs:
 
-Vitest covers source code, including React components, server requests, Server
-Actions, and the football proxy. Testing Library/jsdom supports React UI tests;
-Playwright covers browser behavior. Use Node 22 for raw host commands or the
-container workflow below.
+1. ESLint.
+2. Next.js route type generation and strict TypeScript checking.
+3. Vitest unit and component tests.
 
-```bash
-make unit
-make test
-make test E2E=false
-make test E2E=true
-```
+No host Node/npm, running frontend, backend, `.env.local`, or `E2E=true` switch is
+required. The tooling container has no network while the checks execute.
 
-The first three run the same source suite. E2E=false is the default. E2E accepts
-exactly true or false; values such as yes, 1, and empty strings fail before resources
-are created. `make unit` always excludes E2E, even if E2E=true is supplied.
-The separate `make test-home` mode owns disposable live integration; App has no application migration target.
+Playwright remains available to maintainers through `make _e2e`. It builds unique
+tooling/browser/runtime images, starts a disposable production-style frontend, and
+removes its containers, network, volumes, and per-run images afterward.
 
-## Source discovery
-
-Vitest includes `src/**/*.{test,spec}.{ts,tsx,js,jsx,mts,mjs,cts,cjs}` and excludes
-browser tests under tests/e2e. New source tests matching the pattern are discovered
-automatically; no Makefile edits are needed. Missing tests fail rather than silently
-passing. Home component checks live beside `HomeView` in `src/features/home/components`.
-They cover empty/populated/selected/unavailable Home states. HTTP, environment,
-feature API and Server Action tests sit beside their owners. API tests stub the
-shared HTTP boundary; production never uses fake backend dispatch.
-
-Tests run in a network-disabled tooling container. The lockfile is installed while
-building the image, before the test process starts. Host Node/npm is not used.
-
-## Browser E2E
-
-`make test E2E=true` first runs the source suite. Only if it passes does the helper
-build the standalone runtime and a separate browser-tooling image, then start an
-isolated app and run tests/e2e with Chromium. No host ports are published, and no
-LOCAL/DEV state, database, backend, or other repository is used. Playwright's base
-URL is explicitly set to the test network's app-under-test:3000.
-
-The browser checks verify the rendered page/title without browser runtime errors,
-the built GoalStats icon, recoverable missing-backend state, and narrow/wide layouts. This is standalone
-coverage. The separate live Home workflow below proves the real frozen Flask contract.
-
-The browser stage installs the browser matching the locked Playwright package.
-Browser tooling does not enter the production runtime image, and ordinary source
-tests do not build/download browsers.
-
-## Failure and cleanup
-
-Scripts retain runner failures and stop before E2E when source tests fail. GNU Make
-reports a nonzero recipe failure rather than promising the runner's exact numeric
-exit status at the outer Make boundary. Cleanup removes owned runners, app containers,
-networks, and temporary image tags on success, failure, INT, and TERM. Failure prints
-bounded app logs. Docker build cache can remain for reuse. An uncatchable kill or
-unavailable daemon can prevent cleanup; recover only the reported app-test-* project.
-
-Runner output is streamed. Playwright failure traces inside the disposable runner
-are not retained by the Make wrapper; use raw tooling with an intentional output mount
-if persistent traces are needed.
-
-## Advanced runner use
-
-With compatible host tooling installed:
-
-```bash
-npm run test:unit
-npm run test:unit -- src/features/home/components/home-view.test.tsx
-npm run test:e2e
-```
-
-Raw E2E expects an explicitly prepared app at APP_TEST_BASE_URL, defaulting to
-http://127.0.0.1:3000. This raw default does not apply to normal Make E2E, which always
-creates its own isolated app. Playwright is not configured to start a second server.
-
-## Disposable live Home
-
-```bash
-TEMPLATE_SOURCE=/path/to/template-goalstats-service make test-home
-```
-
-This requires a local Git object for frozen commit
-`6600facf42ecf9a3431b44f5d19ff2ac2a3b0b07`. The script archives that exact commit
-into temporary build context; it neither edits nor runs setup in Template's checkout.
-It builds App/Template images, starts owned PostgreSQL/Redis without published ports,
-migrates, and runs browser create/list/select/reload/validation checks. It restarts
-PostgreSQL while retaining its disposable volume, restarts Redis and Flask, verifies
-persistence, stops Flask to verify safe unavailable UI, then verifies recovery.
-
-All names are unique to this run. The EXIT/INT/TERM cleanup removes its containers,
-network, PostgreSQL volume, temporary image tags and archive directory. Docker build
-cache can remain. No developer LOCAL/DEV database or Parent resources are used. If
-forcibly killed or Docker becomes unavailable, recover only the printed project.
-
-Standalone and live modes select separate Playwright files, without skipped tests.
-The browser talks only to Next; test-runner HTTP queries verify record counts after
-rejected submissions. Live test failures fail the command; there are no fake success
-fallbacks. Auth/session tests do not exist because AUTH BACKEND NOT READY.
-
-Live responsive screenshots remain under ignored `artifacts/<owned-project>/` for
-visual review; they contain only disposable demo records. Container resources are
-still removed automatically.
-The disposable Template container sets `XDG_RUNTIME_DIR=/tmp` so Gunicorn's
-control socket has a writable container-local directory; backend sources stay frozen.
-
-## Football demo and React migration checks
-
-The football proxy unit tests live beside
-`src/app/api/football/[...path]/route.ts`. They cover allowed paths/methods, request
-forwarding, snapshot Location rewriting, malformed and cross-origin writes, missing
-configuration, and sanitizing upstream failures.
-
-The football browser suite is selected explicitly; it is not the default Home suite.
-With a frontend already running at port 3000:
-
-```bash
-npx playwright install chromium
-APP_E2E_MODE=demo npm run test:e2e
-```
-
-To use an installed Chrome browser instead of downloading Chromium:
-
-```bash
-APP_E2E_MODE=demo PLAYWRIGHT_CHANNEL=chrome npm run test:e2e
-```
-
-Set `APP_TEST_BASE_URL` to target a different isolated frontend address. The tests
-intercept football API requests in the browser; they do not write backend records.
-They cover form-to-API field mapping, probability formatting, cached-live labels,
-snapshot save/load UI, reset behavior, charts, and unavailable-backend recovery.
-This verifies browser behavior with fixtures, not real Flask integration or provider
-access. `make test-home` still targets the historical frozen Item/Action backend;
-it does not certify the new football API.
-
-For React work, add component tests beside the new football components and retain
-browser coverage of the actual React route. Cover changed-input versus calculated
-state, loading/errors, team changes during requests, units, and duplicate-submit
-prevention. Update the test target when the product route is established rather
-than assuming `/demo` has already become React.
-
-Typical frontend checks:
-
-```bash
-npm run lint
-npm run typecheck
-npm run test:unit
-VERCEL=1 npm run build
-```
-
-The Vercel-flagged local build checks that configuration branch; it does not run
-Vercel's deployment adapter. Use `npm run build` to check the standalone/Docker
-configuration. Neither command proves production backend connectivity.
+The legacy live Item/Action persistence/outage suite remains available through
+`make _test-home SERVICE_SOURCE=/path/to/goal-stats-service`. It owns a disposable
+backend/database/frontend/browser environment and does not use either development
+repository's running resources.

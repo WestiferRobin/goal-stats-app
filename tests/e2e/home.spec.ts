@@ -8,7 +8,7 @@ test("standalone shell recovers without configured backend and exposes no intern
   await expect(page.getByRole("main").getByRole("alert")).toContainText("Home service is unavailable");
   await page.getByRole("button", { name: "Retry Home" }).click();
   await expect(page.getByRole("main")).toBeVisible();
-  expect(await page.content()).not.toMatch(/HOME_API_BASE_URL|host\.docker\.internal|API configuration failure/);
+  expect(await page.content()).not.toMatch(/SERVICE_API_BASE_URL|host\.docker\.internal|API configuration failure/);
   expect(errors).toEqual([]);
 });
 test("serves the built GoalStats icon", async ({ page }) => {

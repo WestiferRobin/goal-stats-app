@@ -1,4 +1,4 @@
-name: app-local
+# Public local frontend stack. scripts/develop.sh supplies .env.local and project ownership.
 services:
   app:
     build:
@@ -6,8 +6,10 @@ services:
       dockerfile: Dockerfile
       target: development
     environment:
-      HOME_API_BASE_URL: ${HOME_API_BASE_URL:-}
-      FOOTBALL_API_BASE_URL: ${FOOTBALL_API_BASE_URL:-}
+      SERVICE_API_BASE_URL: http://host.docker.internal:5100
+      FOOTBALL_API_BASE_URL: http://host.docker.internal:5100
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     init: true
     ports:
       - "127.0.0.1:${APP_PORT:-3000}:3000"

@@ -11,16 +11,12 @@ React; it is not the final frontend architecture.
 
 | Repository | Owns | How we use it |
 | --- | --- | --- |
-| `frontend/goal-stats-app` | React UI, browser interaction, Next server routes | Build the product here |
-| `backend/template-goalstats-service` | Extracted football engine, JSON API, migrations, imported datasets, snapshots | Run as the football backend; the historical directory name is retained |
-| `frontend/RoadToTheFinal` | Original Flask/Jinja football application | Reference behavior and appearance; do not run it as a second required backend |
+| `goal-stats-app` | React UI, browser interaction, Next server routes | Build the product here |
+| `goal-stats-service` | Extracted football engine, JSON API, migrations, imported datasets, snapshots | Run as the football backend |
+| Historical RoadToTheFinal source | Original Flask/Jinja football application | Reference only; not a required repository or runtime |
 
-The backend's [README](../../../backend/template-goalstats-service/README.md) and
-[football guide](../../../backend/template-goalstats-service/docs/service/football.md)
-are the setup and contract references. Those sibling links work in the parent
-`team-squared-dev` checkout; in a standalone frontend checkout, open the backend
-repository separately. Older parent documentation calling Template frozen may
-refer to the earlier Item/Action foundation, not the current football backend.
+The backend repository's README and football guide are the setup and contract
+references. Clone and run it separately; no parent repository layout is required.
 
 ## What exists today
 
@@ -168,7 +164,7 @@ analytics and tournaments must not block it.
 
 Home reads use Server Component → feature API → shared HTTP client → Flask.
 Writes use native forms → Server Actions → feature API → Flask, followed by
-revalidation and redirect to `/`. `HOME_API_BASE_URL` configures this flow separately.
+revalidation and redirect to `/`. `SERVICE_API_BASE_URL` configures this flow separately.
 The existing `connection()` call keeps live reads out of production builds.
 
 Authentication is not implemented in this frontend. Do not assume the User

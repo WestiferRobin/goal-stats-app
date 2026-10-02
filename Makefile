@@ -1,33 +1,28 @@
-# GNU Make 3.81+ and Bash on macOS/Linux.
-SHELL := /bin/bash
+# GoalStats frontend public developer interface.
+ifeq ($(OS),Windows_NT)
+BASH := C:/Progra~1/Git/bin/bash.exe
+else
+BASH := /bin/bash
+endif
 .DEFAULT_GOAL := help
-ENV ?= local
-E2E ?= false
-PROJECT ?=
-export ENV E2E PROJECT
-.PHONY: help setup build run stop logs unit test test-home
-help:
-	@printf '%s\n' \
-	  'SETUP' \
-	  '  make help                    Show standalone frontend commands' \
-	  '  make setup                   Check Docker/Compose/Make; start nothing' \
-	  '' 'BUILD / RUN' \
-	  '  make build [ENV=local|dev]    Build selected runnable image' \
-	  '  make run [ENV=local|dev]      Build/start app; wait for HTTP readiness' \
-	  '  make stop [ENV=local|dev]     Stop only selected app project' \
-	  '  make logs [ENV=local|dev]     Follow app logs until interrupted' \
-	  '' 'TEST' \
-	  '  make unit                    Source unit/component tests only' \
-	  '  make test [E2E=false]        Source unit/component tests; default false' \
-	  '  make test E2E=true           Source tests, then isolated browser E2E' \
-	  '  make test-home               Disposable live demo; requires TEMPLATE_SOURCE' \
-	  '' 'ENV defaults to local. LOCAL: source-mounted developer container + HMR.' \
-	  'DEV: built container + production-style startup. No host Node required.' \
-	  'Advanced npm/Docker commands and port overrides: docs/DEVELOPMENT.md.'
-setup build run stop logs:
-	@bash scripts/develop.sh "$@" "$${ENV}" "$${PROJECT}"
-unit test:
-	@bash scripts/test.sh "$@" "$${E2E}"
 
-test-home:
-	@bash scripts/test-home.sh
+.PHONY: setup run test stop help
+setup run stop:
+	@$(BASH) scripts/develop.sh $@
+
+test:
+	@$(BASH) scripts/test.sh contributor
+
+help:
+	@$(BASH) scripts/develop.sh help
+
+# Internal maintainer capabilities; intentionally absent from make help.
+.PHONY: _logs _e2e _test-home _build-production
+_logs:
+	@$(BASH) scripts/develop.sh logs
+_e2e:
+	@$(BASH) scripts/test.sh e2e
+_test-home:
+	@$(BASH) scripts/test-home.sh
+_build-production:
+	@docker build --target runtime -t goal-stats-app:runtime .

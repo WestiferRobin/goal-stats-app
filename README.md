@@ -1,142 +1,114 @@
-# GoalStats App
+# GoalStats frontend
 
-GoalStats uses **React with Next.js** for the frontend and a separate Flask backend
-for football calculations and persistence. New product UI work belongs in React.
+Goal Stats has two repositories:
 
-## Read this first
+- `goal-stats-app` is the website users interact with.
+- `goal-stats-service` is everything behind the website: the API, football logic,
+  database access, migrations, and starter data.
 
-| What you need | Read |
-| --- | --- |
-| Find your view, Phase 1 scope, and feature folder | [Feature map](src/features/README.md) |
-| Understand the repositories, request flow, and React implementation plan | [Architecture](docs/ARCHITECTURE.md) |
-| Start the frontend and backend locally, configure URLs, or troubleshoot | [Development](docs/DEVELOPMENT.md) |
-| Run checks and understand what the tests cover | [Testing](docs/TESTING.md) |
-
-The available routes are:
-
-| Route | Current implementation | Purpose |
-| --- | --- | --- |
-| `/` | React, `src/app/page.tsx` and `src/features/home` | Preserved Item/Action reference application |
-| `/demo` | HTML/CSS and browser JavaScript in `src/demo`, served by Next route handlers | Working football proof of concept and reference for the React screen |
-| `/matches`, `/predictions`, `/teams`, `/analytics` | React view scaffolds in their feature folders | Starting points for product implementation; currently under construction |
-| `/api/football/*` | Next.js server route handler | Forwards approved football requests to Flask |
-
-**The football screen has not been converted to React yet.** Hosting `/demo` inside
-Next.js does not make its HTML a React component. Keep it usable as a reference
-while building React components against the existing football API. The new React routes provide view scaffolds for that transition; they do not yet
-implement the demo’s functionality.
-
-`template-goalstats-service` now contains the football backend despite its historical
-name. `RoadToTheFinal` is the original model/design reference and is not needed at
-runtime. The Item/Action demonstration and football screen use separate server-side
-URL settings. Authentication is not implemented in this frontend.
+The simple request flow is: browser → `goal-stats-app` → `goal-stats-service` →
+database and football logic. This repository is `goal-stats-app`.
 
 ## Start here
 
-The football preview is at **http://localhost:3000/demo** when the app is running.
-It serves `src/demo/index.html` and `src/demo/style.css` directly, outside React.
-The original Flask template is preserved as `src/demo/index.jinja.html`.
-`src/demo/demo.js` connects the controls through `/api/football/*` to the football
-JSON API in `template-goalstats-service`. Without a connection, the initial
-values are explicitly labeled as a static preview.
-The existing React application remains at `/`.
+Install Git, Docker with Compose v2, and GNU Make. Use macOS, Linux, WSL, or native
+Windows with Docker Desktop and Git for Windows installed in its standard location.
+You do not need to install Node or npm.
 
-Set the server-only backend origin in `.env.local` and restart Next if needed:
+Clone `goal-stats-app` and `goal-stats-service` side by side and start Docker.
 
-```dotenv
-FOOTBALL_API_BASE_URL=http://127.0.0.1:5300
-```
+First start the backend in another terminal:
 
-Use the backend's actual port (5300 for host startup, 5100 for Docker LOCAL).
-For Next running inside Docker Desktop, pass
-`FOOTBALL_API_BASE_URL=http://host.docker.internal:5300` to `make run`.
-Start/migrate the backend and import its football datasets following its
-`docs/service/football.md`. The proxy appends `/api/v1`; do not include that suffix.
-`HOME_API_BASE_URL` continues to configure only the original Item/Action demo.
-
-For Vercel, set `FOOTBALL_API_BASE_URL` to your deployed Flask HTTPS origin and
-redeploy. Vercel cannot reach the Flask process on your Mac via localhost.
-`API_FOOTBALL_KEY` belongs only on the Flask server. Live refresh uses the provider
-only when clicked; unavailable/cached results are labeled. Manual predictions
-need no provider key. The proxy exposes only the listed football endpoints.
-
-Update Prediction calculates without saving; Save Snapshot writes a shared match
-record. Reset Current Inputs does not delete records. Timelines show the latest
-50 saved snapshots for a team pair, not a unique fixture or private user history.
-Tournaments use all imported teams in ranking order and 1,000–2,000 simulations.
-Attack pressure, match difficulty, and star-player modifiers are not connected;
-insights use undated imported history, not verified recent form.
-
-Optionally expose the running app at **https://localhost/demo**:
-
-```bash
-docker compose -f docker/compose.stuff.yml up -d --wait
-```
-
-This local HTTPS proxy forwards to the app on host port 3000. Caddy creates a local
-certificate. To trust it on macOS, export the CA and add it to your login keychain
-with SSL trust using Keychain Access:
-
-```bash
-docker compose -f docker/compose.stuff.yml cp https:/data/caddy/pki/authorities/local/root.crt /tmp/goalstats-local-ca.crt
-open /tmp/goalstats-local-ca.crt
-```
-
-Stop the proxy with `docker compose -f docker/compose.stuff.yml down`.
-
-Use Git, running Docker Engine/Desktop with Compose v2+, and GNU Make 3.81+ in a
-Bash-compatible macOS/Linux shell. Host Node/npm is optional. No command installs
-system software. Internet access is needed for initial images, npm dependencies,
-and the existing Next Google Font build downloads.
-
-```bash
-make help
+```sh
+cd goal-stats-service
 make setup
 make run
 ```
 
-Open **http://127.0.0.1:3000**. LOCAL is a source-mounted developer container with
-Next.js hot reload. Setup only checks tools: the App requires no generated env files and
-existing developer configuration is preserved. Run builds/starts the container,
-waits for HTTP readiness, and returns while it stays running.
+Then, from this repository:
 
-```bash
-make logs
-make unit
-make test
-make test E2E=true
-make stop
+```sh
+cd goal-stats-app
+make setup
+make run
 ```
 
-`make unit` and `make test` run source component/unit tests. E2E is disabled by
-default. `make test E2E=true` runs source tests first, then browser tests against a
-separate disposable built app. It never uses your LOCAL/DEV app state.
+Leave both terminals running and open <http://127.0.0.1:3000/demo>. Select two
+different teams, click **Update Prediction**, and confirm the probabilities and
+scorelines update. As an additional check,
+<http://127.0.0.1:3000/api/football/teams> should return the same 32 teams as the backend.
 
-## LOCAL and DEV
+| Command | Meaning |
+| --- | --- |
+| `make setup` | Prepare this repository for first use; start nothing. |
+| `make run` | Start or restart the frontend website. |
+| `make test` | Run normal contributor checks and tests. |
+| `make stop` | Stop only this repository's frontend resources. |
+| `make help` | Show the beginner commands. |
 
-| Mode | Behavior | Default URL |
-| --- | --- | --- |
-| LOCAL | Development server, mounted src/public, hot reload | http://127.0.0.1:3000 |
-| DEV | Production-style standalone image, no source mounts | http://127.0.0.1:13000 |
+## Current product state
 
-Both modes run on your machine; DEV is not deployment to a shared server.
+| Route | Current state |
+| --- | --- |
+| `/demo` | Working Goal Stats football proof of concept |
+| `/` | Legacy Item/Action reference application |
+| `/matches` | React product scaffold under development |
+| `/predictions` | React product scaffold under development |
+| `/teams` | React product scaffold under development |
+| `/analytics` | React product scaffold under development |
 
-```bash
-make build ENV=dev
-make run ENV=dev
-make logs ENV=dev
-make stop ENV=dev
+The Phase 1 direction remains Home, Matches, Predictions, Teams, and Analytics.
+The Product Decisions document remains the product/scope authority. Infrastructure
+simplification does not make unfinished routes complete.
+
+## Configuration
+
+`.env.example` documents the safe local defaults. `make setup` creates the ignored
+`.env.local` only when it is missing and never overwrites an existing file.
+
+```dotenv
+APP_PORT=3000
+FOOTBALL_API_BASE_URL=http://127.0.0.1:5100
+SERVICE_API_BASE_URL=http://127.0.0.1:5100
 ```
 
-ENV defaults to local. Unsupported ENV/E2E values fail clearly. Stop targets only
-the selected standalone app project and preserves its development build cache.
-App has no migration target. `make test-home` owns the disposable live Home checks.
+`FOOTBALL_API_BASE_URL` powers Goal Stats. `SERVICE_API_BASE_URL` remains temporarily
+for the legacy Item/Action page. Both are read only by Next.js on the server. Docker
+translates these addresses internally, so the same `.env.local` works in either
+frontend workflow.
 
-## More detail
+## Optional: run the frontend on your machine
 
-- [Architecture](docs/ARCHITECTURE.md): framework/feature ownership and server-first conventions.
-- [Development](docs/DEVELOPMENT.md): configuration, containers, raw tools, and parent reuse.
-- [Testing](docs/TESTING.md): source-test discovery, E2E ownership, and failure behavior.
+Docker through Make is the recommended workflow. Frontend developers may instead
+install Node.js 22 and npm, leave `goal-stats-service` running through Docker, and
+run this repository directly:
 
-Application files use Next.js App Router, strict TypeScript, Tailwind CSS, ESLint,
-and the `@/*` alias for `src/*`. npm and package-lock.json remain authoritative.
+```sh
+npm ci
+npm run dev
+```
+
+Open <http://127.0.0.1:3000/demo>. This uses the same `.env.local`; do not change
+the backend URLs when switching between host and Docker frontend development.
+
+## Where to work
+
+| Location | Purpose |
+| --- | --- |
+| `src/app/` | Routes and Next.js server endpoints |
+| `src/features/` | React product features and components |
+| `src/components/` | Shared frontend components |
+| `src/demo/` | Working football proof of concept |
+| `src/app/api/football/[...path]/route.ts` | Server-side Flask proxy |
+| `tests/` and `*.test.ts(x)` | Browser, unit, and component tests |
+
+See [architecture](docs/ARCHITECTURE.md), [development internals](docs/DEVELOPMENT.md),
+and [testing](docs/TESTING.md) for maintainer detail.
+
+## Common first-run errors
+
+- Docker connection error: start Docker Desktop and wait for it to finish starting.
+- Port 3000 already allocated: stop the conflicting frontend process/container.
+- Football proxy returns 502/503: start `goal-stats-service` on port 5100.
+- Changes do not appear: confirm the frontend container is running, then repeat
+  `make run` if dependency or Docker configuration files changed.
