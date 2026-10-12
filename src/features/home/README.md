@@ -1,31 +1,14 @@
-# Home — Road to the Final
+# Home
 
-## Ownership
+The `/` route renders `components/landing-view.tsx`: a minimal static GoalStats
+introduction, the existing shared navigation, and a link to the implemented `/demo`.
+It requires no backend, environment variable, forms, or server actions. It adds no
+statistics, predictions, dashboard, or new API contracts.
 
-Introduce Road to the Final and the Women’s World Cup direction, then guide users into the product.
+The inherited Item/Action Home implementation and its domain-only tests are retired.
+Shared HTTP infrastructure remains in `src/lib/api`; RoadToTheFinal uses the existing
+football proxy. Matches, Predictions, Teams and Analytics remain teammate-owned
+scaffolds and have not been redesigned or connected to normalized APIs here.
 
-Product route: `/`. This is the target route mapping, not a claim that the
-page is implemented. See the [feature map](../README.md).
-
-## Phase 1 scope
-
-- Brief product introduction and football branding.
-- Overview of prediction and analytics capabilities.
-- Navigation to Matches, Predictions, Teams, and Analytics.
-
-## Data and current backend
-
-Static content. A saved/recent prediction summary is optional and must not block Phase 1.
-
-## Implementation notes
-
-The existing components/home-view.tsx implements the Item/Action reference demo, not this landing page. Preserve its components, API modules, Server Actions, and tests until a deliberate route migration. A future landing view should have a separate entry component such as components/landing-view.tsx.
-
-Keep React view composition in `components/`, feature types and transformations
-in `domain/`, and endpoint functions in `api/` when those files are needed. Static
-views can use a local content module; do not add empty API/domain layers.
-The Next page should import the view component rather than own its implementation.
-
-## Later scope
-
-Featured fixtures, tournament status, and richer World Cup content.
+Future Home design remains governed by the product decisions. Add API/domain layers
+only when an approved feature actually needs them. See the [feature map](../README.md).

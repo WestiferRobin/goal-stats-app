@@ -17,7 +17,10 @@ You do not need to install Node or npm.
 
 Clone `goal-stats-app` and `goal-stats-service` side by side and start Docker.
 
-First start the backend in another terminal:
+Home at `/` is a static landing page and needs no backend. The football demo needs
+the existing backend. During Item/Action retirement, coordinate backend startup with
+its owner: pending migrations must not be applied before release authorization.
+For an authorized development environment, start the backend in another terminal:
 
 ```sh
 cd goal-stats-service
@@ -51,7 +54,7 @@ scorelines update. As an additional check,
 | Route | Current state |
 | --- | --- |
 | `/demo` | Working Goal Stats football proof of concept |
-| `/` | Legacy Item/Action reference application |
+| `/` | Static landing page with existing navigation and a link to the demo |
 | `/matches` | React product scaffold under development |
 | `/predictions` | React product scaffold under development |
 | `/teams` | React product scaffold under development |
@@ -69,13 +72,13 @@ simplification does not make unfinished routes complete.
 ```dotenv
 APP_PORT=3000
 FOOTBALL_API_BASE_URL=http://127.0.0.1:5100
-SERVICE_API_BASE_URL=http://127.0.0.1:5100
 ```
 
-`FOOTBALL_API_BASE_URL` powers Goal Stats. `SERVICE_API_BASE_URL` remains temporarily
-for the legacy Item/Action page. Both are read only by Next.js on the server. Docker
-translates these addresses internally, so the same `.env.local` works in either
-frontend workflow.
+`FOOTBALL_API_BASE_URL` configures the demo proxy and is read only by Next.js on
+the server. Docker translates the local address internally. Home requires no API
+configuration. The legacy Home environment requirement, forms and server actions
+have been removed. Existing ignored environment files are preserved; an old legacy
+variable, if present, is unused.
 
 ## Optional: run the frontend on your machine
 

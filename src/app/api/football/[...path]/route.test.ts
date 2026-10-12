@@ -41,3 +41,10 @@ it("reports missing configuration and sanitizes upstream errors", async () => {
   expect(response.status).toBe(502);
   expect(await response.text()).not.toMatch(/secret|postgres|backend:5300/);
 });
+it.each(["ftp://backend", "http://user:password@backend", "http://backend?private=value", "http://backend#fragment", "not-a-url"])("rejects invalid football configuration without contacting it: %s", async value => {
+  vi.stubEnv("FOOTBALL_API_BASE_URL", value);
+  const response = await GET(new Request("http://localhost/api/football/teams"), context("teams"));
+  expect(response.status).toBe(503);
+  expect(await response.json()).toEqual({ status: 503, detail: "Football service is not configured." });
+  expect(request).not.toHaveBeenCalled();
+});

@@ -31,7 +31,6 @@ prepare_env() {
   fi
   grep -Eq '^APP_PORT=[0-9]+$' "$env_file" || fail '.env.local requires a numeric APP_PORT.'
   grep -Eq '^FOOTBALL_API_BASE_URL=https?://.+$' "$env_file" || fail '.env.local requires FOOTBALL_API_BASE_URL.'
-  grep -Eq '^SERVICE_API_BASE_URL=https?://.+$' "$env_file" || fail '.env.local requires SERVICE_API_BASE_URL.'
   "${compose[@]}" config --quiet
 }
 

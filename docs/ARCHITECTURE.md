@@ -22,10 +22,8 @@ references. Clone and run it separately; no parent repository layout is required
 
 | Location | Responsibility |
 | --- | --- |
-| `src/app/page.tsx` | React root page; Item/Action demo with `?item=<uuid>` selection |
-| `src/features/home/components` | Existing React views and forms |
-| `src/features/home/domain` | Item/Action types, errors, and Server Actions |
-| `src/features/home/api` | Item/Action backend requests and response decoders |
+| `src/app/page.tsx` | Static Home route rendering the minimal landing view |
+| `src/features/home/components` | Landing view using shared navigation and the existing demo link |
 | `src/app/demo/route.ts` | Returns the football HTML document |
 | `src/app/demo/style.css/route.ts`, `src/app/demo/demo.js/route.ts` | Serve the preview assets |
 | `src/demo/index.html`, `style.css`, `demo.js` | Football proof of concept: layout, styling, input mapping, and DOM updates |
@@ -120,7 +118,7 @@ decisions, and the database/API gaps.
 
 ```text
 src/features/
-  home/          Product landing; existing Item/Action code retained here for now
+  home/          Minimal static landing; no API or server-action dependency
   matches/       Match/scenario selection and editable inputs
   predictions/   Results and saved predictions
   teams/         Team catalog, ratings, comparison
@@ -154,18 +152,24 @@ have reached the database. Use backend-agreed identifiers for cross-view state,
 not an assumed fixture identity inferred from two team names.
 
 The proposal asks for MySQL, Match/Scenario persistence, and associated Prediction
-records; the backend currently uses PostgreSQL and combined snapshots. Recalculation
-creating a new Prediction record is still a proposed decision. Keep these backend
-and product dependencies explicit while implementing the React views. The Phase 1
+records. The backend uses PostgreSQL and now supports normalized scenarios and
+saved predictions, while the current demo continues using combined prototype
+snapshots. Connecting the React product views to normalized APIs remains separate
+work. Preserve the demo Calculate/Save distinction during that work. The Phase 1
 core is team selection, a saved scenario, prediction, and retrieval. Advanced
 analytics and tournaments must not block it.
 
-## Existing Item/Action flow
+## Home and API integration status
 
-Home reads use Server Component → feature API → shared HTTP client → Flask.
-Writes use native forms → Server Actions → feature API → Flask, followed by
-revalidation and redirect to `/`. `SERVICE_API_BASE_URL` configures this flow separately.
-The existing `connection()` call keeps live reads out of production builds.
+Home is static and renders without a backend. The legacy Item/Action clients,
+response decoders, forms, types, server actions and environment reader are removed.
+Shared HTTP transport/error handling remains in `src/lib/api`; the football proxy
+and demo are unchanged. No dashboard or normalized API integration was added.
+
+The backend now exposes normalized catalog, scenario and saved-prediction APIs in
+addition to the prototype APIs listed above. The frontend proxy still forwards its
+existing prototype allowlist only. Product views remain scaffolds; wiring them to
+normalized entities is separate work requiring agreed UI flows and proxy contracts.
 
 Authentication is not implemented in this frontend. Do not assume the User
 repository's name supplies an authentication contract. Keep future Auth separate

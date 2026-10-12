@@ -18,12 +18,13 @@ same product views; this repository implements them with React/Next.js.
 
 The Analytics, Matches, Predictions, and Teams folders each have `components/`,
 `domain/`, and `api/` scaffolds with layer-specific implementation guides, matching
-Home’s existing separation. Each now has a React view connected to its matching
+the intended feature separation. Each now has a React view connected to its matching
 `src/app/<view>/page.tsx`. The pages show an under-construction message until their
 product functionality is implemented.
-Currently `/` is the existing React Item/Action reference and `/demo` is the
-connected HTML football proof of concept. Both remain intact. The existing
-`home/components/home-view.tsx` is not the planned product landing screen.
+Currently `/` is a minimal static landing page with shared navigation and a link to
+`/demo`, the connected HTML football proof of concept. Home has no API, form or
+server-action dependency. The existing product-view scaffolds and demo remain
+unchanged; normalized frontend integration is not implemented by this retirement.
 
 ## How to add a view
 
@@ -66,13 +67,13 @@ that small shared module under `src/lib/football`; do not copy contracts or impo
 another feature’s internal API modules. Such a shared module is a future extraction,
 not an existing implementation. Never import server-only HTTP code into the browser.
 
-## Product decisions and backend gaps
+## Product decisions and frontend integration gaps
 
 | Proposal | Current implementation | Required follow-up |
 | --- | --- | --- |
 | MySQL persistence | Backend uses PostgreSQL | Backend-owned database decision/migration; frontend must not claim MySQL is complete |
-| Match/scenario records | Combined state/prediction snapshots by team pair | Decide hypothetical vs real fixture vs both; agree identity and relationship contracts |
-| Separate saved predictions associated with a match | Snapshot stores state and prediction together | Agree data model and API before implementing the proposed relationship |
+| Match/scenario records | Demo uses prototype snapshots; backend also provides normalized catalog/scenario APIs | Connect product views to reviewed normalized contracts separately |
+| Separate saved predictions associated with a scenario | Backend supports saved prediction history; demo still uses combined snapshots | Implement the normalized frontend workflow separately |
 | Recalculation creates a new Prediction record (proposed) | Calculate is stateless; explicit Save creates a snapshot | Confirm policy and distinguish Calculate from Save until implemented |
 | Match difficulty in prediction results | Not returned by current prediction API | Add agreed backend output or clearly show unavailable |
 | Optional recent form/head-to-head | Imported history has no dates | Use honest history labels; do not block the core workflow |

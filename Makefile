@@ -17,12 +17,10 @@ help:
 	@$(BASH) scripts/develop.sh help
 
 # Internal maintainer capabilities; intentionally absent from make help.
-.PHONY: _logs _e2e _test-home _build-production
+.PHONY: _logs _e2e _build-production
 _logs:
 	@$(BASH) scripts/develop.sh logs
 _e2e:
 	@$(BASH) scripts/test.sh e2e
-_test-home:
-	@$(BASH) scripts/test-home.sh
 _build-production:
 	@docker build --target runtime -t goal-stats-app:runtime .

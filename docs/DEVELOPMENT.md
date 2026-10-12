@@ -11,7 +11,7 @@ Browser -> Goal Stats Next.js -> /api/football/* -> Flask backend -> database/fo
 ```
 
 `.env.local` uses the host-facing backend address `http://127.0.0.1:5100`. Local
-Compose overrides the two server-only upstream URLs with
+Compose overrides the football server-only upstream URL with
 `http://host.docker.internal:5100` and maps that name through `host-gateway` for
 Linux compatibility. Contributors neither export URLs nor edit configuration when
 switching frontend workflows.
@@ -34,10 +34,13 @@ Maintainer-only targets in the root Makefile preserve specialized behavior:
 
 - `make _logs`: follow local Next.js logs.
 - `make _e2e`: build a disposable production-style app and run Playwright.
-- `make _test-home SERVICE_SOURCE=/path/to/goal-stats-service`: frozen-backend
-  Item/Action persistence and outage checks.
 - `make _build-production`: verify the standalone production image build.
 
 Vercel configuration and `docker/compose.stuff.yml` Caddy HTTPS support remain
 available for deployment/maintainer use. They are not part of first-run onboarding.
 Host Node/npm remain optional and are not beginner prerequisites.
+
+Home renders without a backend or API configuration. The football demo still uses
+`FOOTBALL_API_BASE_URL`; the existing feature scaffolds and proxy are unchanged.
+The retired Home persistence harness is removed. Do not start the backend retirement
+checkout against persistent PostgreSQL until its migration/deployment is authorized.
