@@ -3,6 +3,11 @@
 import Link from "next/link";
 import ViewNavigation from "@/components/view-navigation";
 
+type HomeViewProps = {
+  selectedId?: string;
+  invalidSelection?: boolean;
+};
+
 const featureCards = [
   {
     title: "Match Analysis",
@@ -26,7 +31,7 @@ const featureCards = [
   },
 ];
 
-export default function HomeView() {
+export default function HomeView(_props: HomeViewProps = {}) {
   return (
     <main
       className="min-h-screen bg-cover bg-center bg-fixed text-white"
