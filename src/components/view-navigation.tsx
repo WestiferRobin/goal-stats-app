@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const views = [
-  ["/", "Road to the Final"],
+  ["/", "Goal Stats"],
   ["/matches", "Matches"],
   ["/predictions", "Predictions"],
   ["/teams", "Teams"],

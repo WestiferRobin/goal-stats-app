@@ -32,12 +32,35 @@ type PredictionResponse = {
 
   most_likely_score?: [number, number];
 
+  top_scorelines?: {
+    team1_goals: number;
+    team2_goals: number;
+    probability: number;
+  }[];
+
   confidence?: {
     label: string;
     percent: number;
   };
 
+  momentum_percent?: {
+    team1: number;
+    team2: number;
+  };
+
+  advancement?: {
+    team1: number;
+    team2: number;
+  };
+
   reasoning?: string[];
+
+  events?: {
+    minute: number | string;
+    team: string;
+    type: string;
+    detail: string;
+  }[];
 };
 
 export default function MatchesView() {
@@ -144,6 +167,8 @@ export default function MatchesView() {
 
     setPrediction(null);
     setError("");
+
+    sessionStorage.removeItem("goalstats-current-prediction");
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -227,7 +252,19 @@ export default function MatchesView() {
         );
       }
 
-      setPrediction(data as PredictionResponse);
+      const predictionData = data as PredictionResponse;
+
+      setPrediction(predictionData);
+
+      sessionStorage.setItem(
+        "goalstats-current-prediction",
+        JSON.stringify({
+          prediction: predictionData,
+          scenario,
+        })
+      );
+
+      window.location.href = "/predictions";
     } catch (err) {
       console.error("PREDICTION ERROR:", err);
 
@@ -665,7 +702,9 @@ function ProbabilityCard({
   return (
     <div className="rounded-xl border border-pink-400/20 bg-pink-500/10 p-5 text-center">
       <p className="text-sm text-zinc-300">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-pink-400">{value}</p>
+      <p className="mt-2 text-3xl font-bold text-pink-400">
+        {value}
+      </p>
     </div>
   );
 }

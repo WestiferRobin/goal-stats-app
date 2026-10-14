@@ -58,7 +58,7 @@ export default function HomeView(_props: HomeViewProps = {}) {
               </h1>
 
               <p className="mt-5 text-xl font-semibold text-zinc-200">
-                Data. Predictions. Insights. The Road to the Final.
+                Data. Predictions. Insights. Built for the road to 2027.
               </p>
 
               <p className="mt-5 max-w-xl text-base leading-7 text-zinc-400">
@@ -112,7 +112,9 @@ export default function HomeView(_props: HomeViewProps = {}) {
               href={card.href}
               className="rounded-2xl border border-white/10 bg-[#0b1724]/95 p-6 shadow-lg transition hover:-translate-y-1 hover:border-pink-500/40"
             >
-              <h2 className="text-xl font-semibold">{card.title}</h2>
+              <h2 className="text-xl font-semibold">
+                {card.title}
+              </h2>
 
               <p className="mt-3 text-sm leading-6 text-zinc-400">
                 {card.text}
@@ -126,53 +128,67 @@ export default function HomeView(_props: HomeViewProps = {}) {
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-[#0b1724]/95 p-6 shadow-lg lg:col-span-2">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">
-                  Featured Match
-                </p>
+          <div className="rounded-2xl border border-white/10 bg-[#0b1724]/95 p-8 shadow-lg lg:col-span-2">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-pink-400">
+              Start a Match Analysis
+            </p>
 
-                <h2 className="mt-2 text-3xl font-bold">
-                  USA vs Mexico
-                </h2>
+            <h2 className="mt-3 text-3xl font-bold">
+              Build Your Own Match Scenario
+            </h2>
 
-                <p className="mt-2 text-zinc-400">
-                  Women&apos;s international match analysis
-                </p>
-              </div>
-
-              <Link
-                href="/matches"
-                className="text-sm font-semibold text-pink-400"
-              >
-                View Match →
-              </Link>
-            </div>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-400">
+              Choose two teams, enter the current match state, and let Goal
+              Stats calculate win probabilities, likely scorelines, momentum,
+              expected goals, and other prediction insights.
+            </p>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-xl bg-[#101d2a] p-5">
-                <p className="text-sm text-zinc-400">USA Win</p>
-                <p className="mt-2 text-3xl font-bold text-blue-400">--</p>
+              <div className="rounded-xl border border-white/10 bg-[#101d2a] p-5">
+                <p className="text-sm font-semibold text-pink-400">
+                  1. Choose Teams
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  Select two teams from the Goal Stats dataset.
+                </p>
               </div>
 
-              <div className="rounded-xl bg-[#101d2a] p-5">
-                <p className="text-sm text-zinc-400">Draw</p>
-                <p className="mt-2 text-3xl font-bold">--</p>
+              <div className="rounded-xl border border-white/10 bg-[#101d2a] p-5">
+                <p className="text-sm font-semibold text-pink-400">
+                  2. Enter Match Data
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  Add the score, minute, possession, shots, cards, and other
+                  match statistics.
+                </p>
               </div>
 
-              <div className="rounded-xl bg-[#101d2a] p-5">
-                <p className="text-sm text-zinc-400">Mexico Win</p>
-                <p className="mt-2 text-3xl font-bold text-pink-400">--</p>
+              <div className="rounded-xl border border-white/10 bg-[#101d2a] p-5">
+                <p className="text-sm font-semibold text-pink-400">
+                  3. Analyze
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  View model predictions and continue into deeper analytics.
+                </p>
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-7 flex flex-wrap gap-4">
               <Link
-                href="/predictions"
-                className="inline-block rounded-lg border border-blue-500 px-5 py-3 font-semibold text-blue-400 hover:bg-blue-500/10"
+                href="/matches"
+                className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600"
               >
-                View Prediction
+                Build Match Scenario →
+              </Link>
+
+              <Link
+                href="/analytics"
+                className="rounded-xl border border-white/20 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
+              >
+                Explore Analytics
               </Link>
             </div>
           </div>
@@ -216,15 +232,24 @@ export default function HomeView(_props: HomeViewProps = {}) {
           </p>
 
           <div className="flex gap-4">
-            <Link href="/about" className="hover:text-white">
+            <Link
+              href="/about"
+              className="hover:text-white"
+            >
               About
             </Link>
 
-            <Link href="/blog" className="hover:text-white">
+            <Link
+              href="/blog"
+              className="hover:text-white"
+            >
               Blog
             </Link>
 
-            <Link href="/project" className="hover:text-white">
+            <Link
+              href="/project"
+              className="hover:text-white"
+            >
               Project
             </Link>
           </div>
