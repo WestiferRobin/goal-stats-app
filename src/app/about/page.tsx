@@ -1,7 +1,16 @@
+import ViewNavigation from "@/components/view-navigation";
 
 export default function AboutPage() {
     return (
-      <main className="min-h-screen bg-zinc-950 px-8 py-16 text-white">
+      <main className="min-h-screen bg-cover bg-center bg-fixed px-8 py-16 text-white"
+            style={{
+            backgroundImage:
+            "linear-gradient(rgba(0, 10, 20, 0.88), rgba(0, 10, 20, 0.92)), url('/images/soccer-field-bg.jpg')",
+            }}>
+            {/* Navigation Bar */}
+            <div className="mx-auto max-w-6xl">
+                <ViewNavigation currentPath="/about" />
+            </div>
         <div className="mx-auto max-w-6xl">
           <p className="mb-4 font-bold uppercase tracking-widest text-pink-500">
             About Us
@@ -27,7 +36,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 
             {/* Our Mission */}
-            <section className="rounded-2xl bg-zinc-900 p-8">
+            <section className="rounded-2xl border border-white/10 bg-[#071725]/95 p-8">
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">Our Mission</h2>
             <p className="leading-relaxed text-gray-300">
@@ -39,7 +48,7 @@ export default function AboutPage() {
             </section>
 
             {/* The Problem We're Solving */}
-            <section className="rounded-2xl bg-zinc-900 p-8">
+            <section className="rounded-2xl border border-white/10 bg-[#071725]/95 p-8">
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">
                 The Problem We're Solving
@@ -54,7 +63,7 @@ export default function AboutPage() {
             </section>
 
             {/* Our Solution & User Value */}
-            <section className="rounded-2xl bg-zinc-900 p-8">
+            <section className="rounded-2xl border border-white/10 bg-[#071725]/95 p-8">
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">
                 Our Solution & User Value
@@ -72,7 +81,7 @@ export default function AboutPage() {
             </section>
 
             {/* Technology & Approach */}
-            <section className="rounded-2xl bg-zinc-900 p-8">
+            <section className="rounded-2xl border border-white/10 bg-[#071725]/95 p-8">
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">
                 Technology & Approach
@@ -87,7 +96,7 @@ export default function AboutPage() {
             </section>
 
             {/* Future Goals & Vision */}
-            <section className="rounded-2xl bg-zinc-900 p-8 md:col-span-2">
+            <section className="rounded-2xl border border-white/10 bg-[#071725]/95 p-8 md:col-span-2">
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">
                 Future Goals & Vision
@@ -107,7 +116,7 @@ export default function AboutPage() {
         </div>
 
         {/* Meet Our Team */}
-        <section className="mx-auto mt-12 max-w-8xl rounded-2xl bg-zinc-900 p-6">
+        <section className="mx-auto mt-12 max-w-8xl rounded-2xl border border-white/10 bg-[#071725]/95 p-6">
         <h2 className="mb-6 text-4xl font-bold text-white">
             Meet Our Team
         </h2>
