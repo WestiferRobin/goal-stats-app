@@ -1,3 +1,5 @@
+"use client";
+
 import MatchesView from "@/features/matches/components/matches-view";
 
 export default function MatchesPage() {

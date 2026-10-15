@@ -1,11 +1,14 @@
 import Link from "next/link";
 
 const views = [
-  ["/", "Home"],
+  ["/", "Goal Stats"],
   ["/matches", "Matches"],
   ["/predictions", "Predictions"],
   ["/teams", "Teams"],
   ["/analytics", "Analytics"],
+  ["/about", "About"],
+  ["/blog", "Blog"],
+  ["/project", "Project"],
 ] as const;
 
 export default function ViewNavigation({ currentPath }: { currentPath: string }) {
