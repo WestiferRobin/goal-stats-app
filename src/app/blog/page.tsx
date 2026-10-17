@@ -24,7 +24,7 @@ export default function BlogPage() {
             Welcome to the Goal Stats development blog!
             Here, our team shares our journey creating a
             database-driven application for the 2027 FIFA
-            Women's World Cup.
+            Women&apos;s World Cup.
           </p>
   
           <div className="mt-10 rounded-2xl border border-white/10 bg-[#071825] p-8">
@@ -36,7 +36,7 @@ export default function BlogPage() {
             <p className="text-gray-300">
               Our mission is to combine soccer, technology,
               and data analytics while bringing more
-              recognition to women's football.
+              recognition to women&apos;s football.
             </p>
           </div>
 
