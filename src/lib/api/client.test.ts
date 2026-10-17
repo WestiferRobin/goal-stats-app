@@ -10,9 +10,9 @@ function respond(body: string | null, status = 200, contentType = "application/j
   })));
 }
 describe("HTTP boundary", () => {
-  it.each(["GET", "POST", "PUT", "DELETE"] as const)("encodes %s and preserves metadata without retries", async method => {
+  it.each(["GET", "POST", "PATCH", "PUT", "DELETE"] as const)("encodes %s and preserves metadata without retries", async method => {
     respond(method === "DELETE" ? null : '{"ok":true}', method === "DELETE" ? 204 : 200);
-    const body = method === "POST" || method === "PUT" ? { name: "Example" } : undefined;
+    const body = method === "POST" || method === "PATCH" || method === "PUT" ? { name: "Example" } : undefined;
     const result = await request("http://backend/resource", { method, body, cache: "no-store" });
     expect(result).toMatchObject({ status: method === "DELETE" ? 204 : 200, location: "/resource/123", data: method === "DELETE" ? undefined : { ok: true } });
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -60,4 +60,8 @@ describe("HTTP boundary", () => {
   it("handles an already cancelled signal", async () => {
     hangingFetch(); await expect(request("http://backend/resource", { signal: AbortSignal.abort() })).rejects.toMatchObject({ kind: "cancelled" });
   });
+});
+it("forwards a genuinely bodyless generation without JSON content type",async()=>{
+ respond('{"prediction_id":1}',201);await request('http://backend/api/v1/scenarios/1/predictions',{method:'POST'});
+ expect(fetchMock).toHaveBeenCalledTimes(1);const options=fetchMock.mock.calls[0][1]!;expect(options.body).toBeUndefined();expect(new Headers(options.headers).has('Content-Type')).toBe(false);expect(options.redirect).toBe('error');
 });

@@ -1,6 +1,6 @@
 # Matches API
 
-Load the team catalog and retrieve snapshot state through `/api/football/teams` and `/api/football/snapshots/{uuid}`. Coordinate submit/save behavior with the agreed cross-view flow; there is no first-class Match CRUD API yet.
+The catalog uses normalized teams, competitions (`edition_label`), and match arrays with 50-record pages. POST `/api/football/predictions/preview` submits validated flat hypothetical inputs and returns engine output without persistence. Version-2 session storage transfers the unsaved preview to Predictions. GET `/api/football/scenarios/{id}` restores saved state; PATCH sends only changed mutable fields and never generates a prediction. Unknown PATCH outcomes require reopening before retry.
 
 Browser functions use relative `/api/football/*` URLs. Next's existing proxy owns
 the backend address and forwards to Flask `/api/v1/*`. Check HTTP status, validate

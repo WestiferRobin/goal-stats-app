@@ -2,7 +2,7 @@ import "server-only";
 import { ApiError, type ProblemDetails } from "./error";
 
 type Options = {
-  method?: "GET" | "POST" | "PUT" | "DELETE";
+  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
   headers?: HeadersInit;
   signal?: AbortSignal;
