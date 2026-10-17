@@ -6,7 +6,6 @@ services:
       dockerfile: Dockerfile
       target: development
     environment:
-      SERVICE_API_BASE_URL: http://host.docker.internal:5100
       FOOTBALL_API_BASE_URL: http://host.docker.internal:5100
     extra_hosts:
       - "host.docker.internal:host-gateway"

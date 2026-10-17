@@ -22,13 +22,13 @@ export default function AboutPage() {
   
           <p className="mb-10 text-lg text-gray-300">
             Team Squared is a hypothetical sports technology company
-            developing Goal Stats, a women's football analytics and
-            prediction application focused on the 2027 FIFA Women's
+            developing Goal Stats, a women&apos;s football analytics and
+            prediction application focused on the 2027 FIFA Women&apos;s
             World Cup. Our goal is to combine football statistics,
             database technology, and predictive analytics into an
             accessible platform that helps fans explore team
             performances, compare matches, and better understand
-            women's football.
+            women&apos;s football.
           </p>
   
           
@@ -41,7 +41,7 @@ export default function AboutPage() {
             <h2 className="mb-4 text-2xl font-bold">Our Mission</h2>
             <p className="leading-relaxed text-gray-300">
                 Our mission is to combine sports, technology, and data
-                analytics to make women's football statistics more
+                analytics to make women&apos;s football statistics more
                 accessible while bringing greater recognition to women
                 athletes, their teams, and their achievements.
             </p>
@@ -51,13 +51,13 @@ export default function AboutPage() {
             <section className="rounded-2xl border border-white/10 bg-[#071725]/95 p-8">
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">
-                The Problem We're Solving
+                The Problem We&apos;re Solving
             </h2>
             <p className="leading-relaxed text-gray-300">
-                Women's football continues to grow worldwide, yet
+                Women&apos;s football continues to grow worldwide, yet
                 women athletes often receive less media coverage and
-                recognition compared to men's football. Through Goal
-                Stats, Team Squared hopes to highlight women's football
+                recognition compared to men&apos;s football. Through Goal
+                Stats, Team Squared hopes to highlight women&apos;s football
                 and make statistics more accessible to fans.
             </p>
             </section>
@@ -75,7 +75,7 @@ export default function AboutPage() {
                 to access, our application helps fans compare team
                 performances, understand match trends, and explore
                 data-driven predictions. Goal Stats also supports
-                greater recognition of women's football by making
+                greater recognition of women&apos;s football by making
                 team statistics and achievements more visible.
             </p>
             </section>
@@ -102,11 +102,11 @@ export default function AboutPage() {
                 Future Goals & Vision
             </h2>
             <p className="leading-relaxed text-gray-300">
-                As we prepare for the 2027 FIFA Women's World Cup,
+                As we prepare for the 2027 FIFA Women&apos;s World Cup,
                 our goal is to expand Goal Stats with additional team
                 statistics, predictive features, and interactive
                 analytics. We hope to create a platform that celebrates
-                women's football while encouraging fans to explore
+                women&apos;s football while encouraging fans to explore
                 the sport through statistics and technology.
             </p>
             </section>

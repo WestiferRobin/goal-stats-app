@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+printf '%s\n' "Retired: this historical Item/Action runner is not supported by the Women's World Cup application. No infrastructure was started. Use the documented current frontend checks." >&2
+exit 2
+
+# Historical implementation retained below; intentionally unreachable.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # Archive the immutable contract commit, never run or edit the backend checkout.

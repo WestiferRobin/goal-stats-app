@@ -16,14 +16,11 @@ same product views; this repository implements them with React/Next.js.
 | [teams](teams/README.md) | `/teams` | Catalog, ratings, rankings, comparison |
 | [analytics](analytics/README.md) | `/analytics` | Limited stable analytics or labeled preview |
 
-The Analytics, Matches, Predictions, and Teams folders each have `components/`,
-`domain/`, and `api/` scaffolds with layer-specific implementation guides, matching
-Home’s existing separation. Each now has a React view connected to its matching
-`src/app/<view>/page.tsx`. The pages show an under-construction message until their
-product functionality is implemented.
-Currently `/` is the existing React Item/Action reference and `/demo` is the
-connected HTML football proof of concept. Both remain intact. The existing
-`home/components/home-view.tsx` is not the planned product landing screen.
+All five views are implemented and composed by their App Router pages. Home uses
+Esteban's preserved HomeView; LandingView and Item/Action modules remain inactive
+reference code. Teams, Matches, Predictions and Analytics use normalized Women's
+World Cup contracts. Demo is a static historical reference with no live requests.
+Informational `/about`, `/blog` and `/project` links await implementation.
 
 ## How to add a view
 
@@ -55,31 +52,27 @@ Analytics for deeper analysis.
 
 Use explicit route/search parameters and agreed backend identifiers to reopen
 saved state; do not make features reach into one another’s component internals.
-The existing snapshot UUID can retrieve a combined state/prediction, but it is
-not an agreed Match/Scenario ID. Coordinate that contract before choosing final
-detail URLs or building persistent cross-view navigation.
+Saved scenarios and predictions use integer IDs and explicit scenario_id or
+prediction_id query parameters. Reopening uses backend GETs, not session storage.
 
 All football browser requests use `/api/football/*`. Next forwards approved paths
 to Flask `/api/v1/*` using a server-only base URL. Reuse this boundary across React
 views. If several views need the same browser request/response contract, extract
 that small shared module under `src/lib/football`; do not copy contracts or import
-another feature’s internal API modules. Such a shared module is a future extraction,
-not an existing implementation. Never import server-only HTTP code into the browser.
+another feature’s internal API modules. The existing `src/lib/football.ts` supplies reused pure contracts and adapters. Never import server-only HTTP code into the browser.
 
-## Product decisions and backend gaps
+## Current behavior and deferred scope
 
-| Proposal | Current implementation | Required follow-up |
-| --- | --- | --- |
-| MySQL persistence | Backend uses PostgreSQL | Backend-owned database decision/migration; frontend must not claim MySQL is complete |
-| Match/scenario records | Combined state/prediction snapshots by team pair | Decide hypothetical vs real fixture vs both; agree identity and relationship contracts |
-| Separate saved predictions associated with a match | Snapshot stores state and prediction together | Agree data model and API before implementing the proposed relationship |
-| Recalculation creates a new Prediction record (proposed) | Calculate is stateless; explicit Save creates a snapshot | Confirm policy and distinguish Calculate from Save until implemented |
-| Match difficulty in prediction results | Not returned by current prediction API | Add agreed backend output or clearly show unavailable |
-| Optional recent form/head-to-head | Imported history has no dates | Use honest history labels; do not block the core workflow |
+PostgreSQL stores teams, competition editions, historical matches, mutable scenarios
+and immutable predictions. Preview calculates without persistence; explicit save
+creates a scenario then a prediction. Further generation appends history after
+supported scenario edits. Dated historical comparisons are available; unknown
+ratings/ranks remain null and hypothetical strengths are explicit.
 
-Do not change database infrastructure, infer a fixture identity, or claim missing
-capabilities simply to match the folder names. These are open dependencies, not
-reasons to delay static pages, team exploration, or the existing prediction flow.
+Analytics renders stored outputs/snapshots. Tournament execution awaits explicit
+strength and bracket inputs; backtesting lacks an approved endpoint. No accuracy,
+telemetry or live-feed results are fabricated. Preserve those UI sections and the
+existing 21 match inputs plus ten strength assumptions.
 
 ## Delivery priority
 
