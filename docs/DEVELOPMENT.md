@@ -26,7 +26,7 @@ npm ci
 npm run dev
 ```
 
-Open <http://127.0.0.1:3000/demo>. Next.js reads the same `.env.local` and reaches
+Open <http://127.0.0.1:3000/>. Next.js reads the same `.env.local` and reaches
 the backend through `http://127.0.0.1:5100`. Stop any Docker frontend using port
 3000 before starting the host process.
 
@@ -40,7 +40,9 @@ Vercel configuration and `docker/compose.stuff.yml` Caddy HTTPS support remain
 available for deployment/maintainer use. They are not part of first-run onboarding.
 Host Node/npm remain optional and are not beginner prerequisites.
 
-Home renders without a backend or API configuration. The football demo still uses
-`FOOTBALL_API_BASE_URL`; the existing feature scaffolds and proxy are unchanged.
-The retired Home persistence harness is removed. Do not start the backend retirement
-checkout against persistent PostgreSQL until its migration/deployment is authorized.
+Home renders the unchanged Women's World Cup HomeView without backend configuration.
+The normalized product views use `FOOTBALL_API_BASE_URL` through the existing proxy.
+Demo is a static historical reference. Restored Item/Action modules are inactive;
+`scripts/test-home.sh` exits before any provisioning. Do not use its historical
+Compose stack for current certification. Informational links `/about`, `/blog` and
+`/project` remain awaiting implementation. See TESTING.md for supported test modes.

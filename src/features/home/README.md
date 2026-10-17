@@ -1,14 +1,18 @@
 # Home
 
-The `/` route renders `components/landing-view.tsx`: a minimal static GoalStats
-introduction, the existing shared navigation, and a link to the implemented `/demo`.
-It requires no backend, environment variable, forms, or server actions. It adds no
-statistics, predictions, dashboard, or new API contracts.
+`src/app/page.tsx` directly renders Esteban's unchanged `components/home-view.tsx`.
+Home presents the Women's World Cup hero, feature cards, scenario calls to action
+and existing shared navigation. It needs no backend configuration, UUID parsing,
+legacy props, form submission or API calls.
 
-The inherited Item/Action Home implementation and its domain-only tests are retired.
-Shared HTTP infrastructure remains in `src/lib/api`; RoadToTheFinal uses the existing
-football proxy. Matches, Predictions, Teams and Analytics remain teammate-owned
-scaffolds and have not been redesigned or connected to normalized APIs here.
+`components/landing-view.tsx` is preserved inactive reference UI and tested directly.
+Restored `api/`, `domain/`, ItemForm, ActionForm and `src/lib/env/server.ts` remain
+historical Item/Action references. Their isolated mocked tests verify reference
+behavior, not compatibility with the five-domain Flask backend. Do not activate
+those clients or require SERVICE_API_BASE_URL for normal operation.
 
-Future Home design remains governed by the product decisions. Add API/domain layers
-only when an approved feature actually needs them. See the [feature map](../README.md).
+`/about`, `/blog` and `/project` are preserved informational destinations awaiting
+implementation. Do not change Esteban's navigation or invent pages to satisfy tests.
+The legacy Home runner is retired; Demo is a static reference. Active football views
+use the existing `/api/football` proxy and fifteen normalized operations. See the
+[feature map](../README.md) and [testing](../../../docs/TESTING.md).

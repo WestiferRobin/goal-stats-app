@@ -1,3 +1,26 @@
+# Item/Action retirement and current preservation status
+
+## Current application
+
+Esteban's HomeView is active through direct root composition. LandingView is retained
+but inactive. All restored Item/Action API/domain/form/environment files and isolated
+mocked tests remain historical references; they are not supported Flask domains and
+are not imported by active pages. Do not add Item/Action endpoints or map UUIDs onto
+normalized football IDs. `SERVICE_API_BASE_URL` is not required by the product.
+
+The legacy Home runner now exits before setup/provisioning. Its old body, Compose
+file and live suite are preserved. Unsupported Playwright modes fail explicitly.
+Demo is historical/static, with no live calls or saves. The React product uses the
+fifteen normalized operations for Team, Competition, Match, Scenario and Prediction.
+Tournament/backtesting execution is deferred; informational links await pages.
+
+## Historical retirement record (not current verification)
+
+The following original record describes an earlier branch/runtime state. Its claims
+about deleted files, prototype APIs, migration heads and verification results are
+historical only; restoration and normalized integration superseded them. Current
+architecture and test behavior are documented in ARCHITECTURE.md and TESTING.md.
+
 # Frontend Item/Action retirement — Prompt 3
 
 ## Scope and ownership

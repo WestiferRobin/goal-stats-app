@@ -17,10 +17,9 @@ You do not need to install Node or npm.
 
 Clone `goal-stats-app` and `goal-stats-service` side by side and start Docker.
 
-Home at `/` is a static landing page and needs no backend. The football demo needs
-the existing backend. During Item/Action retirement, coordinate backend startup with
-its owner: pending migrations must not be applied before release authorization.
-For an authorized development environment, start the backend in another terminal:
+Home at `/` renders Esteban's Women's World Cup HomeView without a backend.
+The Teams, Matches, Predictions and Analytics workflows use the normalized backend.
+For an authorized development environment, start it in another terminal:
 
 ```sh
 cd goal-stats-service
@@ -36,10 +35,10 @@ make setup
 make run
 ```
 
-Leave both terminals running and open <http://127.0.0.1:3000/demo>. Select two
-different teams, click **Update Prediction**, and confirm the probabilities and
-scorelines update. As an additional check,
-<http://127.0.0.1:3000/api/football/teams> should return the same 32 teams as the backend.
+Leave both terminals running and open <http://127.0.0.1:3000/>. Use Matches to
+select two teams and enter explicit hypothetical strengths before generating a
+preview. Predictions saves scenarios and immutable predictions in two steps.
+<http://127.0.0.1:3000/api/football/catalog/teams> returns the 44 historical teams.
 
 | Command | Meaning |
 | --- | --- |
@@ -53,12 +52,15 @@ scorelines update. As an additional check,
 
 | Route | Current state |
 | --- | --- |
-| `/demo` | Working Goal Stats football proof of concept |
-| `/` | Static landing page with existing navigation and a link to the demo |
-| `/matches` | React product scaffold under development |
-| `/predictions` | React product scaffold under development |
-| `/teams` | React product scaffold under development |
-| `/analytics` | React product scaffold under development |
+| `/` | Esteban's Women's World Cup HomeView and navigation |
+| `/matches` | Historical browsing, hypothetical preview, saved scenario editing |
+| `/predictions` | Scenario discovery, explicit saving, immutable prediction history |
+| `/teams` | Historical catalog and dated comparisons; unknown strengths/ranks stay null |
+| `/analytics` | Saved prediction charts; tournament/backtesting execution deferred |
+| `/demo` | Historical/static reference, no live requests or saves |
+
+`/about`, `/blog` and `/project` are preserved informational links awaiting implementation.
+LandingView and the restored Item/Action modules remain inactive reference material.
 
 The Phase 1 direction remains Home, Matches, Predictions, Teams, and Analytics.
 The Product Decisions document remains the product/scope authority. Infrastructure
@@ -74,11 +76,11 @@ APP_PORT=3000
 FOOTBALL_API_BASE_URL=http://127.0.0.1:5100
 ```
 
-`FOOTBALL_API_BASE_URL` configures the demo proxy and is read only by Next.js on
-the server. Docker translates the local address internally. Home requires no API
-configuration. The legacy Home environment requirement, forms and server actions
-have been removed. Existing ignored environment files are preserved; an old legacy
-variable, if present, is unused.
+`FOOTBALL_API_BASE_URL` is read only by the existing Next.js `/api/football` proxy,
+which forwards the fifteen approved operations to Flask `/api/v1`. Flask owns five
+domains: Team, Competition, Match, Scenario and Prediction. Home and the static Demo
+need no API configuration. `SERVICE_API_BASE_URL` belongs only to inactive legacy
+Item/Action reference code; it is not required for the product.
 
 ## Optional: run the frontend on your machine
 
@@ -91,7 +93,7 @@ npm ci
 npm run dev
 ```
 
-Open <http://127.0.0.1:3000/demo>. This uses the same `.env.local`; do not change
+Open <http://127.0.0.1:3000/>. This uses the same `.env.local`; do not change
 the backend URLs when switching between host and Docker frontend development.
 
 ## Where to work
@@ -101,7 +103,7 @@ the backend URLs when switching between host and Docker frontend development.
 | `src/app/` | Routes and Next.js server endpoints |
 | `src/features/` | React product features and components |
 | `src/components/` | Shared frontend components |
-| `src/demo/` | Working football proof of concept |
+| `src/demo/` | Preserved historical presentation; live controls disabled |
 | `src/app/api/football/[...path]/route.ts` | Server-side Flask proxy |
 | `tests/` and `*.test.ts(x)` | Browser, unit, and component tests |
 

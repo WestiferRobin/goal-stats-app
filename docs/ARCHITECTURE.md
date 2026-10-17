@@ -1,176 +1,93 @@
 # GoalStats architecture and React implementation guide
 
-## What we are building
+## Responsibilities and composition
 
-The product frontend is React on Next.js. Flask owns football calculations,
-validation, provider access, and persistence. PostgreSQL stores backend data.
-The existing football `/demo` is a working proof of concept to translate into
-React; it is not the final frontend architecture.
+Next.js App Router pages compose feature views. Esteban's unchanged HomeView is
+active at `/`; LandingView remains an inactive reference. Shared navigation is
+preserved, including `/about`, `/blog` and `/project`, whose destinations await
+implementation. No legacy UUID query parsing is needed by Home.
 
-## Repository responsibilities
-
-| Repository | Owns | How we use it |
-| --- | --- | --- |
-| `goal-stats-app` | React UI, browser interaction, Next server routes | Build the product here |
-| `goal-stats-service` | Extracted football engine, JSON API, migrations, imported datasets, snapshots | Run as the football backend |
-| Historical RoadToTheFinal source | Original Flask/Jinja football application | Reference only; not a required repository or runtime |
-
-The backend repository's README and football guide are the setup and contract
-references. Clone and run it separately; no parent repository layout is required.
-
-## What exists today
+React feature views → existing `/api/football` proxy → Flask `/api/v1` → five domain
+services → five repositories → PostgreSQL. Domains are Team, Competition, Match,
+Scenario and Prediction. Flask owns prediction mathematics and persistence;
+RoadToTheFinal remains a historical mathematics/UI reference.
 
 | Location | Responsibility |
 | --- | --- |
-| `src/app/page.tsx` | Static Home route rendering the minimal landing view |
-| `src/features/home/components` | Landing view using shared navigation and the existing demo link |
-| `src/app/demo/route.ts` | Returns the football HTML document |
-| `src/app/demo/style.css/route.ts`, `src/app/demo/demo.js/route.ts` | Serve the preview assets |
-| `src/demo/index.html`, `style.css`, `demo.js` | Football proof of concept: layout, styling, input mapping, and DOM updates |
-| `src/demo/index.jinja.html` | Preserved original Jinja template; not executed by Next.js |
-| `src/app/api/football/[...path]/route.ts` | Allowed football API methods/paths, server-side forwarding, safe errors |
-| `src/lib/api` | Shared server HTTP client, timeout and error handling |
+| `src/app/` | Pages, layout, errors, and existing HTTP routes |
+| `src/features/` | Home, Teams, Matches, Predictions and Analytics UI |
+| `src/components/` | Reused presentation/navigation |
+| `src/lib/api/` | Server-only HTTP transport and safe errors |
+| `src/lib/football.ts` | Reused pure normalized contracts/validation/adapters |
+| `src/demo/` | Preserved historical HTML, styling and assets |
 
-The `/demo` JavaScript updates DOM elements directly. React work should replace
-that rendering behavior with components and state, while retaining the API contract.
-Do not paste its document or Jinja expressions into a React page and expect them
-to become interactive components.
+Browser code never imports server-only transport or database/Redis clients.
+No duplicate engine, generic proxy, service factory or global state framework is
+needed. Keep feature responsibilities separate; share only actually reused code.
 
-## How a football request travels
+## Fifteen approved operations
 
-1. A user changes match inputs in the browser.
-2. The frontend sends JSON to its own origin, such as `POST /api/football/predictions`.
-3. Next reads the server-only `FOOTBALL_API_BASE_URL` and forwards the request to
-   `${FOOTBALL_API_BASE_URL}/api/v1/predictions`.
-4. Flask validates the request, loads team ratings, and calculates the prediction.
-5. JSON returns through Next; the frontend updates its displayed result.
+Browser prefix `/api/football`; backend prefix `/api/v1`:
 
-The same browser URLs work locally and on Vercel. The browser never needs the
-Flask hostname or provider key. `app/api` is an HTTP boundary, not a React component
-and not the football engine. It does not store predictions or duplicate formulas.
+| Method | Suffix |
+| --- | --- |
+| GET | `/catalog/teams` |
+| GET | `/catalog/teams/{team_id}` |
+| GET | `/catalog/competitions` |
+| GET | `/catalog/matches` |
+| GET | `/catalog/matches/{match_id}` |
+| GET | `/catalog/matches/insights` |
+| POST | `/scenarios` |
+| GET | `/scenarios` |
+| GET | `/scenarios/{scenario_id}` |
+| PATCH | `/scenarios/{scenario_id}` |
+| POST | `/scenarios/{scenario_id}/predictions` |
+| GET | `/scenarios/{scenario_id}/predictions` |
+| GET | `/predictions/{prediction_id}` |
+| POST | `/predictions/preview` |
+| POST | `/competitions/simulate` |
 
-The proxy accepts only its listed paths and methods, uses a 30-second upstream
-timeout, avoids caching results, and returns sanitized errors. It checks supplied
-POST origins and expects JSON objects. These checks do not implement user login,
-authorization, private snapshots, or rate limiting.
+Health/readiness are separate infrastructure operations. Consult backend OpenAPI
+for complete schemas. Proxy IDs are positive integers bounded at 2147483647.
+The server-only `FOOTBALL_API_BASE_URL` supplies the backend origin. The existing
+proxy validates methods, JSON, origins and bodyless generation, rejects redirects,
+uses a bounded timeout, rewrites valid Locations and sanitizes errors. It does not
+supply authentication, private records or rate limiting.
 
-## Football endpoint map
+## Current product workflow
 
-The browser prefix is `/api/football`; Flask's prefix is `/api/v1`.
+Historical data covers Women's World Cup 1991–2023: 44 teams, nine editions,
+348 matches and 1,081 goals. Catalog ratings/rankings remain null when unknown.
+Historical scores are not fabricated in-play statistics.
 
-| Method | Suffix on either prefix | UI behavior |
-| --- | --- | --- |
-| GET | `/teams` | Populate teams and dataset rankings |
-| POST | `/predictions` | Calculate from current inputs without saving |
-| GET | `/insights?team1=Spain&team2=England` | Imported head-to-head and team history |
-| POST | `/snapshots` | Calculate and persist a shared snapshot; returns 201 |
-| GET | `/snapshots?team1=Spain&team2=England` | Load saved timeline; preview requests latest 50 |
-| GET | `/snapshots/{uuid}` | Retrieve a saved snapshot |
-| POST | `/live/refresh` | Explicit provider refresh, cached fallback, or unavailable result |
-| POST | `/tournaments/simulate` | Simulate a bracket |
-| GET | `/history` | Imported historical rows; exposed but no dedicated preview screen |
-| GET | `/backtests` | Model evaluation; exposed but no dedicated preview screen |
+Matches retains 21 state inputs and requires ten explicit hypothetical strengths.
+A flat POST to `/predictions/preview` calculates without saving. Versioned session
+storage transfers the unsaved preview. Predictions explicitly creates a scenario,
+retains its integer ID, then sends a genuinely bodyless generation POST. Saved
+predictions carry immutable input_snapshot, output, model_version and generated_at.
+GET discovery/detail/history supports reopening without browser storage. PATCH
+changes only mutable scenario fields; generating another prediction is explicit.
+Uncertain saves are not automatically retried; users inspect saved records first.
 
-See backend Swagger at `/swagger` for request schemas. A prediction request:
+Analytics reads stored output and snapshots, reversing each newest-first history
+page for chronological charts. Probability fractions become percentages once;
+momentum/confidence already use percentages. Charts represent hypothetical saved
+revisions, not fabricated historical telemetry. Tournament UI awaits explicit
+strength/bracket inputs; backtesting has no approved endpoint. Both are deferred.
 
-```json
-{
-  "team1": "Spain",
-  "team2": "England",
-  "minute": 65,
-  "team1_stats": { "goals": 1, "shots": 8, "shots_on_target": 4, "possession": 60 },
-  "team2_stats": { "goals": 0, "shots": 5, "shots_on_target": 2, "possession": 40 }
-}
-```
+## Preserved historical boundaries
 
-The backend applies defaults for omitted optional statistics. Browser code can
-use `fetch('/api/football/predictions', ...)` with `Content-Type: application/json`.
-Always check `response.ok` and show a recoverable error; do not display a failed
-request as a new successful prediction.
+Item/Action API/domain modules, forms, types, environment helper and isolated mocked
+tests remain reference code. Active routes do not import their clients or Server
+Actions. Do not reconnect `/items` or add prototype compatibility endpoints.
+`SERVICE_API_BASE_URL` is not active configuration. The historical Home runner exits
+before provisioning; its Compose and live test files remain preserved.
 
-## Contract details that matter when writing React
+`/demo` serves preserved HTML/styles/assets as a labeled historical/static reference.
+Its script disables calculation/save controls and performs no requests. Its response
+blocks connections and form submissions with CSP and links to supported React views.
+Displayed sample values are illustrative, not live backend results. The original
+Jinja template remains unexecuted reference material.
 
-- Team names identify teams in the current API. Select two distinct imported teams.
-- `probabilities`, `advancement`, and scoreline probabilities are fractions:
-  `0.65` displays as `65%`. Momentum and confidence already use percentages.
-- `expected_goals_remaining` means additional goals, not a final score.
-- Both possession values must total 100. Minutes are 0–120, extra minutes 0–30.
-- The preview's `team1_total_shots` input maps to `team1_stats.shots`; its
-  `team1_shots` input actually means `team1_stats.shots_on_target`. Use clear names
-  in React instead of retaining this legacy naming ambiguity.
-- Tournament requests contain 4, 8, 16, or 32 distinct team names and 1,000–2,000
-  simulations. The preview supplies all imported teams in ranking order.
-- Live responses wrap `state`, `prediction`, `source`, and `observed_at`.
-  Display `real` versus `cached` and the observation time. Do not relabel manual
-  calculations as live data. No available live/cache data produces an error.
-- Snapshot lists are shared records for a team pair, not user-private records or
-  a single identified fixture. Reset clears current inputs; it does not delete data.
-- Insights contain undated imported history. Do not label it verified recent form.
-- Attack pressure and difficulty are not in the current prediction response.
-  Star-player modifiers are not wired in the preview. Coordinate any new backend
-  fields before enabling corresponding React controls.
-
-## React work: features organized by product view
-
-The Phase 1 proposal maps each navigation view to its own feature. Read the
-[feature map](../src/features/README.md) for minimum scope, ownership, open product
-decisions, and the database/API gaps.
-
-```text
-src/features/
-  home/          Minimal static landing; no API or server-action dependency
-  matches/       Match/scenario selection and editable inputs
-  predictions/   Results and saved predictions
-  teams/         Team catalog, ratings, comparison
-  analytics/     Limited stable analytics or labeled preview
-```
-
-Each folder has a scope README. Analytics, Matches, Predictions, and Teams share
-Home’s `components/`, `domain/`, and `api/` structure. Each has an implemented React
-view scaffold, rendered by `src/app/<view>/page.tsx` at its matching URL. These pages
-provide navigation and an under-construction message; their product functionality
-is not yet implemented. Shared navigation lives in `src/components/view-navigation.tsx`.
-The existing `/` Home reference and `/demo` football proof of concept remain intact.
-
-Next pages should import their feature's view component. Add `components/`,
-`domain/`, and `api/` files as needed; static pages do not need dummy API modules.
-Shared header/navigation belongs in the application layout. A card such as
-prediction confidence belongs inside Predictions, not in a separate top-level
-feature. Do not group all navigation pages into one `features/football` view.
-
-Use Server Components for noninteractive composition and Client Components for
-forms, selection, and result updates. Browser API helpers call `/api/football/*`;
-never import server-only HTTP clients or backend settings into a Client Component.
-If multiple features need the same football types/request helpers, extract a small
-shared `src/lib/football` module when needed. Features should not import another
-feature's internals. Dependencies remain `app → features → lib`.
-
-Keep edited inputs separate from the last successful response. Show when inputs
-need recalculation, disable duplicate submissions, and handle stale responses after
-team changes. Do not automatically retry a save after a timeout; it may already
-have reached the database. Use backend-agreed identifiers for cross-view state,
-not an assumed fixture identity inferred from two team names.
-
-The proposal asks for MySQL, Match/Scenario persistence, and associated Prediction
-records. The backend uses PostgreSQL and now supports normalized scenarios and
-saved predictions, while the current demo continues using combined prototype
-snapshots. Connecting the React product views to normalized APIs remains separate
-work. Preserve the demo Calculate/Save distinction during that work. The Phase 1
-core is team selection, a saved scenario, prediction, and retrieval. Advanced
-analytics and tournaments must not block it.
-
-## Home and API integration status
-
-Home is static and renders without a backend. The legacy Item/Action clients,
-response decoders, forms, types, server actions and environment reader are removed.
-Shared HTTP transport/error handling remains in `src/lib/api`; the football proxy
-and demo are unchanged. No dashboard or normalized API integration was added.
-
-The backend now exposes normalized catalog, scenario and saved-prediction APIs in
-addition to the prototype APIs listed above. The frontend proxy still forwards its
-existing prototype allowlist only. Product views remain scaffolds; wiring them to
-normalized entities is separate work requiring agreed UI flows and proxy contracts.
-
-Authentication is not implemented in this frontend. Do not assume the User
-repository's name supplies an authentication contract. Keep future Auth separate
-from Home and football until its requests, responses, and session behavior exist.
+Authentication is not implemented. Keep future auth/session contracts separate from
+Home and football. See [feature map](../src/features/README.md) and [testing](TESTING.md).
