@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import { request as backendRequest } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/error";
 
@@ -15,7 +16,21 @@ function allowedMethods(path: string) {
   if (match[3]) return match[1] === "scenarios" ? ["GET", "POST"] : undefined;
   return match[1] === "scenarios" ? ["GET", "PATCH"] : ["GET"];
 }
-const titles: Record<number, string> = {400:"Bad Request",403:"Forbidden",404:"Not Found",405:"Method Not Allowed",409:"Conflict",413:"Content Too Large",415:"Unsupported Media Type",500:"Internal Server Error",502:"Bad Gateway",503:"Service Unavailable",504:"Gateway Timeout"};
+// Only explicit loopback development targets may omit service authentication.
+// All other destinations must be public HTTPS hostnames configured by the server.
+function isLocalBackend(base: URL) {
+  const host = base.hostname.toLowerCase().replace(/\.$/, "");
+  return host === "localhost" || host === "[::1]" || /^127\.\d+\.\d+\.\d+$/.test(host);
+}
+function validateDestination(base: URL) {
+  if (!/^https?:$/.test(base.protocol) || base.username || base.password || base.search || base.hash || base.pathname !== "/") throw new Error();
+  const cloud = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+  if (!cloud && isLocalBackend(base)) return;
+  const host = base.hostname.toLowerCase().replace(/\.$/, "");
+  if (base.protocol !== "https:" || isLocalBackend(base) || isIP(host.replace(/^\[|\]$/g, "")) ||
+      !host.includes(".") || /(?:^|\.)(?:localhost|local|internal)$/.test(host)) throw new Error();
+}
+const titles: Record<number, string> = {400:"Bad Request",401:"Unauthorized",429:"Too Many Requests",403:"Forbidden",404:"Not Found",405:"Method Not Allowed",409:"Conflict",413:"Content Too Large",415:"Unsupported Media Type",500:"Internal Server Error",502:"Bad Gateway",503:"Service Unavailable",504:"Gateway Timeout"};
 function problem(status: number, detail: string) {
   return Response.json({ type:"about:blank", title:titles[status] ?? "Request failed", status, detail }, { status, headers: { "Content-Type":"application/problem+json", "Cache-Control": "no-store" } });
 }
@@ -29,8 +44,17 @@ async function forward(request: Request, context: { params: Promise<{ path: stri
   let base: URL;
   try {
     base = new URL(process.env.FOOTBALL_API_BASE_URL ?? "");
-    if (!/^https?:$/.test(base.protocol) || base.username || base.password || base.search || base.hash || base.pathname !== "/") throw new Error();
+    validateDestination(base);
   } catch { return problem(503, "Football service is not configured."); }
+  const protectedOperation = request.method === "POST" || request.method === "PATCH";
+  const upstreamHeaders: Record<string, string> = {};
+  if (protectedOperation && !isLocalBackend(base)) {
+    const token = process.env.SERVICE_API_TOKEN;
+    if (!token || token.length < 32 || /[^\x21-\x7e]/.test(token)) {
+      return problem(503, "Football service is not configured.");
+    }
+    upstreamHeaders.Authorization = `Bearer ${token}`;
+  }
   let body: unknown;
   if (request.method === "POST" || request.method === "PATCH") {
     const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0].trim();
@@ -54,7 +78,7 @@ async function forward(request: Request, context: { params: Promise<{ path: stri
   }
   const url = `${base.toString().replace(/\/$/, "")}/api/v1/${path}${new URL(request.url).search}`;
   try {
-    const response = await backendRequest(url, { method: request.method as "GET" | "POST" | "PATCH", body, signal: request.signal, timeoutMs: 30_000 });
+    const response = await backendRequest(url, { method: request.method as "GET" | "POST" | "PATCH", body, headers: upstreamHeaders, signal: request.signal, timeoutMs: 30_000 });
     const headers: Record<string, string> = { "Cache-Control": "no-store" };
     if (response.location) {
       try {
@@ -68,6 +92,9 @@ async function forward(request: Request, context: { params: Promise<{ path: stri
     if (!(error instanceof ApiError)) throw error;
     if (error.kind === "http") {
       const status = error.status ?? 502;
+      if (status === 401) return problem(401, "Football service could not authorize this request.");
+      if (status === 403) return problem(403, "Football service does not permit this request.");
+      if (status === 429) return problem(429, "Too many requests. Wait before trying again; check saved history before repeating a save.");
       if (status === 400) return problem(400, "Check the selected IDs and input values.");
       if (status === 404) return problem(404, "The requested football record was not found.");
       if (status === 409) return problem(409, "The record changed or conflicts with this request. Reload it before retrying.");
