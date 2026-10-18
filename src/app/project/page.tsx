@@ -12,7 +12,7 @@ export default function ProjectPage() {
     >
       {/* Navigation Bar */}
       <div className="mx-auto max-w-6xl">
-            <ViewNavigation currentPath="/about" />
+            <ViewNavigation currentPath="/project" />
         </div>
 
       {/* Project Content */}
@@ -29,9 +29,9 @@ export default function ProjectPage() {
 
         <p className="mt-6 max-w-4xl text-lg leading-relaxed text-gray-300">
           Goal Stats is a database-driven football prediction and analytics
-          application focused on the 2027 FIFA Women's World Cup.
+          application focused on the 2027 FIFA Women&apos;s World Cup.
           Our project combines historical match data, team statistics,
-          and prediction models to help users explore women's football
+          and prediction models to help users explore women&apos;s football
           through interactive data analysis.
         </p>
 
@@ -45,17 +45,27 @@ export default function ProjectPage() {
           </h2>
 
           <p className="leading-relaxed text-gray-300">
-            Developed by Team Squared, Goal Stats aims to make women's
+            Developed by Team Squared, Goal Stats aims to make women&apos;s
             football statistics and match predictions more accessible.
             The application is designed to allow users to explore
             international teams, compare historical match information,
             create match scenarios, and generate predictions.
 
-            Our project builds a platform that introduces a MySQL relational database
+            Our deployed application uses a PostgreSQL relational database
             to store teams, competitions, matches, scenarios, and
             prediction results.
           </p>
 
+        </section>
+
+        <section className="mt-12 rounded-2xl border border-white/10 bg-[#071825] p-8">
+          <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
+          <h2 className="mb-4 text-2xl font-bold">Production Architecture & Historical Catalog</h2>
+          <p className="leading-relaxed text-gray-300">
+            Next.js / React on Vercel → Next.js server-side API proxy → Python / Flask on Render → PostgreSQL on Render.
+            The historical catalog contains 44 national teams, nine Women&apos;s World Cup editions (1991–2023),
+            348 matches and 1,081 goals. These are historical records, not 2027 fixtures or live match feeds.
+          </p>
         </section>
 
         {/* How Goal Stats Works */}
@@ -113,7 +123,7 @@ export default function ProjectPage() {
                 Team Exploration
             </h3>
             <p className="leading-relaxed text-gray-300">
-                Users can explore international women's football
+                Users can explore international women&apos;s football
                 teams, compare team information, and examine
                 historical match performances.
             </p>
@@ -136,6 +146,27 @@ export default function ProjectPage() {
         </div>
         </section>
 
+        <section className="mt-12 rounded-2xl border border-white/10 bg-[#071825] p-8">
+          <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
+          <h2 className="mb-4 text-2xl font-bold">How to Use Goal Stats</h2>
+          <ol className="list-decimal space-y-3 pl-5 leading-relaxed text-gray-300">
+            <li>Open Teams to explore the historical catalog and compare teams.</li>
+            <li>Open Matches to browse historical matches or use the hypothetical scenario form. Browsing a historical match does not populate hypothetical inputs.</li>
+            <li>Select two distinct teams in the scenario form.</li>
+            <li>Enter both teams&apos; match statistics, score and Minute. Possession must total 100%.</li>
+            <li>Enter all ten hypothetical strength assumptions: offense, defense, form, star power and clutch for each team (0–100). These are your assumptions, not verified FIFA rankings.</li>
+            <li>Select Generate Preview → to open the prediction preview.</li>
+            <li>Review win/draw/loss probabilities, expected goals, likely scoreline and supported explanations. An unsaved preview is temporary and is not a persistent database record.</li>
+            <li>Select Save new scenario and prediction to persist the scenario and its result.</li>
+            <li>Return to Predictions to browse saved scenarios, use Reopen scenario # to edit supported match state, or Open predictions to inspect saved history. Save scenario changes updates match state; Generate another saved prediction appends a result without replacing earlier predictions.</li>
+            <li>From a saved prediction, select View Analytics → to inspect its saved results and input snapshot.</li>
+          </ol>
+          <p className="mt-6 leading-relaxed text-gray-300">
+            Saved scenarios and predictions are shared classroom-prototype records. Tournament simulation
+            and backtesting execution are future work and are not available through the current interface.
+          </p>
+        </section>
+
             {/* Database Design */}
             <section className="mt-12">
 
@@ -148,9 +179,9 @@ export default function ProjectPage() {
             </h2>
 
             <p className="mb-8 max-w-4xl leading-relaxed text-gray-300">
-            Goal Stats is designed to use a MySQL relational database
+            Goal Stats uses a PostgreSQL relational database
             to organize and store football information. The database
-            will provide persistent storage for teams, competitions,
+            provides persistent storage for teams, competitions,
             historical matches, user-created scenarios, and prediction
             results. Primary and foreign keys connect related
             information while reducing unnecessary data duplication.
@@ -169,23 +200,23 @@ export default function ProjectPage() {
                 {[
                 {
                     name: "Teams",
-                    description: "Stores team information and prediction model inputs."
+                    description: "Primary key: team_id. Stores team identity and attributed ratings when available; hypothetical strengths are supplied explicitly."
                 },
                 {
                     name: "Competitions",
-                    description: "Stores tournament and competition information."
+                    description: "Primary key: competition_id. Stores tournament edition information."
                 },
                 {
                     name: "Matches",
-                    description: "Stores historical match data and results."
+                    description: "Primary key: match_id. Foreign keys: competition_id, home_team_id and away_team_id reference competitions and teams. Stores historical results and source provenance."
                 },
                 {
                     name: "Scenarios",
-                    description: "Stores user-created match scenarios and statistics."
+                    description: "Primary key: scenario_id. Foreign keys: team1_id and team2_id reference teams; nullable match_id optionally references one historical match. Match state is editable; changing teams or strength assumptions requires a new scenario."
                 },
                 {
                     name: "Predictions",
-                    description: "Stores generated prediction results for match scenarios."
+                    description: "Primary key: prediction_id. Foreign key: scenario_id references one scenario. Stores results, model_version, generated_at and the original input_snapshot (JSONB). One scenario can have many saved predictions."
                 }
                 ].map((table) => (
                 <div
@@ -244,8 +275,9 @@ export default function ProjectPage() {
                 </div>
 
                 <p className="mt-5 text-sm text-gray-400">
+                <a className="text-pink-400 underline" href="/images/goal-stats-er-diagram.png">Open full-size ER diagram</a><br />
                 PK = Primary Key | FK = Foreign Key |
-                1:N = One-to-Many Relationship
+                0..1 = Zero or one | 0..N = Zero or many. Selected keys and snapshot field shown.
                 </p>
             </div>
             </section>
@@ -271,7 +303,7 @@ export default function ProjectPage() {
                 {[
                     {
                     name: "Competitions → Matches",
-                    detail: "One competition can contain multiple matches."
+                    detail: "Each match belongs to exactly one competition; a competition can contain zero or many matches."
                     },
                     {
                     name: "Teams → Matches",
@@ -287,7 +319,7 @@ export default function ProjectPage() {
                     },
                     {
                     name: "Scenarios → Predictions",
-                    detail: "One scenario can have multiple generated prediction results."
+                    detail: "Each saved prediction belongs to exactly one scenario; a scenario can have zero or many saved predictions."
                     }
                 ].map((item) => (
                     <div
@@ -307,9 +339,11 @@ export default function ProjectPage() {
                 <p className="mt-6 leading-relaxed text-gray-300">
                 Teams and competitions are not repeated inside historical
                 match records, while prediction results are stored separately
-                from the scenarios that generated them. Each scenario preserves
-                the model inputs used for a prediction, allowing saved results
-                to remain reproducible even if team ratings change over time.
+                from the scenarios that generated them. Scenario match state can be edited.
+                Each saved prediction preserves its original input_snapshot and outputs;
+                supported application operations append predictions and do not overwrite
+                prediction history when a scenario changes. This is application behavior,
+                not a claim that database administrators cannot modify records.
                 </p>
             </div>
             </section>
@@ -327,7 +361,7 @@ export default function ProjectPage() {
             <p className="mb-8 text-lg leading-relaxed text-gray-300">
                 Goal Stats combines web development, database technology,
                 and predictive analytics to create an interactive platform
-                for women's football. Our application is designed to connect
+                for women&apos;s football. Our application connects
                 a user-friendly interface with backend services and a
                 relational database to organize match information and
                 generate statistical predictions.
@@ -349,9 +383,9 @@ export default function ProjectPage() {
                 },
                 {
                     name: "Database Management",
-                    technology: "MySQL",
+                    technology: "PostgreSQL",
                     description:
-                    "Our planned MySQL relational database organizes teams, competitions, historical matches, scenarios, and prediction results. Primary and foreign keys connect related records and help maintain data consistency."
+                    "Our deployed PostgreSQL relational database organizes teams, competitions, historical matches, scenarios, and prediction results. Primary and foreign keys connect related records and help maintain data consistency."
                 },
                 {
                     name: "Predictive Analytics",
@@ -382,6 +416,38 @@ export default function ProjectPage() {
             </div>
             </section>
 
+        <section className="mt-12 rounded-2xl border border-white/10 bg-[#071825] p-8">
+          <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
+          <h2 className="mb-4 text-2xl font-bold">Project Deliverables</h2>
+          <ul className="list-disc space-y-3 pl-5 leading-relaxed text-gray-300">
+            <li><a className="text-pink-400 underline" href="https://goal-stats-app.vercel.app/">Working application</a></li>
+            <li><a className="text-pink-400 underline" href="https://github.com/WestiferRobin/goal-stats-app">Frontend repository</a></li>
+            <li><a className="text-pink-400 underline" href="https://github.com/WestiferRobin/goal-stats-service">Backend repository</a></li>
+            <li>Use About and Blog in the navigation for the team introduction and project reflections.</li>
+            <li>Technical database document — public URL: PENDING. The Google Drive document exists but is not finalized or exported as a public PDF. Finalize its design, implementation, course concepts, screenshots and user guide; then publish, verify and integrate the PDF link.</li>
+            <li>Phase 1 presentation — public URL: PENDING. The Google Slides presentation exists; public access and team approval have not been verified.</li>
+          </ul>
+        </section>
+
+        <section className="mt-12 rounded-2xl border border-white/10 bg-[#071825] p-8">
+          <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
+          <h2 className="mb-4 text-2xl font-bold">Original Development & AI Assistance</h2>
+          <p className="leading-relaxed text-gray-300">
+            Goal Stats builds upon the earlier RoadToTheFinal football prediction prototype. Team Squared
+            expanded the project with a React/Next.js frontend, Flask REST APIs, a PostgreSQL database,
+            historical Women&apos;s World Cup data integration, persistent match scenarios, prediction history,
+            automated testing, and cloud deployment.
+          </p>
+          <p className="mt-4 leading-relaxed text-gray-300">
+            AI tools, including ChatGPT and Codex, assisted with development, debugging, refactoring, testing,
+            and documentation. The team adapted and integrated AI-assisted work, corrected implementation
+            issues, and verified functionality through automated and application testing.
+          </p>
+          <p className="mt-4 leading-relaxed text-gray-300">
+            <strong>Reference:</strong> RoadToTheFinal — <a className="text-pink-400 underline" href="https://github.com/Estebansito1/RoadToTheFinal">https://github.com/Estebansito1/RoadToTheFinal</a>
+          </p>
+        </section>
+
             {/* Current Progress & Development */}
 
             <section className="mt-16">
@@ -396,8 +462,8 @@ export default function ProjectPage() {
             <p className="mb-10 text-lg leading-relaxed text-gray-300">
                 Team Squared is developing Goal Stats in phases, beginning with
                 application planning, database design, and website development.
-                Our current focus is connecting the different components into
-                a functional database-driven football analytics platform.
+                The frontend, API proxy, Flask service and PostgreSQL database are integrated.
+                Current work focuses on documentation, data quality and validation.
             </p>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -412,10 +478,10 @@ export default function ProjectPage() {
 
                 <ul className="list-disc space-y-3 pl-5 leading-relaxed text-gray-300">
                     <li>Established the Goal Stats project concept and objectives.</li>
-                    <li>Developed the initial website pages and navigation.</li>
+                    <li>Integrated the website pages with the normalized backend API.</li>
                     <li>Created the Phase 1 Entity Relationship (ER) diagram.</li>
-                    <li>Identified the main database tables and relationships.</li>
-                    <li>Documented the application features and technology stack.</li>
+                    <li>Implemented the five PostgreSQL tables and their relationships.</li>
+                    <li>Implemented historical browsing, scenario persistence and saved prediction analytics.</li>
                 </ul>
                 </article>
 
@@ -428,8 +494,8 @@ export default function ProjectPage() {
                 </h3>
 
                 <ul className="list-disc space-y-3 pl-5 leading-relaxed text-gray-300">
-                    <li>Preparing the MySQL database implementation.</li>
-                    <li>Planning database integration with backend services.</li>
+                    <li>Finalizing the technical database PDF and deliverable links.</li>
+                    <li>Documenting team contributions and review of AI-assisted work.</li>
                     <li>Refining match scenarios and prediction functionality.</li>
                     <li>Improving website design and user experience.</li>
                     <li>Reviewing the consistency of football data and statistics.</li>
@@ -445,9 +511,9 @@ export default function ProjectPage() {
                 </h3>
 
                 <ul className="list-disc space-y-3 pl-5 leading-relaxed text-gray-300">
-                    <li>Obtaining reliable historical women's football data.</li>
+                    <li>Obtaining reliable historical women&apos;s football data.</li>
                     <li>Maintaining data accuracy and database consistency.</li>
-                    <li>Connecting frontend, backend, and database components.</li>
+                    <li>Monitoring the integrated frontend, backend, and database components.</li>
                     <li>Testing prediction results and application functionality.</li>
                     <li>Preparing the platform for future tournament analysis.</li>
                 </ul>
@@ -471,8 +537,8 @@ export default function ProjectPage() {
                 Our goal is to develop an interactive, database-driven platform
                 that combines football statistics, predictive analytics, and
                 accessible technology. Through Goal Stats, Team Squared hopes
-                to make women's football data easier to explore while promoting
-                greater recognition of women's teams and athletes.
+                to make women&apos;s football data easier to explore while promoting
+                greater recognition of women&apos;s teams and athletes.
             </p>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -486,7 +552,7 @@ export default function ProjectPage() {
                 </h3>
 
                 <p className="leading-relaxed text-gray-300">
-                    Provide users with an easy way to explore women's football
+                    Provide users with an easy way to explore women&apos;s football
                     teams, compare historical performances, analyze match
                     statistics, and generate predictions through an
                     interactive website.
@@ -502,7 +568,7 @@ export default function ProjectPage() {
                 </h3>
 
                 <p className="leading-relaxed text-gray-300">
-                    Implement a MySQL relational database to organize teams,
+                    Maintain the implemented PostgreSQL relational database to organize teams,
                     competitions, historical matches, prediction scenarios,
                     and generated results while maintaining data accuracy,
                     consistency, and accessibility.
@@ -514,14 +580,14 @@ export default function ProjectPage() {
                 <div className="mb-6 h-1 w-16 rounded-full bg-pink-500" />
 
                 <h3 className="mb-4 text-2xl font-bold text-white">
-                    Promoting Women's Football
+                    Promoting Women&apos;s Football
                 </h3>
 
                 <p className="leading-relaxed text-gray-300">
-                    Increase awareness and recognition of women's football
+                    Increase awareness and recognition of women&apos;s football
                     by creating a platform that highlights international
                     teams, player achievements, and statistical insights
-                    leading toward the 2027 FIFA Women's World Cup.
+                    leading toward the 2027 FIFA Women&apos;s World Cup.
                 </p>
                 </article>
 
