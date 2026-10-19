@@ -16,7 +16,7 @@ it("retains hero content and analysis direction", () => {
   expect(screen.getByText("Data. Predictions. Insights. Built for the road to 2027.")).toBeTruthy();
   expect(screen.getByText("2027 Direction")).toBeTruthy();
 });
-it.each([["Match Analysis", "/matches"], ["AI Predictions", "/predictions"], ["Team Exploration", "/teams"], ["Analytics", "/analytics"]])("keeps the %s feature card linked to %s", (title, href) => {
+it.each([["Match Analysis", "/matches"], ["Match Predictions", "/predictions"], ["Team Exploration", "/teams"], ["Analytics", "/analytics"]])("keeps the %s feature card linked to %s", (title, href) => {
   render(<HomeView />);
   const card = screen.getByRole("heading", { level: 2, name: title }).closest("a")!;
   expect(card.getAttribute("href")).toBe(href);

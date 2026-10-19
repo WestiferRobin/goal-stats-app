@@ -17,19 +17,12 @@ export default function AboutPage() {
           </p>
   
           <h1 className="mb-6 text-5xl font-bold">
-            About Goal Stats
+            About Team Squared
           </h1>
   
           <p className="mb-10 text-lg text-gray-300">
-            Team Squared is a hypothetical sports technology company
-            developing Goal Stats, a women&apos;s football analytics and
-            prediction application focused on the 2027 FIFA Women&apos;s
-            World Cup. Our goal is to combine football statistics,
-            database technology, and predictive analytics into an
-            accessible platform that helps fans explore team
-            performances, compare matches, and better understand
-            women&apos;s football.
-          </p>
+                Team Squared is developing Goal Stats, a women’s football analytics application focused on historical FIFA Women’s World Cup results, team comparisons, and hypothetical match predictions. It brings football data, database technology, and model-generated estimates into one easy-to-use application. The 2027 FIFA Women’s World Cup informs our future direction.
+            </p>
   
           
             {/* About Information Cards */}
@@ -40,10 +33,7 @@ export default function AboutPage() {
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">Our Mission</h2>
             <p className="leading-relaxed text-gray-300">
-                Our mission is to combine sports, technology, and data
-                analytics to make women&apos;s football statistics more
-                accessible while bringing greater recognition to women
-                athletes, their teams, and their achievements.
+                Our mission is to make football data easier to explore and understand by giving users access to team information, match scenarios, predictions, expected goals, momentum, and other analytics in one place.
             </p>
             </section>
 
@@ -51,63 +41,43 @@ export default function AboutPage() {
             <section className="rounded-2xl border border-white/10 bg-[#071725]/95 p-8">
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">
-                The Problem We&apos;re Solving
+                The Problem We Are Solving
             </h2>
             <p className="leading-relaxed text-gray-300">
-                Women&apos;s football continues to grow worldwide, yet
-                women athletes often receive less media coverage and
-                recognition compared to men&apos;s football. Through Goal
-                Stats, Team Squared hopes to highlight women&apos;s football
-                and make statistics more accessible to fans.
+                Football information is often spread across different websites, statistics pages, and data sources. Goal Stats brings important match and team information together and uses that data to generate predictions and analytics that are easier for users to understand.
             </p>
             </section>
 
-            {/* Our Solution & User Value */}
+            {/* Value to Users */}
             <section className="rounded-2xl border border-white/10 bg-[#071725]/95 p-8">
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">
-                Our Solution & User Value
+                Value to Users
             </h2>
             <p className="leading-relaxed text-gray-300">
-                Goal Stats brings together football statistics, team
-                information, match analysis, and predictive analytics
-                into one platform. By making this information easier
-                to access, our application helps fans compare team
-                performances, understand match trends, and explore
-                data-driven predictions. Goal Stats also supports
-                greater recognition of women&apos;s football by making
-                team statistics and achievements more visible.
+                Users can compare available team information and historical Women’s World Cup results, create hypothetical match scenarios, view predicted win/draw/loss probabilities and model-generated expected goals remaining and momentum estimates, and explicitly save predictions with their input snapshots for later review. Historical backtesting and tournament simulation are not available in Phase 1.
             </p>
             </section>
 
-            {/* Technology & Approach */}
+            {/* Phase 1 Workflow */}
             <section className="rounded-2xl border border-white/10 bg-[#071725]/95 p-8">
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">
-                Technology & Approach
+                Phase 1 Workflow
             </h2>
             <p className="leading-relaxed text-gray-300">
-                Our project combines database design, web development,
-                and statistical analysis to create an accessible
-                football analytics application. We use database
-                technology to organize information and support
-                data-driven match predictions.
+                Prediction previews are temporary and do not save database records. Users can explicitly save predictions and their input snapshots, then reopen them in Analytics. Phase 1 does not provide live match feeds or player-level features.
             </p>
             </section>
 
-            {/* Future Goals & Vision */}
+            {/* Future Direction */}
             <section className="rounded-2xl border border-white/10 bg-[#071725]/95 p-8 md:col-span-2">
             <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
             <h2 className="mb-4 text-2xl font-bold">
-                Future Goals & Vision
+                Future Direction
             </h2>
             <p className="leading-relaxed text-gray-300">
-                As we prepare for the 2027 FIFA Women&apos;s World Cup,
-                our goal is to expand Goal Stats with additional team
-                statistics, predictive features, and interactive
-                analytics. We hope to create a platform that celebrates
-                women&apos;s football while encouraging fans to explore
-                the sport through statistics and technology.
+                The 2027 FIFA Women’s World Cup is a future direction for Goal Stats. Phase 1 focuses on historical tournament results and user-defined scenarios. Future development may include additional leagues, tournaments, larger datasets, backtesting, and tournament simulation.
             </p>
             </section>
 
@@ -115,27 +85,27 @@ export default function AboutPage() {
 
         </div>
 
-        {/* Meet Our Team */}
+        {/* Team Roles */}
         <section className="mx-auto mt-12 max-w-8xl rounded-2xl border border-white/10 bg-[#071725]/95 p-6">
         <h2 className="mb-6 text-4xl font-bold text-white">
-            Meet Our Team
+            Team Roles
         </h2>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
             {
                 name: "Esteban Naranjo",
-                role: "Web Designer & Application Developer",
+                role: "Frontend / Product & Application Integration",
                 image: "/team/Esteban.png",
             },
             {
                 name: "Nikita Bordbar",
-                role: "Web/Backend Designer & Database Integration",
+                role: "Frontend / Backend & Database Integration",
                 image: "/team/Nikita.png",
             },
             {
                 name: "Wesley Webb",
-                role: "Architecture & Datbase Integration",
+                role: "Backend / Architecture & Database Integration",
                 image: "/team/Wesley.png",
             },
             {
