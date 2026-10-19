@@ -291,8 +291,9 @@ export default function PredictionsView() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-zinc-300">
-              Create a match scenario first, then Goal Stats will show the full
-              prediction analysis here.
+              {selectedScenario
+                ? "Open an existing saved prediction from the history below to view its analysis. If none exist yet, select Generate saved prediction."
+                : "Create a match scenario first, then Goal Stats will show the full prediction analysis here."}
             </p>
 
             {error && (
@@ -305,7 +306,7 @@ export default function PredictionsView() {
               href={scenarioId ? `/matches?scenario_id=${scenarioId}` : "/matches?preview=1"}
               className="mt-6 inline-block rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600"
             >
-              Build a Match Scenario →
+              {selectedScenario ? "Reopen Scenario →" : "Build a Match Scenario →"}
             </Link>
             {selectedScenario && <div className="mt-4">
               <p>Scenario #{selectedScenario.scenario_id}: {selectedScenario.team1_name} vs {selectedScenario.team2_name}, minute {selectedScenario.match_minute}</p>
@@ -732,7 +733,7 @@ export default function PredictionsView() {
                   <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-5 text-zinc-400">
                     No saved predictions yet. Press{" "}
                     <strong className="text-white">
-                      Save scenario and prediction
+                      {scenarioId ? "Generate another saved prediction" : "Save new scenario and prediction"}
                     </strong>{" "}
                     to save the current prediction.
                   </div>

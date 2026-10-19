@@ -1,4 +1,5 @@
 
+import Link from "next/link";
 import ViewNavigation from "@/components/view-navigation";
 
 export default function ProjectPage() {
@@ -29,11 +30,18 @@ export default function ProjectPage() {
 
         <p className="mt-6 max-w-4xl text-lg leading-relaxed text-gray-300">
           Goal Stats is a database-driven football prediction and analytics
-          application focused on the 2027 FIFA Women&apos;s World Cup.
-          Our project combines historical match data, team statistics,
-          and prediction models to help users explore women&apos;s football
-          through interactive data analysis.
+          application for exploring historical FIFA Women&apos;s World Cup results
+          and hypothetical match predictions. Supporting the 2027 FIFA
+          Women&apos;s World Cup is a future direction.
         </p>
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <Link className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white hover:bg-pink-600" href="/">
+            Launch Goal Stats
+          </Link>
+          <a className="text-pink-400 underline" href="#phase-1-deliverables">
+            View Phase 1 Deliverables
+          </a>
+        </div>
 
         {/* Project Overview */}
         <section className="mt-12 rounded-2xl border border-white/10 bg-[#071825] p-8">
@@ -47,7 +55,7 @@ export default function ProjectPage() {
           <p className="leading-relaxed text-gray-300">
             Developed by Team Squared, Goal Stats aims to make women&apos;s
             football statistics and match predictions more accessible.
-            The application is designed to allow users to explore
+            The application lets users explore
             international teams, compare historical match information,
             create match scenarios, and generate predictions.
 
@@ -62,7 +70,8 @@ export default function ProjectPage() {
           <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
           <h2 className="mb-4 text-2xl font-bold">Production Architecture & Historical Catalog</h2>
           <p className="leading-relaxed text-gray-300">
-            Next.js / React on Vercel → Next.js server-side API proxy → Python / Flask on Render → PostgreSQL on Render.
+            Browser → Next.js API proxy → Flask → SQLAlchemy → PostgreSQL.
+            The Next.js / React frontend runs on Vercel; the Flask service and PostgreSQL database run on Render.
             The historical catalog contains 44 national teams, nine Women&apos;s World Cup editions (1991–2023),
             348 matches and 1,081 goals. These are historical records, not 2027 fixtures or live match feeds.
           </p>
@@ -95,7 +104,7 @@ export default function ProjectPage() {
                 Match Scenarios
             </h3>
             <p className="leading-relaxed text-gray-300">
-                Users can select two teams and enter match details,
+                Users select two teams, enter hypothetical strengths, and provide match details,
                 including scores, match time, possession, and
                 other available statistics to create custom
                 match scenarios.
@@ -136,10 +145,9 @@ export default function ProjectPage() {
                 Match Analytics
             </h3>
             <p className="leading-relaxed text-gray-300">
-                Goal Stats presents match momentum, possession,
-                expected goals, and additional statistical
-                insights to help users understand team
-                performance and match trends.
+                Goal Stats displays saved hypothetical prediction results, including
+                momentum, possession, and expected goals. History compares
+                saved scenario revisions rather than live match telemetry.
             </p>
             </div>
 
@@ -158,9 +166,15 @@ export default function ProjectPage() {
             <li>Select Generate Preview → to open the prediction preview.</li>
             <li>Review win/draw/loss probabilities, expected goals, likely scoreline and supported explanations. An unsaved preview is temporary and is not a persistent database record.</li>
             <li>Select Save new scenario and prediction to persist the scenario and its result.</li>
-            <li>Return to Predictions to browse saved scenarios, use Reopen scenario # to edit supported match state, or Open predictions to inspect saved history. Save scenario changes updates match state; Generate another saved prediction appends a result without replacing earlier predictions.</li>
+            <li>Return to Predictions to browse saved scenarios, use Reopen scenario # to edit supported match state, or Open predictions to inspect saved history. Save scenario changes updates match state without generating a prediction. Generating a saved prediction explicitly appends a result without replacing earlier predictions.</li>
             <li>From a saved prediction, select View Analytics → to inspect its saved results and input snapshot.</li>
           </ol>
+          <p className="mt-6 leading-relaxed text-gray-300">
+            Saving a new scenario and prediction uses two requests: first the scenario is stored,
+            then a prediction is calculated and saved with its input snapshot. If prediction generation
+            fails after the scenario is saved, the scenario remains available for another attempt.
+            Editing a scenario does not change earlier prediction snapshots or results.
+          </p>
           <p className="mt-6 leading-relaxed text-gray-300">
             Saved scenarios and predictions are shared classroom-prototype records. Tournament simulation
             and backtesting execution are future work and are not available through the current interface.
@@ -377,7 +391,7 @@ export default function ProjectPage() {
                 },
                 {
                     name: "Backend Development",
-                    technology: "Python & Flask",
+                    technology: "Python, Flask & SQLAlchemy",
                     description:
                     "The Goal Stats implementation uses Flask & Python for backend functionality. Our project builds on this foundation to support application logic, process match scenarios, and connect prediction features with stored football data."
                 },
@@ -416,16 +430,19 @@ export default function ProjectPage() {
             </div>
             </section>
 
-        <section className="mt-12 rounded-2xl border border-white/10 bg-[#071825] p-8">
+        <section id="phase-1-deliverables" aria-labelledby="deliverables-heading" className="mt-12 rounded-2xl border border-white/10 bg-[#071825] p-8">
           <div className="mb-4 h-1 w-16 rounded-full bg-pink-500" />
-          <h2 className="mb-4 text-2xl font-bold">Project Deliverables</h2>
+          <h2 id="deliverables-heading" className="mb-4 text-2xl font-bold">Phase 1 Deliverables</h2>
           <ul className="list-disc space-y-3 pl-5 leading-relaxed text-gray-300">
-            <li><a className="text-pink-400 underline" href="https://goal-stats-app.vercel.app/">Working application</a></li>
-            <li><a className="text-pink-400 underline" href="https://github.com/WestiferRobin/goal-stats-app">Frontend repository</a></li>
-            <li><a className="text-pink-400 underline" href="https://github.com/WestiferRobin/goal-stats-service">Backend repository</a></li>
-            <li>Use About and Blog in the navigation for the team introduction and project reflections.</li>
-            <li>Technical database document — public URL: PENDING. The Google Drive document exists but is not finalized or exported as a public PDF. Finalize its design, implementation, course concepts, screenshots and user guide; then publish, verify and integrate the PDF link.</li>
-            <li>Phase 1 presentation — public URL: PENDING. The Google Slides presentation exists; public access and team approval have not been verified.</li>
+            <li><a className="text-pink-400 underline" href="/deliverables/goal-stats-phase1-presentation.pptx" download="goal-stats-phase1-presentation.pptx">Presentation</a></li>
+            <li><Link className="text-pink-400 underline" href="/about">About Page</Link></li>
+            <li><a className="text-pink-400 underline" href="/deliverables/product-overview-instructions.pdf">Database Product Overview &amp; Instructions</a></li>
+            <li><Link className="text-pink-400 underline" href="/blog">Blog</Link></li>
+            <li>
+              <a className="text-pink-400 underline" href="/deliverables/source-code-executable.pdf">Source Code &amp; Executable</a>
+              <p className="mt-2">Repository links, the working application, and a summary of original development and AI assistance.</p>
+            </li>
+            <li><a className="text-pink-400 underline" href="/deliverables/database-product-document.pdf">Database Product Document</a></li>
           </ul>
         </section>
 
@@ -494,7 +511,7 @@ export default function ProjectPage() {
                 </h3>
 
                 <ul className="list-disc space-y-3 pl-5 leading-relaxed text-gray-300">
-                    <li>Finalizing the technical database PDF and deliverable links.</li>
+                    <li>Reviewing the linked Phase 1 deliverables for submission.</li>
                     <li>Documenting team contributions and review of AI-assisted work.</li>
                     <li>Refining match scenarios and prediction functionality.</li>
                     <li>Improving website design and user experience.</li>
@@ -586,21 +603,13 @@ export default function ProjectPage() {
                 <p className="leading-relaxed text-gray-300">
                     Increase awareness and recognition of women&apos;s football
                     by creating a platform that highlights international
-                    teams, player achievements, and statistical insights
+                    teams, historical results, and statistical insights
                     leading toward the 2027 FIFA Women&apos;s World Cup.
                 </p>
                 </article>
 
             </div>
             </section>
-
-
-
-
-
-
-
-
       </div>
     </main>
   );

@@ -82,8 +82,6 @@ export default function AnalyticsView() {
   const [tournamentResult, setTournamentResult] =
     React.useState<TournamentResult | null>(null);
 
-  const [tournamentLoading] =
-    React.useState(false);
 
   const [tournamentError, setTournamentError] =
     React.useState("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
@@ -317,7 +315,7 @@ export default function AnalyticsView() {
           currentPath="/analytics"
         />
         <p className="mt-4 text-sm text-zinc-400">{current.saved ? `Saved prediction #${current.saved.prediction_id} · ${formatDate(current.saved.generated_at)} · ${current.saved.model_version}` : `Unsaved hypothetical preview · ${current.prediction.model}`}</p>
-        <p>Saved Hypothetical Scenario Revisions — not historical match telemetry. Generation order need not follow match-minute order.</p>
+        <p>Saved Hypothetical Scenario Revisions — not live or historical match telemetry. History follows prediction generation time, which need not follow match-minute order.</p>
         <details><summary>Hypothetical strength assumptions</summary>{(["team1","team2"] as const).map(side=><p key={side}>{current.scenario[side]}: {strengthFields.map(f=>`${f.replace("_"," ")} ${current.scenario.input[`${side}_${f}`]}`).join(" · ")}</p>)}</details>
         {scenarioId && <div><button type="button" disabled={loadingHistory||historyOffset===0} onClick={()=>setHistoryOffset(v=>Math.max(0,v-pageSize))}>Previous predictions</button><span>Prediction page {historyOffset/pageSize+1}</span><button type="button" disabled={loadingHistory||!!historyError||history.length<pageSize} onClick={()=>setHistoryOffset(v=>v+pageSize)}>Next predictions</button></div>}
 
@@ -386,14 +384,11 @@ export default function AnalyticsView() {
               </p>
 
               <h2 className="mt-2 text-3xl font-bold">
-                How the Match Is Changing
+                Compare Hypothetical Scenario Revisions
               </h2>
 
               <p className="mt-3 max-w-3xl text-zinc-400">
-                Analyze momentum and compare
-                saved match states to see how
-                the model and match statistics
-                change over time.
+                Compare probabilities, possession assumptions, and expected goals across saved hypothetical states. Momentum is a model estimate for the selected prediction.
               </p>
             </section>
 
@@ -408,8 +403,7 @@ export default function AnalyticsView() {
                 </h2>
 
                 <p className="mt-2 text-sm text-zinc-400">
-                  Current momentum from the
-                  prediction model.
+                  Model-estimated momentum for the selected hypothetical state.
                 </p>
 
                 <div className="mt-6 grid gap-5 md:grid-cols-2">
@@ -512,7 +506,7 @@ export default function AnalyticsView() {
               <TrendPanel
                 eyebrow="Model Trend"
                 title="Expected Goals Remaining"
-                description="Remaining expected goals across saved model predictions."
+                description="Model-estimated remaining goals across saved hypothetical predictions."
               >
                 {chartHistory.length > 0 ? (
                   <ExpectedGoalsHistory
@@ -536,9 +530,7 @@ export default function AnalyticsView() {
               </h2>
 
               <p className="mt-2 text-sm text-zinc-400">
-                Each snapshot records the state
-                of the match and its prediction
-                at that moment.
+                Each snapshot preserves hypothetical inputs and the prediction generated from them.
               </p>
 
               {history.length === 0 ? (
@@ -571,9 +563,7 @@ export default function AnalyticsView() {
               </h2>
 
               <p className="mt-2 text-sm text-zinc-400">
-                The current match state used
-                by the analytics and prediction
-                model.
+                Hypothetical match statistics used to generate the selected prediction.
               </p>
 
               <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -603,10 +593,7 @@ export default function AnalyticsView() {
                   </h2>
 
                   <p className="mt-3 max-w-3xl text-zinc-400">
-                    Evaluate how the Goal Stats
-                    prediction model performs
-                    against imported historical
-                    match results.
+                    Historical backtesting is deferred in Phase 1. This website does not evaluate prediction accuracy against imported historical results.
                   </p>
                 </div>
 
@@ -615,12 +602,10 @@ export default function AnalyticsView() {
                   onClick={() =>
                     void loadBacktests()
                   }
-                  disabled={backtestLoading}
+                  disabled={true}
                   className="rounded-lg border border-white/20 bg-black/30 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-50"
                 >
-                  {backtestLoading
-                    ? "Loading..."
-                    : "Refresh Backtest"}
+                  Backtesting unavailable in Phase 1
                 </button>
               </div>
 
@@ -814,11 +799,7 @@ export default function AnalyticsView() {
               </h2>
 
               <p className="mt-3 max-w-3xl text-zinc-400">
-                Choose teams and run the existing
-                Goal Stats tournament simulator to
-                estimate each team&apos;s chances of
-                reaching later rounds and winning
-                the tournament.
+                Tournament simulation execution is unavailable through the Phase 1 website. The backend includes a simulator requiring explicit participant strengths and bracket ordering; this interface does not execute it.
               </p>
 
               <div className="mt-6 rounded-2xl border border-pink-400/20 bg-pink-500/10 p-6">
@@ -1008,16 +989,11 @@ export default function AnalyticsView() {
                   disabled={true}
                   className="mt-6 rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {tournamentLoading
-                    ? "Running Simulation..."
-                    : "Run Monte Carlo Simulation"}
+                  Tournament execution unavailable in Phase 1
                 </button>
 
                 <p className="mt-3 text-xs text-zinc-400">
-                  The simulator uses the real
-                  backend endpoint. Results are
-                  not generated or hard-coded
-                  in the frontend.
+                  These setup controls do not run a simulation or produce tournament results in Phase 1.
                 </p>
               </div>
 

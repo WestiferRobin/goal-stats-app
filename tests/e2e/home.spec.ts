@@ -8,7 +8,7 @@ test("Home retains its hero and feature cards without backend or legacy requests
   await page.goto("/?item=invalid");
   await expect(page).toHaveTitle("GoalStats");
   await expect(page.getByRole("heading", { level: 1, name: homeHeading })).toBeVisible();
-  for (const title of ["Match Analysis", "AI Predictions", "Team Exploration", "Analytics"]) await expect(page.getByRole("heading", { level: 2, name: title, exact: true })).toBeVisible();
+  for (const title of ["Match Analysis", "Match Predictions", "Team Exploration", "Analytics"]) await expect(page.getByRole("heading", { level: 2, name: title, exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Explore Matches", exact: true })).toHaveAttribute("href", "/matches");
   await expect(page.getByRole("link", { name: "View Predictions", exact: true })).toHaveAttribute("href", "/predictions");
   await expect(page.locator("form")).toHaveCount(0);
