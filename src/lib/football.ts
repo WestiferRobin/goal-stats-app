@@ -103,6 +103,12 @@ export function parseInsights(value: unknown): InsightsResponse {
   parseMatches(row.head_to_head);
   parseMatches(row.team1_history);
   parseMatches(row.team2_history);
+  for (const [key, teamId] of [["team1_history", row.team1_id], ["team2_history", row.team2_id], ["head_to_head", row.team1_id]] as const) {
+    const matches = row[key] as HistoryMatch[];
+    if (matches.length > Number(row.limit) || new Set(matches.map(m => m.match_id)).size !== matches.length ||
+        matches.some(m => m.home_team_id !== teamId && m.away_team_id !== teamId) ||
+        (key === "head_to_head" && matches.some(m => m.home_team_id !== row.team2_id && m.away_team_id !== row.team2_id))) throw new Error("Invalid comparison records.");
+  }
   return value as InsightsResponse;
 }
 
@@ -185,4 +191,38 @@ export function previewPredictionView(session:PreviewSession):PredictionView{ret
 export function scenarioPatch(before:ScenarioInput,after:ScenarioInput):Partial<ScenarioInput>{
  for(const key of ["team1_id","team2_id","title","match_id",...(["team1","team2"] as const).flatMap(side=>[`${side}_fifa_rank`,...strengthFields.map(f=>`${side}_${f}`)])] as (keyof ScenarioInput)[])if((before[key]??null)!==(after[key]??null))throw new Error("Teams and strength assumptions cannot be changed on a saved scenario. Generate a preview and explicitly save a new scenario instead.");
  const patch:Record<string,number>={};for(const key of ["match_minute",...(["team1","team2"] as const).flatMap(side=>[`${side}_modifier_total`,...statFields.map(f=>`${side}_${f}`)])] as (keyof ScenarioInput)[])if(before[key]!==after[key])patch[key]=after[key] as number;return patch;
+}
+
+
+export type TeamSummaryFilters = { competition_id: number | null; date_from: string | null; date_to: string | null };
+export type TeamSummary = {
+  team_id: number; name: string; matches_played: number; wins: number; draws: number; losses: number;
+  goals_for: number; goals_against: number; goal_difference: number; tournament_appearances: number;
+  filters: TeamSummaryFilters; score_basis: "including_extra_time_no_shootout" | null;
+  result_definition: "recorded_final_score"; coverage_status: "available_records_only" | "no_matching_records";
+};
+export function parseTeamSummaryFilters(value: unknown): TeamSummaryFilters {
+  const row = object(value);
+  const calendarDate = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) &&
+    Number.isFinite(Date.parse(v)) && new Date(v).toISOString().slice(0,10) === v;
+  requireFields(row, { competition_id: v => v === null || isCatalogId(v),
+    date_from: v => v === null || calendarDate(v), date_to: v => v === null || calendarDate(v) });
+  if (Object.keys(row).some(k => !["competition_id","date_from","date_to"].includes(k)) ||
+      (row.date_from && row.date_to && String(row.date_from) > String(row.date_to))) throw new Error("Invalid historical filters.");
+  return row as TeamSummaryFilters;
+}
+export function parseTeamSummary(value: unknown): TeamSummary {
+  requireFields(value, { team_id: isCatalogId, name: v => string(v) && String(v).trim().length > 0,
+    matches_played: count, wins: count, draws: count, losses: count, goals_for: count, goals_against: count,
+    goal_difference: v => typeof v === "number" && Number.isSafeInteger(v), tournament_appearances: count,
+    result_definition: v => v === "recorded_final_score" });
+  const row = value as TeamSummary;
+  parseTeamSummaryFilters(row.filters);
+  if (row.wins + row.draws + row.losses !== row.matches_played ||
+      row.goal_difference !== row.goals_for - row.goals_against || row.tournament_appearances > row.matches_played ||
+      (row.matches_played === 0 ? row.goals_for !== 0 || row.goals_against !== 0 || row.score_basis !== null || row.coverage_status !== "no_matching_records" :
+        row.tournament_appearances === 0 || row.score_basis !== "including_extra_time_no_shootout" || row.coverage_status !== "available_records_only")) {
+    throw new Error("Invalid historical summary totals.");
+  }
+  return row;
 }

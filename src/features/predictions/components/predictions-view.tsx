@@ -56,13 +56,17 @@ export default function PredictionsView() {
         const predictionId = routeId(params.get("prediction_id"));
         const requestedScenario = routeId(params.get("scenario_id"));
         if (predictionId && requestedScenario) throw new Error("Open either a prediction or a scenario, not both.");
+        let pendingGeneration: number | null = null;
         try {
         const pending = sessionStorage.getItem(pendingKey);
         if (pending) {
           const marker: unknown = JSON.parse(pending);
           if (marker && typeof marker === "object" && "kind" in marker && marker.kind === "create") setUncertain("create");
-          if (marker && typeof marker === "object" && "kind" in marker && marker.kind === "generate" && "scenario_id" in marker && isCatalogId(marker.scenario_id) && (!requestedScenario || requestedScenario === marker.scenario_id) && !predictionId) {
-            setUncertain("generate"); setScenarioId(marker.scenario_id);
+          if (marker && typeof marker === "object" && "kind" in marker && marker.kind === "generate" && "scenario_id" in marker && isCatalogId(marker.scenario_id)) {
+            pendingGeneration = marker.scenario_id;
+            if (!predictionId && (!requestedScenario || requestedScenario === marker.scenario_id)) {
+              setUncertain("generate"); setScenarioId(marker.scenario_id);
+            }
           }
         }
         } catch { /* Durable GETs do not require browser storage. */ }
@@ -74,6 +78,7 @@ export default function PredictionsView() {
           if (record.prediction_id !== predictionId) throw new Error("Prediction ID does not match the requested record.");
           if (controller.signal.aborted) return;
           setResult(savedPredictionView(record)); setScenarioId(record.scenario_id);
+          if (pendingGeneration === record.scenario_id) setUncertain("generate");
         } else if (requestedScenario) {
           setScenarioId(requestedScenario);
         } else {

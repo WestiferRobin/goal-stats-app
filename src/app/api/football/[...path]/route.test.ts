@@ -198,3 +198,13 @@ it.each(["http://service.internal:5100","http://192.168.1.2:5100","http://host.d
   expect((await GET(new Request("http://localhost/api/football/catalog/teams"),context("catalog/teams"))).status).toBe(503);
   expect(request).not.toHaveBeenCalled();
 });
+
+it("forwards only exact summary GETs with supported filter query intact",async()=>{
+ configure();vi.mocked(request).mockResolvedValue({data:{},status:200,mediaType:"application/json",location:null});
+ const query="?competition_id=2&date_from=1991-01-01&date_to=2023-12-31";
+ expect((await GET(new Request(`http://localhost/api/football/catalog/teams/1/summary${query}`),context("catalog/teams/1/summary"))).status).toBe(200);
+ expect(request).toHaveBeenCalledExactlyOnceWith(`http://127.0.0.1:5300/api/v1/catalog/teams/1/summary${query}`,expect.objectContaining({method:"GET",headers:{}}));
+ vi.mocked(request).mockClear();expect((await POST(mutation("POST","catalog/teams/1/summary"),context("catalog/teams/1/summary"))).status).toBe(405);
+ for(const path of ["catalog/teams/0/summary","catalog/teams/01/summary","catalog/teams/2147483648/summary","catalog/matches/1/summary","catalog/teams/1/summary/extra"]){expect((await GET(new Request(`http://localhost/api/football/${path}`),context(path))).status).toBe(404);}
+ expect(request).not.toHaveBeenCalled();
+});

@@ -79,7 +79,7 @@ SERVICE_API_TOKEN=
 ```
 
 `FOOTBALL_API_BASE_URL` is read only by the existing Next.js `/api/football` proxy,
-which forwards the fifteen approved operations to Flask `/api/v1`. Flask owns five
+which forwards the sixteen approved operations to Flask `/api/v1`. Flask owns five
 domains: Team, Competition, Match, Scenario and Prediction. Home and the static Demo
 need no API configuration. `SERVICE_API_BASE_URL` belongs only to inactive legacy
 Item/Action reference code; it is not required for the product.
@@ -200,4 +200,4 @@ In Matches, select two teams, enter explicit hypothetical strengths and generate
 prediction preview. Confirm `/api/football/predictions/preview` succeeds in the
 browser network panel. Local host and Docker development require no service token.
 Saved scenarios and predictions continue to use the existing backend contract;
-this setup does not add historical-summary endpoints or infer unknown ratings.
+historical summary totals remain separate from hypothetical prediction ratings.

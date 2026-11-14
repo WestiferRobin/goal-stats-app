@@ -2,6 +2,7 @@
 
 import React from "react";
 import ViewNavigation from "@/components/view-navigation";
+import TeamSummaryCard from "./team-summary";
 
 import { parseTeams, parseInsights, type Team, type HistoryMatch, type InsightsResponse } from "@/lib/football";
 
@@ -70,6 +71,8 @@ export default function TeamsView() {
     return () => controller.abort();
   }, []);
 
+  const pageSize = 50;
+  const [historyOffset, setHistoryOffset] = React.useState(0);
   const [insightsRefresh, setInsightsRefresh] = React.useState(0);
   function resetInsights() { setInsights(null); setInsightsError(""); setInsightsLoading(true); }
   React.useEffect(() => {
@@ -78,12 +81,12 @@ export default function TeamsView() {
       if (!team1Id || !team2Id || team1Id === team2Id) return;
       resetInsights();
       try {
-        const params = new URLSearchParams({team1_id:String(team1Id),team2_id:String(team2Id)});
+        const params = new URLSearchParams({team1_id:String(team1Id),team2_id:String(team2Id),limit:String(pageSize),offset:String(historyOffset)});
         const response = await fetch(`/api/football/catalog/matches/insights?${params}`, {signal:controller.signal});
         const data = await response.json();
         if (!response.ok) throw new Error(data?.detail || "Unable to load team insights.");
         const result = parseInsights(data);
-        if (result.team1_id !== team1Id || result.team2_id !== team2Id) throw new Error("Invalid comparison response.");
+        if (result.team1_id !== team1Id || result.team2_id !== team2Id || result.limit !== pageSize || result.offset !== historyOffset) throw new Error("Invalid comparison response.");
         if (!controller.signal.aborted) setInsights(result);
       } catch (err) {
         if (!controller.signal.aborted) setInsightsError(err instanceof Error ? err.message : "Unable to load team insights.");
@@ -91,7 +94,7 @@ export default function TeamsView() {
     }
     void loadInsights();
     return () => controller.abort();
-  }, [team1Id, team2Id, insightsRefresh]);
+  }, [team1Id, team2Id, insightsRefresh, historyOffset]);
 
   const team1 =
     teams.find((team) => team.team_id === team1Id) ?? null;
@@ -183,7 +186,7 @@ export default function TeamsView() {
                       <select
                         aria-label="Team 1"
                         value={team1Id}
-                        onChange={(event) => { resetInsights(); setTeam1Id(
+                        onChange={(event) => { resetInsights(); setHistoryOffset(0); setTeam1Id(
                             Number(event.target.value)
                           ); }}
                         className="w-full rounded-lg border border-white/20 bg-black/75 p-3 text-white outline-none transition focus:border-pink-400"
@@ -210,7 +213,7 @@ export default function TeamsView() {
                       <select
                         aria-label="Team 2"
                         value={team2Id}
-                        onChange={(event) => { resetInsights(); setTeam2Id(
+                        onChange={(event) => { resetInsights(); setHistoryOffset(0); setTeam2Id(
                             Number(event.target.value)
                           ); }}
                         className="w-full rounded-lg border border-white/20 bg-black/75 p-3 text-white outline-none transition focus:border-pink-400"
@@ -393,6 +396,11 @@ export default function TeamsView() {
                       </div>
                     </section>
 
+                    <div className="mt-8 grid gap-6 lg:grid-cols-2">
+                      <TeamSummaryCard key={`summary1-${team1.team_id}-${insightsRefresh}`} team={team1} />
+                      <TeamSummaryCard key={`summary2-${team2.team_id}-${insightsRefresh}`} team={team2} />
+                    </div>
+
                     <section className="mt-8 rounded-2xl border border-white/10 bg-black/55 p-6">
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
@@ -445,7 +453,7 @@ export default function TeamsView() {
                                   insights.head_to_head ??
                                   []
                                 }
-                                emptyMessage={`No imported head-to-head matches are available for ${team1.name} and ${team2.name}.`}
+                                emptyMessage={historyOffset ? "No head-to-head matches on this page. Use Previous history page to see earlier records." : `No imported head-to-head matches are available for ${team1.name} and ${team2.name}.`}
                               />
                             </div>
                           </>
@@ -468,6 +476,11 @@ export default function TeamsView() {
                         </p>
                       </div>
 
+                      <nav aria-label="Comparison history pages" className="mt-5 flex flex-wrap items-center gap-4">
+                        <button type="button" disabled={insightsLoading || historyOffset === 0} onClick={() => { resetInsights(); setHistoryOffset(value => Math.max(0, value - pageSize)); }} className="rounded-lg border border-white/20 px-4 py-2 disabled:opacity-50">Previous history page</button>
+                        <span>History page {historyOffset / pageSize + 1} · Up to {pageSize} records per list, oldest first</span>
+                        <button type="button" disabled={insightsLoading || !!insightsError || !insights || ![insights.head_to_head, insights.team1_history, insights.team2_history].some(rows => rows.length === pageSize)} onClick={() => { resetInsights(); setHistoryOffset(value => value + pageSize); }} className="rounded-lg border border-white/20 px-4 py-2 disabled:opacity-50">Next history page</button>
+                      </nav>
                       <div className="mt-5 grid gap-6 lg:grid-cols-2">
                         <HistoryCard
                           teamName={team1.name}
@@ -476,6 +489,7 @@ export default function TeamsView() {
                           }
                           loading={insightsLoading || (!insights && !insightsError)}
                           failed={Boolean(insightsError)}
+                          offset={historyOffset}
                         />
 
                         <HistoryCard
@@ -485,6 +499,7 @@ export default function TeamsView() {
                           }
                           loading={insightsLoading || (!insights && !insightsError)}
                           failed={Boolean(insightsError)}
+                          offset={historyOffset}
                         />
                       </div>
                     </section>
@@ -725,11 +740,13 @@ function HistoryCard({
   matches,
   loading,
   failed,
+  offset,
 }: {
   teamName: string;
   matches: HistoryMatch[];
   loading: boolean;
   failed: boolean;
+  offset: number;
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/55 p-6">
@@ -751,7 +768,7 @@ function HistoryCard({
         <div className="mt-5">
           <MatchList
             matches={matches}
-            emptyMessage={`No imported match history is available for ${teamName}.`}
+            emptyMessage={offset ? "No matches on this page. Use Previous history page to see earlier records." : `No imported match history is available for ${teamName}.`}
           />
         </div>
       )}

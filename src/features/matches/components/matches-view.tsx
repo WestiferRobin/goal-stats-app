@@ -259,14 +259,6 @@ export default function MatchesView() {
       return;
     }
 
-    if (
-      team1ShotsOnTarget > team1TotalShots ||
-      team2ShotsOnTarget > team2TotalShots
-    ) {
-      setError("Shots on target cannot be greater than total shots.");
-      return;
-    }
-
     setError("");
     setPrediction(null);
     setLoading(true);submitting.current=true;
@@ -318,7 +310,6 @@ export default function MatchesView() {
     if(!savedScenario||submitting.current||patchUncertain)return;
     submitting.current=true;setLoading(true);setError("");setScenarioMessage("");let sent=false;
     try{const input=formInput(),patch=scenarioPatch(savedScenario,input);if(!Object.keys(patch).length){setScenarioMessage("No match-state changes to save.");return;}
-      if(input.team1_shots_on_target>input.team1_shots||input.team2_shots_on_target>input.team2_shots)throw new Error("Shots on target cannot be greater than total shots.");
       sent=true;const response=await fetch(`/api/football/scenarios/${savedScenario.scenario_id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(patch)});
       if(response.status<500)sent=false;const data=await response.json();if(!response.ok)throw new Error(data?.detail||"Unable to update scenario.");sent=true;const updated=parseScenario(data);if(updated.scenario_id!==savedScenario.scenario_id)throw new Error("Invalid scenario identity.");setSavedScenario(updated);restoreInputs(updated);setScenarioMessage("Scenario state updated. Existing predictions are unchanged; no prediction was generated.");sent=false;
     }catch(err){if(sent)setPatchUncertain(true);setError(`${err instanceof Error?err.message:"Unable to update scenario."}${sent?" Update outcome is uncertain. Reopen the saved scenario to inspect it before retrying.":""}`);}finally{submitting.current=false;setLoading(false);}

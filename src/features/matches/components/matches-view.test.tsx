@@ -105,3 +105,19 @@ it("preserves edited state after PATCH validation failure and blocks uncertain r
  if(url.endsWith('/catalog/teams'))return Response.json(teams);if(url.endsWith('/catalog/competitions'))return Response.json([competition]);if(url.includes('/catalog/matches'))return Response.json([]);return Response.json(savedScenario);
  });vi.stubGlobal('fetch',fetch);window.history.replaceState(null,'','/matches?scenario_id=7');render(<MatchesView/>);await screen.findByText(/Editing scenario #7/);fireEvent.change(screen.getByRole('spinbutton',{name:'Minute'}),{target:{value:'75'}});fireEvent.click(screen.getByRole('button',{name:'Save scenario changes'}));await screen.findByText('Update rejected');expect((screen.getByRole('spinbutton',{name:'Minute'}) as HTMLInputElement).value).toBe('75');status=504;fireEvent.click(screen.getByRole('button',{name:'Save scenario changes'}));await screen.findByText(/Update outcome is uncertain/);expect((screen.getByRole('button',{name:'Save scenario changes'}) as HTMLButtonElement).disabled).toBe(true);expect(fetch.mock.calls.filter(([,o])=>o?.method)).toHaveLength(2);
 });
+it("sends original shots to preview without frontend normalization",async()=>{
+ const fetch=workflow();sessionStorage.setItem('goalstats-current-prediction',JSON.stringify({...preview,input:{...preview.input,team1_shots:0,team1_shots_on_target:4}}));window.history.replaceState(null,'','/matches?preview=1');render(<MatchesView/>);await waitFor(()=>expect((screen.getByRole('spinbutton',{name:'Minute'}) as HTMLInputElement).value).toBe('65'));
+ fireEvent.submit(screen.getByRole('button',{name:'Generate Preview →'}).closest('form')!);await waitFor(()=>expect(push).toHaveBeenCalledWith('/predictions'));
+ const writes=fetch.mock.calls.filter(([,o])=>o?.method);expect(writes).toHaveLength(1);expect(JSON.parse(writes[0][1]!.body as string)).toMatchObject({team1_shots:0,team1_shots_on_target:4});
+});
+it("PATCHes original shots and retains the saved scenario values",async()=>{
+ const fetch=workflow();window.history.replaceState(null,'','/matches?scenario_id=7');render(<MatchesView/>);await screen.findByText(/Editing scenario #7/);
+ fireEvent.change(screen.getByRole('spinbutton',{name:'China Total Shots'}),{target:{value:'0'}});fireEvent.click(screen.getByRole('button',{name:'Save scenario changes'}));await screen.findByText(/Scenario state updated/);
+ const writes=fetch.mock.calls.filter(([,o])=>o?.method);expect(writes).toHaveLength(1);expect(JSON.parse(writes[0][1]!.body as string)).toEqual({team1_shots:0});expect((screen.getByRole('spinbutton',{name:'China Total Shots'}) as HTMLInputElement).value).toBe('0');expect((screen.getByRole('spinbutton',{name:'China Shots on Target'}) as HTMLInputElement).value).toBe('4');
+});
+it.each(['preview','patch'])('rejects negative shot values for %s without sending a mutation',async mode=>{
+ const fetch=workflow();vi.spyOn(console,'error').mockImplementation(()=>{});sessionStorage.setItem('goalstats-current-prediction',JSON.stringify(preview));window.history.replaceState(null,'',mode==='patch'?'/matches?scenario_id=7':'/matches?preview=1');render(<MatchesView/>);await waitFor(()=>expect((screen.getByRole('spinbutton',{name:'Minute'}) as HTMLInputElement).value).toBe('65'));
+ fireEvent.change(screen.getByRole('spinbutton',{name:'China Total Shots'}),{target:{value:'-1'}});
+ if(mode==='patch')fireEvent.click(screen.getByRole('button',{name:'Save scenario changes'}));else fireEvent.submit(screen.getByRole('button',{name:'Generate Preview →'}).closest('form')!);
+ await screen.findByText('Invalid team1_shots.');expect(fetch.mock.calls.filter(([,o])=>o?.method)).toHaveLength(0);
+});

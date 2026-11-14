@@ -11,6 +11,8 @@ const routes: Record<string, string[]> = {
 };
 function allowedMethods(path: string) {
   if (Object.hasOwn(routes, path)) return routes[path];
+  const summary = /^catalog\/teams\/([1-9]\d*)\/summary$/.exec(path);
+  if (summary && Number(summary[1]) <= 2147483647) return ["GET"];
   const match = /^(catalog\/teams|catalog\/matches|scenarios|predictions)\/([1-9]\d*)(\/predictions)?$/.exec(path);
   if (!match || Number(match[2]) > 2147483647) return undefined;
   if (match[3]) return match[1] === "scenarios" ? ["GET", "POST"] : undefined;

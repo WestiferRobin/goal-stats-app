@@ -1,15 +1,16 @@
 # Teams API
 
-Load `/api/football/teams` and optional `/api/football/insights?team1=…&team2=…`. Keep this feature’s API modules internal; extract shared team request contracts into `src/lib/football` when Matches also needs them.
+Browser requests use the same-origin `/api/football` proxy, forwarded to Flask `/api/v1`:
 
-Browser functions use relative `/api/football/*` URLs. Next's existing proxy owns
-the backend address and forwards to Flask `/api/v1/*`. Check HTTP status, validate
-returned data at the boundary, and expose recoverable errors to the view.
+- `GET /catalog/teams`: normalized team identities and nullable ratings.
+- `GET /catalog/teams/{id}/summary`: full-history totals, independent of pagination.
+  `getTeamSummary` validates the response, requested team, and echoed `competition_id`,
+  `date_from`, and `date_to` filters. Date bounds are inclusive; omitted filters are null.
+- `GET /catalog/matches/insights?team1_id=…&team2_id=…&limit=50&offset=…`:
+  head-to-head and individual histories, ordered by match date then match ID. The same
+  offset applies independently to all three lists. This endpoint has no competition/date filters.
 
-The Home feature’s `.server.ts` modules are server-only examples, not modules to
-import into Client Components. Do not place backend URLs or provider keys in this
-layer’s browser code. Do not import another feature’s internal request functions.
-Test requests/error handling beside the implementation and never use developer
-records for automated write tests.
-
-See the [feature scope](../README.md) and [feature map](../../README.md).
+The Teams view requests both summaries without filters, matching its comparison scope.
+Backend summary metrics are authoritative. Never derive aggregate totals from a page.
+Check HTTP status before parsing; preserve abort signals and discard stale responses.
+Backend URLs and credentials belong only in the server proxy, never these browser clients.

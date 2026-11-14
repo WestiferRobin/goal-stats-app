@@ -69,3 +69,16 @@ it("PATCHes only changed state and rejects immutable changes",()=>{
  expect(scenarioPatch(input,{...input,match_minute:75})).toEqual({match_minute:75});expect(scenarioPatch(input,input)).toEqual({});expect(()=>scenarioPatch(input,{...input,team1_offense:80})).toThrow();expect(()=>scenarioPatch(input,{...input,team1_id:3})).toThrow();
 });
 it("rejects noncanonical saved IDs",()=>{expect(routeId(null)).toBeNull();expect(routeId('2147483647')).toBe(2147483647);for(const value of ['0','-1','01','1.1','abc','2147483648',''])expect(()=>routeId(value)).toThrow();});
+it('retains supplied shots and rejects nonnumeric values without normalization',()=>{
+ const original={...input,team1_shots:0,team1_shots_on_target:4};expect(previewInput(original)).toMatchObject(original);expect(scenarioPatch(input,parseScenarioInput(original))).toEqual({team1_shots:0});
+ for(const value of [NaN,Infinity,'abc',-1,0.5])expect(()=>parseScenarioInput({...input,team1_shots:value})).toThrow();
+});
+it.each(['road-to-the-final-heuristic-v1','road-to-the-final-heuristic-v2'])('preserves %s snapshot outputs without recalculation',model=>{
+ const record={...saved,model_version:model,output:{...output,model}};expect(parseSavedPrediction(record)).toEqual(record);
+});
+
+// Frozen pre-v2 response from backend d8d7452 tests/unit/services/test_prediction.py.
+import frozenV1 from './fixtures/frozen-v1-prediction.json';
+it('reads the actual frozen v1 contract without rewriting its output or assumptions',()=>{
+ const before=JSON.stringify(frozenV1);expect(parseSavedPrediction(frozenV1)).toEqual(frozenV1);expect(JSON.stringify(frozenV1)).toBe(before);
+});
