@@ -34,3 +34,16 @@ it("does not show empty history while a request is pending",async()=>{
  expect(screen.queryByText(/No imported match history/)).toBeNull();
  expect(screen.queryByText(/No imported head-to-head/)).toBeNull();
 });
+
+it.each(['http','json','network'])("clears initial loading after a completed %s failure",async kind=>{
+ vi.spyOn(console,'error').mockImplementation(()=>{});
+ vi.stubGlobal('fetch',vi.fn(async()=>{
+  if(kind==='network')throw new TypeError('Network request failed');
+  return kind==='json'?new Response('not-json'):Response.json({detail:'Catalog unavailable'},{status:503});
+ }));
+ render(<TeamsView/>);
+ await waitFor(()=>expect(screen.queryByText('Loading teams...')).toBeNull());
+ expect(screen.queryByText('No teams are available.')).toBeNull();
+ expect(screen.queryByRole('combobox')).toBeNull();
+ expect(screen.getByText(kind==='http'?'Catalog unavailable':kind==='network'?'Network request failed':/JSON|Unexpected token/)).toBeTruthy();
+});

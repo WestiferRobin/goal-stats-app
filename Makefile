@@ -6,8 +6,8 @@ BASH := /bin/bash
 endif
 .DEFAULT_GOAL := help
 
-.PHONY: setup run test stop help
-setup run stop:
+.PHONY: setup run deploy test stop help
+setup run deploy stop:
 	@$(BASH) scripts/develop.sh $@
 
 test:

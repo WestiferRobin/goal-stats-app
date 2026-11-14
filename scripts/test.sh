@@ -35,7 +35,7 @@ echo 'Building frontend tooling image...'
 docker build --target tooling -t "$tool_image" .
 echo 'Running lint, TypeScript, and unit/component tests...'
 docker run --rm --name "$container" --network none "$tool_image" sh -c \
-  'npm run lint && npm run typecheck && npm run test:unit'
+  'npm run lint && npm run typecheck && npm run test:unit && node --test scripts/development/*.test.mjs'
 
 if [[ "$action" == e2e ]]; then
   echo 'Preparing isolated browser E2E runtime...'

@@ -25,7 +25,7 @@ function isLocalBackend(base: URL) {
 function isLocalDevelopmentBackend(base: URL) {
   if (process.env.VERCEL === "1" || process.env.NODE_ENV === "production") return false;
   return isLocalBackend(base) || (process.env.NODE_ENV === "development" &&
-    base.origin === "http://host.docker.internal:5100");
+    process.env.GOALSTATS_LOCAL_DOCKER === "1" && base.origin === "http://host.docker.internal:5100");
 }
 function validateDestination(base: URL) {
   if (!/^https?:$/.test(base.protocol) || base.username || base.password || base.search || base.hash || base.pathname !== "/") throw new Error();
