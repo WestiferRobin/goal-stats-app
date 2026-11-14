@@ -35,7 +35,8 @@ make setup
 make run
 ```
 
-Leave both terminals running and open <http://127.0.0.1:3000/>. Use Matches to
+Leave both terminals running and open <http://localhost:3000/> or
+<http://127.0.0.1:3000/>. Use Matches to
 select two teams and enter explicit hypothetical strengths before generating a
 preview. Predictions saves scenarios and immutable predictions in two steps.
 <http://127.0.0.1:3000/api/football/catalog/teams> returns the 44 historical teams.
@@ -144,6 +145,10 @@ npm run dev
 
 Open <http://127.0.0.1:3000/>. This uses the same `.env.local`; do not change
 the backend URLs when switching between host and Docker frontend development.
+Both browser addresses work in local development. Next.js explicitly permits the
+`127.0.0.1` development origin alongside its built-in `localhost` support. After
+changing `next.config.ts`, restart host Next.js or rerun `make run` for Docker.
+These browser addresses are separate from the backend destination: Docker
 Compose overrides the host URL with `http://host.docker.internal:5100` inside the
 container and supplies a `host-gateway` mapping. Docker uses Node.js 22; the host
 alternative also requires Node.js 22. Restart host Next.js after environment changes
