@@ -22,7 +22,7 @@ it("uses normalized identities, dated scores and nullable cards",async()=>{
  fireEvent.click(screen.getByRole('button',{name:'Refresh'}));await waitFor(()=>expect(fetch).toHaveBeenCalledTimes(3));
 });
 it("handles empty teams and unavailable catalog without fallback",async()=>{
- stubFetch(vi.fn(async()=>Response.json([])));const view=render(<TeamsView/>);await screen.findByText('No teams are available.');view.unmount();vi.spyOn(console,'error').mockImplementation(()=>{});stubFetch(vi.fn(async()=>Response.json({detail:'Unavailable'},{status:503})));render(<TeamsView/>);await screen.findByText('Unavailable');expect(screen.queryByRole('combobox')).toBeNull();
+ stubFetch(vi.fn(async()=>Response.json([])));const view=render(<TeamsView/>);await screen.findByText('No teams are available. Comparison requires at least two teams.');view.unmount();vi.spyOn(console,'error').mockImplementation(()=>{});stubFetch(vi.fn(async()=>Response.json({detail:'Unavailable'},{status:503})));render(<TeamsView/>);await screen.findByText('Unavailable');expect(screen.queryByRole('combobox')).toBeNull();
 });
 it("handles empty and failed history with refresh",async()=>{
  let fail=false;stubFetch(vi.fn(async(url:string)=>Response.json(url.endsWith('/teams')?teams:fail?{detail:'History unavailable'}:{...insights,head_to_head:[],team1_history:[],team2_history:[]},{status:!url.endsWith('/teams')&&fail?503:200})));render(<TeamsView/>);await screen.findByText(/No imported head-to-head/);expect(screen.getAllByText(/No imported match history/)).toHaveLength(2);fail=true;fireEvent.click(screen.getByRole('button',{name:'Refresh'}));await screen.findByText('History unavailable');expect(screen.queryByText(/No imported head-to-head/)).toBeNull();expect(screen.queryByText(/No imported match history/)).toBeNull();
@@ -79,4 +79,15 @@ it.each(['http','json','network'])("clears initial loading after a completed %s 
  expect(screen.queryByText('No teams are available.')).toBeNull();
  expect(screen.queryByRole('combobox')).toBeNull();
  expect(screen.getByText(kind==='http'?'Catalog unavailable':kind==='network'?'Network request failed':/JSON|Unexpected token/)).toBeTruthy();
+});
+
+it("explains a one-team catalog without requesting comparisons", async () => {
+ const fetch = vi.fn(async () => Response.json([teams[0]]));
+ vi.stubGlobal("fetch", fetch);
+ render(<TeamsView/>);
+ expect(screen.queryByText(/Only one team/)).toBeNull();
+ await screen.findByText("Only one team is available. Comparison requires at least two teams.");
+ expect(screen.queryByText(/No teams are available/)).toBeNull();
+ expect(screen.queryByRole("button", {name:"Refresh"})).toBeNull();
+ expect(fetch).toHaveBeenCalledTimes(1);
 });

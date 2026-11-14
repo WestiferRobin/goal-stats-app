@@ -162,7 +162,9 @@ export default function TeamsView() {
               </p>
             )}
 
-            {!loading && !error && teams.length === 0 && <p role="status">No teams are available.</p>}
+            {!loading && !error && teams.length < 2 && <p role="status">
+              {teams.length === 0 ? "No teams are available." : "Only one team is available."} Comparison requires at least two teams.
+            </p>}
             {!loading && !error && (
               <>
                 <section className="mt-8 rounded-2xl border border-white/10 bg-black/55 p-6">

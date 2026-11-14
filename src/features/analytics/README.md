@@ -4,8 +4,8 @@
 
 Present stable analysis beyond the basic prediction result without blocking the core workflow.
 
-Product route: `/analytics`. The route renders a React view scaffold; its product
-functionality is not implemented yet. See the [feature map](../README.md).
+Product route: `/analytics`. The view displays prediction outputs and saved
+scenario history. See the [feature map](../README.md).
 
 ## Phase 1 scope
 
@@ -14,11 +14,16 @@ functionality is not implemented yet. See the [feature map](../README.md).
 
 ## Data and current backend
 
-Prediction responses include momentum. Snapshot state/predictions support saved trends. `/api/football/backtests`, `/history`, and `/tournaments/simulate` exist, but endpoint availability does not make them Phase 1 requirements.
+Prediction responses include momentum. `GET /api/football/predictions/{id}` loads
+an immutable saved result. `GET /api/football/scenarios/{id}/predictions` provides
+scenario-scoped history with limit/offset pagination. Analytics also accepts an
+unsaved preview; it does not call backtest or tournament-simulation endpoints.
 
 ## Implementation notes
 
-Attack pressure is not in the current prediction contract. Snapshot history is shared by team pair, not isolated by fixture or user. Do not present these charts as verified accuracy or calibrated forecasts.
+Attack pressure is not in the current prediction contract. Saved history is scoped
+by scenario ID, not team pair, and supports mixed v1/v2 results without recalculation.
+Do not present these charts as verified accuracy or calibrated forecasts.
 
 ## Feature structure
 
@@ -26,8 +31,7 @@ Attack pressure is not in the current prediction contract. Snapshot history is s
 - [domain/](domain/README.md): feature types, state, validation, and transformations.
 - [api/](api/README.md): endpoint calls and response handling.
 
-The folders include implementation guidance and a React view scaffold linked from
-its Next page. Add domain/API modules as each behavior is built; no API is mocked.
+The folders document the implemented view and its validated API contracts.
 The Next page should import the view component rather than own its implementation.
 
 ## Later scope

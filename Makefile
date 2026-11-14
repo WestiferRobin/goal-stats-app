@@ -24,3 +24,8 @@ _e2e:
 	@$(BASH) scripts/test.sh e2e
 _build-production:
 	@docker build --target runtime -t goal-stats-app:runtime .
+
+# Isolated current normalized application acceptance (no persistent services).
+.PHONY: _e2e-normalized
+_e2e-normalized:
+	@python3 scripts/test-normalized.py

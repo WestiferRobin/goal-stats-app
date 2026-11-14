@@ -121,3 +121,61 @@ it.each(['preview','patch'])('rejects negative shot values for %s without sendin
  if(mode==='patch')fireEvent.click(screen.getByRole('button',{name:'Save scenario changes'}));else fireEvent.submit(screen.getByRole('button',{name:'Generate Preview →'}).closest('form')!);
  await screen.findByText('Invalid team1_shots.');expect(fetch.mock.calls.filter(([,o])=>o?.method)).toHaveLength(0);
 });
+
+import v2Cases from '@/lib/fixtures/backend-v2-predictions.json';
+it.each(v2Cases)('previews real v2 minute $minute without persistence or shot normalization', async fixture=>{
+ const fetch=vi.fn(async(url:string,options:RequestInit={})=>{
+  if(url.endsWith('/catalog/teams'))return Response.json(teams);
+  if(url.endsWith('/catalog/competitions'))return Response.json([competition]);
+  if(url.includes('/catalog/matches'))return Response.json([]);
+  if(url==='/api/football/predictions/preview'&&options.method==='POST')return Response.json(fixture.output);
+  throw new Error(`Unexpected request: ${url}`);
+ });
+ vi.stubGlobal('fetch',fetch);
+ sessionStorage.setItem('goalstats-current-prediction',JSON.stringify({version:2,kind:'preview',input:fixture.request,output:fixture.output}));
+ window.history.replaceState(null,'','/matches?preview=1');render(<MatchesView/>);
+ await waitFor(()=>expect((screen.getByRole('spinbutton',{name:'Minute'}) as HTMLInputElement).value).toBe(String(fixture.minute)));
+ fireEvent.submit(screen.getByRole('button',{name:'Generate Preview →'}).closest('form')!);
+ await waitFor(()=>expect(push).toHaveBeenCalledWith('/predictions'));
+ const writes=fetch.mock.calls.filter(([,options])=>options?.method);
+ expect(writes).toHaveLength(1);
+ expect(writes[0][0]).toBe('/api/football/predictions/preview');
+ expect(JSON.parse(writes[0][1]!.body as string)).toEqual(fixture.request);
+ expect(JSON.parse(sessionStorage.getItem('goalstats-current-prediction')!).output).toEqual(fixture.output);
+ for(const reason of fixture.output.reasoning)expect(screen.getByText(reason,{exact:false})).toBeTruthy();
+});
+it('PATCHes a v2 scenario without changing the original saved snapshot or generating',async()=>{
+ const fixture=v2Cases[0],before=JSON.stringify(fixture.saved);
+ const fetch=vi.fn(async(url:string,options:RequestInit={})=>{
+  if(url.endsWith('/catalog/teams'))return Response.json(teams);
+  if(url.endsWith('/catalog/competitions'))return Response.json([competition]);
+  if(url.includes('/catalog/matches'))return Response.json([]);
+  return Response.json(options.method==='PATCH'?{...fixture.scenario,match_minute:90}:fixture.scenario);
+ });
+ vi.stubGlobal('fetch',fetch);window.history.replaceState(null,'','/matches?scenario_id=7');render(<MatchesView/>);
+ await screen.findByText(/Editing scenario #7/);
+ fireEvent.change(screen.getByRole('spinbutton',{name:'Minute'}),{target:{value:'90'}});
+ fireEvent.click(screen.getByRole('button',{name:'Save scenario changes'}));await screen.findByText(/Scenario state updated/);
+ const writes=fetch.mock.calls.filter(([,options])=>options?.method);
+ expect(writes).toHaveLength(1);expect(writes[0]).toEqual(['/api/football/scenarios/7',{method:'PATCH',headers:{'Content-Type':'application/json'},body:'{"match_minute":90}'}]);
+ expect(JSON.stringify(fixture.saved)).toBe(before);
+});
+it('keeps v2 preview loading and failure separate without saving or navigating',async()=>{
+ const fixture=v2Cases[0];let finish!: (response:Response)=>void;
+ const fetch=vi.fn(async(url:string,options:RequestInit={})=>{
+  if(url.endsWith('/catalog/teams'))return Response.json(teams);
+  if(url.endsWith('/catalog/competitions'))return Response.json([competition]);
+  if(url.includes('/catalog/matches'))return Response.json([]);
+  if(options.method==='POST')return new Promise<Response>(resolve=>{finish=resolve;});
+  throw new Error(url);
+ });vi.stubGlobal('fetch',fetch);vi.spyOn(console,'error').mockImplementation(()=>{});
+ sessionStorage.setItem('goalstats-current-prediction',JSON.stringify({version:2,kind:'preview',input:fixture.request,output:fixture.output}));
+ window.history.replaceState(null,'','/matches?preview=1');render(<MatchesView/>);
+ await waitFor(()=>expect((screen.getByRole('spinbutton',{name:'Minute'}) as HTMLInputElement).value).toBe('89'));
+ fireEvent.submit(screen.getByRole('button',{name:'Generate Preview →'}).closest('form')!);
+ await waitFor(()=>expect(finish).toBeDefined());expect(push).not.toHaveBeenCalled();
+ expect((screen.getByRole('button',{name:'Generating Preview...'}) as HTMLButtonElement).disabled).toBe(true);
+ finish(Response.json({detail:'Preview unavailable'},{status:503}));await screen.findByText('Preview unavailable');
+ expect(push).not.toHaveBeenCalled();expect(fetch.mock.calls.filter(([,options])=>options?.method)).toHaveLength(1);
+ expect(screen.getByRole('button',{name:'Generate Preview →'})).toBeTruthy();
+});

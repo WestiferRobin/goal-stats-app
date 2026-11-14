@@ -4,8 +4,8 @@
 
 Own the matchup and editable match state used to request a prediction.
 
-Product route: `/matches`. The route renders a React view scaffold; its product
-functionality is not implemented yet. See the [feature map](../README.md).
+Product route: `/matches`. The view browses historical records and edits hypothetical
+scenario inputs separately. See the [feature map](../README.md).
 
 ## Phase 1 scope
 
@@ -16,11 +16,17 @@ functionality is not implemented yet. See the [feature map](../README.md).
 
 ## Data and current backend
 
-`GET /api/football/teams` supplies teams. Existing snapshot endpoints save/retrieve a state and prediction together. A first-class Match/Scenario identity and its persistence contract are not yet established.
+`GET /api/football/catalog/teams` supplies teams. Catalog competitions and matches
+support historical browsing with pagination and edition/team filters.
+`POST /api/football/predictions/preview` calculates without saving. Predictions owns
+scenario creation and generation; Matches reopens `GET /api/football/scenarios/{id}`
+and PATCHes changed mutable fields without generating another prediction.
 
 ## Implementation notes
 
-Open decision: does Match mean a hypothetical scenario, a real fixture, or both? Do not silently treat a team pair or snapshot ID as a unique real fixture. Keep editable inputs here; Predictions owns the result presentation.
+Historical matches are imported records; editable scenarios are hypothetical inputs.
+A team pair is not a scenario identity. Keep editable inputs here; Predictions owns
+the result presentation.
 
 ## Feature structure
 
@@ -28,10 +34,9 @@ Open decision: does Match mean a hypothetical scenario, a real fixture, or both?
 - [domain/](domain/README.md): feature types, state, validation, and transformations.
 - [api/](api/README.md): endpoint calls and response handling.
 
-The folders include implementation guidance and a React view scaffold linked from
-its Next page. Add domain/API modules as each behavior is built; no API is mocked.
+The folders document the implemented view and its validated API contracts.
 The Next page should import the view component rather than own its implementation.
 
 ## Later scope
 
-Fixture schedules, automatic live matches, persisted events, filtering, and finalized results.
+Fixture schedules, automatic live matches, persisted events, and finalized results.

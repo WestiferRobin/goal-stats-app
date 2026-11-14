@@ -319,7 +319,7 @@ export default function PredictionsView() {
               {saveMessage && <p role="status">{saveMessage}</p>}
               {historyError && <p role="alert">{historyError}</p>}
               {loadingHistory && <p>Loading prediction history...</p>}
-              {!loadingHistory&&!historyError&&history.length===0&&<p>No saved predictions yet.</p>}
+              {!loadingHistory&&!historyError&&history.length===0&&<p>{historyOffset > 0 ? "No predictions on this page. Use Previous predictions to see earlier records." : `No saved predictions exist for scenario #${scenarioId} yet.`}</p>}
               {history.map(r=><button type="button" key={r.prediction_id} onClick={()=>void loadSnapshot(r)}>Open prediction #{r.prediction_id} · {formatSavedDate(r.generated_at)}</button>)}
               {historyPagination}
             </div>}
@@ -736,11 +736,11 @@ export default function PredictionsView() {
                 !historyError &&
                 history.length === 0 && (
                   <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-5 text-zinc-400">
-                    No saved predictions yet. Press{" "}
-                    <strong className="text-white">
-                      {scenarioId ? "Generate another saved prediction" : "Save new scenario and prediction"}
-                    </strong>{" "}
-                    to save the current prediction.
+                    {historyOffset > 0
+                      ? "No predictions on this page. Use Previous predictions to see earlier records."
+                      : scenarioId
+                        ? `No saved predictions exist for scenario #${scenarioId} yet.`
+                        : "This preview has not been saved."}
                   </div>
                 )}
 

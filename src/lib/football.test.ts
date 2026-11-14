@@ -82,3 +82,45 @@ import frozenV1 from './fixtures/frozen-v1-prediction.json';
 it('reads the actual frozen v1 contract without rewriting its output or assumptions',()=>{
  const before=JSON.stringify(frozenV1);expect(parseSavedPrediction(frozenV1)).toEqual(frozenV1);expect(JSON.stringify(frozenV1)).toBe(before);
 });
+
+import v2Cases from './fixtures/backend-v2-predictions.json';
+import {parsePredictionOutput, parsePredictionHistory} from './football';
+it.each(v2Cases)('preserves real backend v2 output and effective snapshot at minute $minute', fixture => {
+ const before = JSON.stringify(fixture);
+ expect(parsePredictionOutput(fixture.output)).toEqual(fixture.output);
+ expect(parseSavedPrediction(fixture.saved)).toEqual(fixture.saved);
+ expect(parsePreviewSession({version:2,kind:'preview',input:fixture.request,output:fixture.output}).output).toEqual(fixture.output);
+ expect(fixture.request.team1_shots).toBe(0);
+ expect(fixture.saved.input_snapshot.team1_shots).toBe(4);
+ expect(Object.values(fixture.output.probabilities).reduce((a,b)=>a+b,0)).toBeCloseTo(1,12);
+ expect(fixture.output.reasoning.some(reason=>reason.includes('Confidence is a heuristic'))).toBe(true);
+ if(fixture.minute>=90){
+  expect(fixture.output.expected_goals_remaining).toEqual({team1:0,team2:0});
+  expect(fixture.output.top_scorelines).toHaveLength(1);
+  const home=fixture.request.team1_goals, away=fixture.request.team2_goals;
+  expect(fixture.output.probabilities).toEqual({team1:Number(home>away),draw:Number(home===away),team2:Number(home<away)});
+  expect(fixture.output.most_likely_score).toEqual([home,away]);
+  expect(fixture.output.top_scorelines[0].probability).toBe(1);
+  expect(fixture.output.reasoning.some(reason=>reason.includes('summarizes the supplied current score'))).toBe(true);
+ } else expect(fixture.output.expected_goals_remaining.team1).toBeGreaterThan(0);
+ expect(JSON.stringify(fixture)).toBe(before);
+});
+it.each([
+ {probabilities:{team1:60,draw:25,team2:15}},
+ {probabilities:{team1:-.1,draw:.5,team2:.6}},
+ {probabilities:{team1:.2,draw:.2,team2:.2}},
+ {confidence:{label:'High',percent:101}},
+ {expected_goals_remaining:{team1:-1,team2:0}},
+ {reasoning:[null]}, {minute:151}, {model:''},
+ {top_scorelines:[{team1_goals:1,team2_goals:0,probability:2}]},
+])('rejects malformed v2 output %j', changes => {
+ expect(()=>parsePredictionOutput({...v2Cases[0].output,...changes})).toThrow();
+});
+it('preserves a mixed backend v1/v2 history and rejects a foreign scenario',()=>{
+ // IDs are envelope metadata, not model outputs.
+ const history=[v2Cases[0].saved,{...frozenV1,scenario_id:7,input_snapshot:{...frozenV1.input_snapshot,scenario_id:7}}];
+ const before=JSON.stringify(history);
+ expect(parsePredictionHistory(history,7)).toEqual(history);
+ expect(JSON.stringify(history)).toBe(before);
+ expect(()=>parsePredictionHistory(history,8)).toThrow();
+});

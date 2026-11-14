@@ -1,0 +1,1303 @@
+[
+  {
+    "minute": 89,
+    "request": {
+      "match_minute": 89,
+      "team1_goals": 1,
+      "team1_shots": 0,
+      "team1_shots_on_target": 4,
+      "team1_big_chances": 0,
+      "team1_defender_blocks": 0,
+      "team1_goalkeeper_saves": 0,
+      "team1_corners": 0,
+      "team1_yellow_cards": 0,
+      "team1_red_cards": 0,
+      "team1_possession": 50.0,
+      "team1_modifier_total": 0.0,
+      "team2_goals": 0,
+      "team2_shots": 0,
+      "team2_shots_on_target": 0,
+      "team2_big_chances": 0,
+      "team2_defender_blocks": 0,
+      "team2_goalkeeper_saves": 0,
+      "team2_corners": 0,
+      "team2_yellow_cards": 0,
+      "team2_red_cards": 0,
+      "team2_possession": 50.0,
+      "team2_modifier_total": 0.0,
+      "team1_id": 1,
+      "team2_id": 2,
+      "extra_minute": 0,
+      "status": "",
+      "team1_offense": 70.0,
+      "team1_defense": 70.0,
+      "team1_form": 70.0,
+      "team1_star_power": 70.0,
+      "team1_clutch": 70.0,
+      "team1_fifa_rank": null,
+      "team2_offense": 70.0,
+      "team2_defense": 70.0,
+      "team2_form": 70.0,
+      "team2_star_power": 70.0,
+      "team2_clutch": 70.0,
+      "team2_fifa_rank": null
+    },
+    "scenario": {
+      "match_minute": 89,
+      "team1_goals": 1,
+      "team1_shots": 0,
+      "team1_shots_on_target": 4,
+      "team1_big_chances": 0,
+      "team1_defender_blocks": 0,
+      "team1_goalkeeper_saves": 0,
+      "team1_corners": 0,
+      "team1_yellow_cards": 0,
+      "team1_red_cards": 0,
+      "team1_possession": 50.0,
+      "team1_modifier_total": 0.0,
+      "team2_goals": 0,
+      "team2_shots": 0,
+      "team2_shots_on_target": 0,
+      "team2_big_chances": 0,
+      "team2_defender_blocks": 0,
+      "team2_goalkeeper_saves": 0,
+      "team2_corners": 0,
+      "team2_yellow_cards": 0,
+      "team2_red_cards": 0,
+      "team2_possession": 50.0,
+      "team2_modifier_total": 0.0,
+      "title": null,
+      "team1_id": 1,
+      "team2_id": 2,
+      "match_id": null,
+      "team1_offense": 70.0,
+      "team1_defense": 70.0,
+      "team1_form": 70.0,
+      "team1_star_power": 70.0,
+      "team1_clutch": 70.0,
+      "team1_fifa_rank": null,
+      "team2_offense": 70.0,
+      "team2_defense": 70.0,
+      "team2_form": 70.0,
+      "team2_star_power": 70.0,
+      "team2_clutch": 70.0,
+      "team2_fifa_rank": null,
+      "scenario_id": 7,
+      "created_at": "2026-01-01T00:00:00Z",
+      "team1_name": "China",
+      "team2_name": "Norway",
+      "prediction_ready": true
+    },
+    "output": {
+      "team1": "China",
+      "team2": "Norway",
+      "minute": 89,
+      "status": "",
+      "probabilities": {
+        "team1": 0.9879451086205083,
+        "team2": 7.416690950613177e-05,
+        "draw": 0.01198072446998547
+      },
+      "advancement": {
+        "team1": 0.9939354708555012,
+        "team2": 0.006064529144498868
+      },
+      "expected_goals_remaining": {
+        "team1": 0.01655826558265583,
+        "team2": 0.012330623306233064
+      },
+      "momentum_percent": {
+        "team1": 91.66666666666666,
+        "team2": 8.333333333333332
+      },
+      "most_likely_score": [
+        1,
+        0
+      ],
+      "top_scorelines": [
+        {
+          "team1_goals": 1,
+          "team2_goals": 0,
+          "probability": 0.9715244056259754
+        },
+        {
+          "team1_goals": 2,
+          "team2_goals": 0,
+          "probability": 0.016086759128386748
+        },
+        {
+          "team1_goals": 1,
+          "team2_goals": 1,
+          "probability": 0.011979501478585878
+        },
+        {
+          "team1_goals": 2,
+          "team2_goals": 1,
+          "probability": 0.00019835976703024312
+        },
+        {
+          "team1_goals": 3,
+          "team2_goals": 0,
+          "probability": 0.00013318441500602038
+        }
+      ],
+      "confidence": {
+        "percent": 100.0,
+        "label": "High"
+      },
+      "reasoning": [
+        "Supplied hypothetical state: China currently has more goals.",
+        "Supplied hypothetical state: China has more shots on target.",
+        "Supplied hypothetical state: China has the higher attack pressure score.",
+        "Supplied hypothetical state: China currently has more live momentum.",
+        "Supplied hypothetical state: China has more calculated dangerous attacks.",
+        "Team ratings and match statistics are user-provided hypothetical inputs. Historical browsing does not automatically supply these ratings.",
+        "Predictions are calculated estimates, not recorded historical match results.",
+        "The model estimates additional goals from minute 89 through the nominal 90-minute horizon.",
+        "Stoppage time, extra time, and penalty shootouts are not forecast.",
+        "Preview status and extra_minute are metadata; they do not establish match completion, a match phase, or a supported future prediction horizon.",
+        "Confidence is a heuristic based on the margin between the two leading outcome probabilities, not measured prediction accuracy.",
+        "Advancement uses a hypothetical clutch-weighted tiebreak assumption when the modeled score is tied (equal shares if both clutch ratings are zero); it is not a recorded shootout outcome.",
+        "For calculation, total shots are normalized upward to shots on target when shots on target exceed submitted shots. Prediction does not modify the scenario."
+      ],
+      "model": "road-to-the-final-heuristic-v2"
+    },
+    "saved": {
+      "prediction_id": 89,
+      "scenario_id": 7,
+      "generated_at": "2026-11-13T12:00:00Z",
+      "model_version": "road-to-the-final-heuristic-v2",
+      "input_snapshot": {
+        "match_minute": 89,
+        "team1_goals": 1,
+        "team1_shots": 4,
+        "team1_shots_on_target": 4,
+        "team1_big_chances": 0,
+        "team1_defender_blocks": 0,
+        "team1_goalkeeper_saves": 0,
+        "team1_corners": 0,
+        "team1_yellow_cards": 0,
+        "team1_red_cards": 0,
+        "team1_possession": 50.0,
+        "team1_modifier_total": 0.0,
+        "team2_goals": 0,
+        "team2_shots": 0,
+        "team2_shots_on_target": 0,
+        "team2_big_chances": 0,
+        "team2_defender_blocks": 0,
+        "team2_goalkeeper_saves": 0,
+        "team2_corners": 0,
+        "team2_yellow_cards": 0,
+        "team2_red_cards": 0,
+        "team2_possession": 50.0,
+        "team2_modifier_total": 0.0,
+        "title": null,
+        "team1_id": 1,
+        "team2_id": 2,
+        "match_id": null,
+        "team1_offense": 70.0,
+        "team1_defense": 70.0,
+        "team1_form": 70.0,
+        "team1_star_power": 70.0,
+        "team1_clutch": 70.0,
+        "team1_fifa_rank": null,
+        "team2_offense": 70.0,
+        "team2_defense": 70.0,
+        "team2_form": 70.0,
+        "team2_star_power": 70.0,
+        "team2_clutch": 70.0,
+        "team2_fifa_rank": null,
+        "scenario_id": 7,
+        "created_at": "2026-01-01T00:00:00Z",
+        "team1_name": "China",
+        "team2_name": "Norway",
+        "prediction_ready": true,
+        "adapter_version": "scenario-v1",
+        "extra_minute": 0,
+        "status": ""
+      },
+      "output": {
+        "team1": "China",
+        "team2": "Norway",
+        "minute": 89,
+        "status": "",
+        "probabilities": {
+          "team1": 0.9879451086205083,
+          "team2": 7.416690950613177e-05,
+          "draw": 0.01198072446998547
+        },
+        "advancement": {
+          "team1": 0.9939354708555012,
+          "team2": 0.006064529144498868
+        },
+        "expected_goals_remaining": {
+          "team1": 0.01655826558265583,
+          "team2": 0.012330623306233064
+        },
+        "momentum_percent": {
+          "team1": 91.66666666666666,
+          "team2": 8.333333333333332
+        },
+        "most_likely_score": [
+          1,
+          0
+        ],
+        "top_scorelines": [
+          {
+            "team1_goals": 1,
+            "team2_goals": 0,
+            "probability": 0.9715244056259754
+          },
+          {
+            "team1_goals": 2,
+            "team2_goals": 0,
+            "probability": 0.016086759128386748
+          },
+          {
+            "team1_goals": 1,
+            "team2_goals": 1,
+            "probability": 0.011979501478585878
+          },
+          {
+            "team1_goals": 2,
+            "team2_goals": 1,
+            "probability": 0.00019835976703024312
+          },
+          {
+            "team1_goals": 3,
+            "team2_goals": 0,
+            "probability": 0.00013318441500602038
+          }
+        ],
+        "confidence": {
+          "percent": 100.0,
+          "label": "High"
+        },
+        "reasoning": [
+          "Supplied hypothetical state: China currently has more goals.",
+          "Supplied hypothetical state: China has more shots on target.",
+          "Supplied hypothetical state: China has the higher attack pressure score.",
+          "Supplied hypothetical state: China currently has more live momentum.",
+          "Supplied hypothetical state: China has more calculated dangerous attacks.",
+          "Team ratings and match statistics are user-provided hypothetical inputs. Historical browsing does not automatically supply these ratings.",
+          "Predictions are calculated estimates, not recorded historical match results.",
+          "The model estimates additional goals from minute 89 through the nominal 90-minute horizon.",
+          "Stoppage time, extra time, and penalty shootouts are not forecast.",
+          "Preview status and extra_minute are metadata; they do not establish match completion, a match phase, or a supported future prediction horizon.",
+          "Confidence is a heuristic based on the margin between the two leading outcome probabilities, not measured prediction accuracy.",
+          "Advancement uses a hypothetical clutch-weighted tiebreak assumption when the modeled score is tied (equal shares if both clutch ratings are zero); it is not a recorded shootout outcome.",
+          "For calculation, total shots are normalized upward to shots on target when shots on target exceed submitted shots. Prediction does not modify the scenario."
+        ],
+        "model": "road-to-the-final-heuristic-v2"
+      }
+    }
+  },
+  {
+    "minute": 90,
+    "request": {
+      "match_minute": 90,
+      "team1_goals": 1,
+      "team1_shots": 0,
+      "team1_shots_on_target": 4,
+      "team1_big_chances": 0,
+      "team1_defender_blocks": 0,
+      "team1_goalkeeper_saves": 0,
+      "team1_corners": 0,
+      "team1_yellow_cards": 0,
+      "team1_red_cards": 0,
+      "team1_possession": 50.0,
+      "team1_modifier_total": 0.0,
+      "team2_goals": 0,
+      "team2_shots": 0,
+      "team2_shots_on_target": 0,
+      "team2_big_chances": 0,
+      "team2_defender_blocks": 0,
+      "team2_goalkeeper_saves": 0,
+      "team2_corners": 0,
+      "team2_yellow_cards": 0,
+      "team2_red_cards": 0,
+      "team2_possession": 50.0,
+      "team2_modifier_total": 0.0,
+      "team1_id": 1,
+      "team2_id": 2,
+      "extra_minute": 0,
+      "status": "",
+      "team1_offense": 70.0,
+      "team1_defense": 70.0,
+      "team1_form": 70.0,
+      "team1_star_power": 70.0,
+      "team1_clutch": 70.0,
+      "team1_fifa_rank": null,
+      "team2_offense": 70.0,
+      "team2_defense": 70.0,
+      "team2_form": 70.0,
+      "team2_star_power": 70.0,
+      "team2_clutch": 70.0,
+      "team2_fifa_rank": null
+    },
+    "scenario": {
+      "match_minute": 90,
+      "team1_goals": 1,
+      "team1_shots": 0,
+      "team1_shots_on_target": 4,
+      "team1_big_chances": 0,
+      "team1_defender_blocks": 0,
+      "team1_goalkeeper_saves": 0,
+      "team1_corners": 0,
+      "team1_yellow_cards": 0,
+      "team1_red_cards": 0,
+      "team1_possession": 50.0,
+      "team1_modifier_total": 0.0,
+      "team2_goals": 0,
+      "team2_shots": 0,
+      "team2_shots_on_target": 0,
+      "team2_big_chances": 0,
+      "team2_defender_blocks": 0,
+      "team2_goalkeeper_saves": 0,
+      "team2_corners": 0,
+      "team2_yellow_cards": 0,
+      "team2_red_cards": 0,
+      "team2_possession": 50.0,
+      "team2_modifier_total": 0.0,
+      "title": null,
+      "team1_id": 1,
+      "team2_id": 2,
+      "match_id": null,
+      "team1_offense": 70.0,
+      "team1_defense": 70.0,
+      "team1_form": 70.0,
+      "team1_star_power": 70.0,
+      "team1_clutch": 70.0,
+      "team1_fifa_rank": null,
+      "team2_offense": 70.0,
+      "team2_defense": 70.0,
+      "team2_form": 70.0,
+      "team2_star_power": 70.0,
+      "team2_clutch": 70.0,
+      "team2_fifa_rank": null,
+      "scenario_id": 7,
+      "created_at": "2026-01-01T00:00:00Z",
+      "team1_name": "China",
+      "team2_name": "Norway",
+      "prediction_ready": true
+    },
+    "output": {
+      "team1": "China",
+      "team2": "Norway",
+      "minute": 90,
+      "status": "",
+      "probabilities": {
+        "team1": 1.0,
+        "team2": 0.0,
+        "draw": 0.0
+      },
+      "advancement": {
+        "team1": 1.0,
+        "team2": 0.0
+      },
+      "expected_goals_remaining": {
+        "team1": 0.0,
+        "team2": 0.0
+      },
+      "momentum_percent": {
+        "team1": 91.66666666666666,
+        "team2": 8.333333333333332
+      },
+      "most_likely_score": [
+        1,
+        0
+      ],
+      "top_scorelines": [
+        {
+          "team1_goals": 1,
+          "team2_goals": 0,
+          "probability": 1.0
+        }
+      ],
+      "confidence": {
+        "percent": 100.0,
+        "label": "High"
+      },
+      "reasoning": [
+        "Supplied hypothetical state: China currently has more goals.",
+        "Supplied hypothetical state: China has more shots on target.",
+        "Supplied hypothetical state: China has the higher attack pressure score.",
+        "Supplied hypothetical state: China currently has more live momentum.",
+        "Supplied hypothetical state: China has more calculated dangerous attacks.",
+        "Team ratings and match statistics are user-provided hypothetical inputs. Historical browsing does not automatically supply these ratings.",
+        "Predictions are calculated estimates, not recorded historical match results.",
+        "No future match period is modeled at minute 90. This result summarizes the supplied current score; it does not confirm an actual final result or reconstruct the minute-90 score.",
+        "Stoppage time, extra time, and penalty shootouts are not forecast.",
+        "Preview status and extra_minute are metadata; they do not establish match completion, a match phase, or a supported future prediction horizon.",
+        "Confidence is a heuristic based on the margin between the two leading outcome probabilities, not measured prediction accuracy.",
+        "Advancement uses a hypothetical clutch-weighted tiebreak assumption when the modeled score is tied (equal shares if both clutch ratings are zero); it is not a recorded shootout outcome.",
+        "For calculation, total shots are normalized upward to shots on target when shots on target exceed submitted shots. Prediction does not modify the scenario."
+      ],
+      "model": "road-to-the-final-heuristic-v2"
+    },
+    "saved": {
+      "prediction_id": 90,
+      "scenario_id": 7,
+      "generated_at": "2026-11-13T12:00:00Z",
+      "model_version": "road-to-the-final-heuristic-v2",
+      "input_snapshot": {
+        "match_minute": 90,
+        "team1_goals": 1,
+        "team1_shots": 4,
+        "team1_shots_on_target": 4,
+        "team1_big_chances": 0,
+        "team1_defender_blocks": 0,
+        "team1_goalkeeper_saves": 0,
+        "team1_corners": 0,
+        "team1_yellow_cards": 0,
+        "team1_red_cards": 0,
+        "team1_possession": 50.0,
+        "team1_modifier_total": 0.0,
+        "team2_goals": 0,
+        "team2_shots": 0,
+        "team2_shots_on_target": 0,
+        "team2_big_chances": 0,
+        "team2_defender_blocks": 0,
+        "team2_goalkeeper_saves": 0,
+        "team2_corners": 0,
+        "team2_yellow_cards": 0,
+        "team2_red_cards": 0,
+        "team2_possession": 50.0,
+        "team2_modifier_total": 0.0,
+        "title": null,
+        "team1_id": 1,
+        "team2_id": 2,
+        "match_id": null,
+        "team1_offense": 70.0,
+        "team1_defense": 70.0,
+        "team1_form": 70.0,
+        "team1_star_power": 70.0,
+        "team1_clutch": 70.0,
+        "team1_fifa_rank": null,
+        "team2_offense": 70.0,
+        "team2_defense": 70.0,
+        "team2_form": 70.0,
+        "team2_star_power": 70.0,
+        "team2_clutch": 70.0,
+        "team2_fifa_rank": null,
+        "scenario_id": 7,
+        "created_at": "2026-01-01T00:00:00Z",
+        "team1_name": "China",
+        "team2_name": "Norway",
+        "prediction_ready": true,
+        "adapter_version": "scenario-v1",
+        "extra_minute": 0,
+        "status": ""
+      },
+      "output": {
+        "team1": "China",
+        "team2": "Norway",
+        "minute": 90,
+        "status": "",
+        "probabilities": {
+          "team1": 1.0,
+          "team2": 0.0,
+          "draw": 0.0
+        },
+        "advancement": {
+          "team1": 1.0,
+          "team2": 0.0
+        },
+        "expected_goals_remaining": {
+          "team1": 0.0,
+          "team2": 0.0
+        },
+        "momentum_percent": {
+          "team1": 91.66666666666666,
+          "team2": 8.333333333333332
+        },
+        "most_likely_score": [
+          1,
+          0
+        ],
+        "top_scorelines": [
+          {
+            "team1_goals": 1,
+            "team2_goals": 0,
+            "probability": 1.0
+          }
+        ],
+        "confidence": {
+          "percent": 100.0,
+          "label": "High"
+        },
+        "reasoning": [
+          "Supplied hypothetical state: China currently has more goals.",
+          "Supplied hypothetical state: China has more shots on target.",
+          "Supplied hypothetical state: China has the higher attack pressure score.",
+          "Supplied hypothetical state: China currently has more live momentum.",
+          "Supplied hypothetical state: China has more calculated dangerous attacks.",
+          "Team ratings and match statistics are user-provided hypothetical inputs. Historical browsing does not automatically supply these ratings.",
+          "Predictions are calculated estimates, not recorded historical match results.",
+          "No future match period is modeled at minute 90. This result summarizes the supplied current score; it does not confirm an actual final result or reconstruct the minute-90 score.",
+          "Stoppage time, extra time, and penalty shootouts are not forecast.",
+          "Preview status and extra_minute are metadata; they do not establish match completion, a match phase, or a supported future prediction horizon.",
+          "Confidence is a heuristic based on the margin between the two leading outcome probabilities, not measured prediction accuracy.",
+          "Advancement uses a hypothetical clutch-weighted tiebreak assumption when the modeled score is tied (equal shares if both clutch ratings are zero); it is not a recorded shootout outcome.",
+          "For calculation, total shots are normalized upward to shots on target when shots on target exceed submitted shots. Prediction does not modify the scenario."
+        ],
+        "model": "road-to-the-final-heuristic-v2"
+      }
+    }
+  },
+  {
+    "minute": 91,
+    "request": {
+      "match_minute": 91,
+      "team1_goals": 1,
+      "team1_shots": 0,
+      "team1_shots_on_target": 4,
+      "team1_big_chances": 0,
+      "team1_defender_blocks": 0,
+      "team1_goalkeeper_saves": 0,
+      "team1_corners": 0,
+      "team1_yellow_cards": 0,
+      "team1_red_cards": 0,
+      "team1_possession": 50.0,
+      "team1_modifier_total": 0.0,
+      "team2_goals": 1,
+      "team2_shots": 0,
+      "team2_shots_on_target": 0,
+      "team2_big_chances": 0,
+      "team2_defender_blocks": 0,
+      "team2_goalkeeper_saves": 0,
+      "team2_corners": 0,
+      "team2_yellow_cards": 0,
+      "team2_red_cards": 0,
+      "team2_possession": 50.0,
+      "team2_modifier_total": 0.0,
+      "team1_id": 1,
+      "team2_id": 2,
+      "extra_minute": 0,
+      "status": "",
+      "team1_offense": 70.0,
+      "team1_defense": 70.0,
+      "team1_form": 70.0,
+      "team1_star_power": 70.0,
+      "team1_clutch": 70.0,
+      "team1_fifa_rank": null,
+      "team2_offense": 70.0,
+      "team2_defense": 70.0,
+      "team2_form": 70.0,
+      "team2_star_power": 70.0,
+      "team2_clutch": 70.0,
+      "team2_fifa_rank": null
+    },
+    "scenario": {
+      "match_minute": 91,
+      "team1_goals": 1,
+      "team1_shots": 0,
+      "team1_shots_on_target": 4,
+      "team1_big_chances": 0,
+      "team1_defender_blocks": 0,
+      "team1_goalkeeper_saves": 0,
+      "team1_corners": 0,
+      "team1_yellow_cards": 0,
+      "team1_red_cards": 0,
+      "team1_possession": 50.0,
+      "team1_modifier_total": 0.0,
+      "team2_goals": 1,
+      "team2_shots": 0,
+      "team2_shots_on_target": 0,
+      "team2_big_chances": 0,
+      "team2_defender_blocks": 0,
+      "team2_goalkeeper_saves": 0,
+      "team2_corners": 0,
+      "team2_yellow_cards": 0,
+      "team2_red_cards": 0,
+      "team2_possession": 50.0,
+      "team2_modifier_total": 0.0,
+      "title": null,
+      "team1_id": 1,
+      "team2_id": 2,
+      "match_id": null,
+      "team1_offense": 70.0,
+      "team1_defense": 70.0,
+      "team1_form": 70.0,
+      "team1_star_power": 70.0,
+      "team1_clutch": 70.0,
+      "team1_fifa_rank": null,
+      "team2_offense": 70.0,
+      "team2_defense": 70.0,
+      "team2_form": 70.0,
+      "team2_star_power": 70.0,
+      "team2_clutch": 70.0,
+      "team2_fifa_rank": null,
+      "scenario_id": 7,
+      "created_at": "2026-01-01T00:00:00Z",
+      "team1_name": "China",
+      "team2_name": "Norway",
+      "prediction_ready": true
+    },
+    "output": {
+      "team1": "China",
+      "team2": "Norway",
+      "minute": 91,
+      "status": "",
+      "probabilities": {
+        "team1": 0.0,
+        "team2": 0.0,
+        "draw": 1.0
+      },
+      "advancement": {
+        "team1": 0.5,
+        "team2": 0.5
+      },
+      "expected_goals_remaining": {
+        "team1": 0.0,
+        "team2": 0.0
+      },
+      "momentum_percent": {
+        "team1": 78.57142857142857,
+        "team2": 21.428571428571427
+      },
+      "most_likely_score": [
+        1,
+        1
+      ],
+      "top_scorelines": [
+        {
+          "team1_goals": 1,
+          "team2_goals": 1,
+          "probability": 1.0
+        }
+      ],
+      "confidence": {
+        "percent": 100.0,
+        "label": "High"
+      },
+      "reasoning": [
+        "Supplied hypothetical state: China has more shots on target.",
+        "Supplied hypothetical state: China has the higher attack pressure score.",
+        "Supplied hypothetical state: China currently has more live momentum.",
+        "Supplied hypothetical state: China has more calculated dangerous attacks.",
+        "Team ratings and match statistics are user-provided hypothetical inputs. Historical browsing does not automatically supply these ratings.",
+        "Predictions are calculated estimates, not recorded historical match results.",
+        "No future match period is modeled at minute 91. This result summarizes the supplied current score; it does not confirm an actual final result or reconstruct the minute-90 score.",
+        "Stoppage time, extra time, and penalty shootouts are not forecast.",
+        "Preview status and extra_minute are metadata; they do not establish match completion, a match phase, or a supported future prediction horizon.",
+        "Confidence is a heuristic based on the margin between the two leading outcome probabilities, not measured prediction accuracy.",
+        "Advancement uses a hypothetical clutch-weighted tiebreak assumption when the modeled score is tied (equal shares if both clutch ratings are zero); it is not a recorded shootout outcome.",
+        "For calculation, total shots are normalized upward to shots on target when shots on target exceed submitted shots. Prediction does not modify the scenario."
+      ],
+      "model": "road-to-the-final-heuristic-v2"
+    },
+    "saved": {
+      "prediction_id": 91,
+      "scenario_id": 7,
+      "generated_at": "2026-11-13T12:00:00Z",
+      "model_version": "road-to-the-final-heuristic-v2",
+      "input_snapshot": {
+        "match_minute": 91,
+        "team1_goals": 1,
+        "team1_shots": 4,
+        "team1_shots_on_target": 4,
+        "team1_big_chances": 0,
+        "team1_defender_blocks": 0,
+        "team1_goalkeeper_saves": 0,
+        "team1_corners": 0,
+        "team1_yellow_cards": 0,
+        "team1_red_cards": 0,
+        "team1_possession": 50.0,
+        "team1_modifier_total": 0.0,
+        "team2_goals": 1,
+        "team2_shots": 0,
+        "team2_shots_on_target": 0,
+        "team2_big_chances": 0,
+        "team2_defender_blocks": 0,
+        "team2_goalkeeper_saves": 0,
+        "team2_corners": 0,
+        "team2_yellow_cards": 0,
+        "team2_red_cards": 0,
+        "team2_possession": 50.0,
+        "team2_modifier_total": 0.0,
+        "title": null,
+        "team1_id": 1,
+        "team2_id": 2,
+        "match_id": null,
+        "team1_offense": 70.0,
+        "team1_defense": 70.0,
+        "team1_form": 70.0,
+        "team1_star_power": 70.0,
+        "team1_clutch": 70.0,
+        "team1_fifa_rank": null,
+        "team2_offense": 70.0,
+        "team2_defense": 70.0,
+        "team2_form": 70.0,
+        "team2_star_power": 70.0,
+        "team2_clutch": 70.0,
+        "team2_fifa_rank": null,
+        "scenario_id": 7,
+        "created_at": "2026-01-01T00:00:00Z",
+        "team1_name": "China",
+        "team2_name": "Norway",
+        "prediction_ready": true,
+        "adapter_version": "scenario-v1",
+        "extra_minute": 0,
+        "status": ""
+      },
+      "output": {
+        "team1": "China",
+        "team2": "Norway",
+        "minute": 91,
+        "status": "",
+        "probabilities": {
+          "team1": 0.0,
+          "team2": 0.0,
+          "draw": 1.0
+        },
+        "advancement": {
+          "team1": 0.5,
+          "team2": 0.5
+        },
+        "expected_goals_remaining": {
+          "team1": 0.0,
+          "team2": 0.0
+        },
+        "momentum_percent": {
+          "team1": 78.57142857142857,
+          "team2": 21.428571428571427
+        },
+        "most_likely_score": [
+          1,
+          1
+        ],
+        "top_scorelines": [
+          {
+            "team1_goals": 1,
+            "team2_goals": 1,
+            "probability": 1.0
+          }
+        ],
+        "confidence": {
+          "percent": 100.0,
+          "label": "High"
+        },
+        "reasoning": [
+          "Supplied hypothetical state: China has more shots on target.",
+          "Supplied hypothetical state: China has the higher attack pressure score.",
+          "Supplied hypothetical state: China currently has more live momentum.",
+          "Supplied hypothetical state: China has more calculated dangerous attacks.",
+          "Team ratings and match statistics are user-provided hypothetical inputs. Historical browsing does not automatically supply these ratings.",
+          "Predictions are calculated estimates, not recorded historical match results.",
+          "No future match period is modeled at minute 91. This result summarizes the supplied current score; it does not confirm an actual final result or reconstruct the minute-90 score.",
+          "Stoppage time, extra time, and penalty shootouts are not forecast.",
+          "Preview status and extra_minute are metadata; they do not establish match completion, a match phase, or a supported future prediction horizon.",
+          "Confidence is a heuristic based on the margin between the two leading outcome probabilities, not measured prediction accuracy.",
+          "Advancement uses a hypothetical clutch-weighted tiebreak assumption when the modeled score is tied (equal shares if both clutch ratings are zero); it is not a recorded shootout outcome.",
+          "For calculation, total shots are normalized upward to shots on target when shots on target exceed submitted shots. Prediction does not modify the scenario."
+        ],
+        "model": "road-to-the-final-heuristic-v2"
+      }
+    }
+  },
+  {
+    "minute": 105,
+    "request": {
+      "match_minute": 105,
+      "team1_goals": 0,
+      "team1_shots": 0,
+      "team1_shots_on_target": 4,
+      "team1_big_chances": 0,
+      "team1_defender_blocks": 0,
+      "team1_goalkeeper_saves": 0,
+      "team1_corners": 0,
+      "team1_yellow_cards": 0,
+      "team1_red_cards": 0,
+      "team1_possession": 50.0,
+      "team1_modifier_total": 0.0,
+      "team2_goals": 2,
+      "team2_shots": 0,
+      "team2_shots_on_target": 0,
+      "team2_big_chances": 0,
+      "team2_defender_blocks": 0,
+      "team2_goalkeeper_saves": 0,
+      "team2_corners": 0,
+      "team2_yellow_cards": 0,
+      "team2_red_cards": 0,
+      "team2_possession": 50.0,
+      "team2_modifier_total": 0.0,
+      "team1_id": 1,
+      "team2_id": 2,
+      "extra_minute": 0,
+      "status": "",
+      "team1_offense": 70.0,
+      "team1_defense": 70.0,
+      "team1_form": 70.0,
+      "team1_star_power": 70.0,
+      "team1_clutch": 70.0,
+      "team1_fifa_rank": null,
+      "team2_offense": 70.0,
+      "team2_defense": 70.0,
+      "team2_form": 70.0,
+      "team2_star_power": 70.0,
+      "team2_clutch": 70.0,
+      "team2_fifa_rank": null
+    },
+    "scenario": {
+      "match_minute": 105,
+      "team1_goals": 0,
+      "team1_shots": 0,
+      "team1_shots_on_target": 4,
+      "team1_big_chances": 0,
+      "team1_defender_blocks": 0,
+      "team1_goalkeeper_saves": 0,
+      "team1_corners": 0,
+      "team1_yellow_cards": 0,
+      "team1_red_cards": 0,
+      "team1_possession": 50.0,
+      "team1_modifier_total": 0.0,
+      "team2_goals": 2,
+      "team2_shots": 0,
+      "team2_shots_on_target": 0,
+      "team2_big_chances": 0,
+      "team2_defender_blocks": 0,
+      "team2_goalkeeper_saves": 0,
+      "team2_corners": 0,
+      "team2_yellow_cards": 0,
+      "team2_red_cards": 0,
+      "team2_possession": 50.0,
+      "team2_modifier_total": 0.0,
+      "title": null,
+      "team1_id": 1,
+      "team2_id": 2,
+      "match_id": null,
+      "team1_offense": 70.0,
+      "team1_defense": 70.0,
+      "team1_form": 70.0,
+      "team1_star_power": 70.0,
+      "team1_clutch": 70.0,
+      "team1_fifa_rank": null,
+      "team2_offense": 70.0,
+      "team2_defense": 70.0,
+      "team2_form": 70.0,
+      "team2_star_power": 70.0,
+      "team2_clutch": 70.0,
+      "team2_fifa_rank": null,
+      "scenario_id": 7,
+      "created_at": "2026-01-01T00:00:00Z",
+      "team1_name": "China",
+      "team2_name": "Norway",
+      "prediction_ready": true
+    },
+    "output": {
+      "team1": "China",
+      "team2": "Norway",
+      "minute": 105,
+      "status": "",
+      "probabilities": {
+        "team1": 0.0,
+        "team2": 1.0,
+        "draw": 0.0
+      },
+      "advancement": {
+        "team1": 0.0,
+        "team2": 1.0
+      },
+      "expected_goals_remaining": {
+        "team1": 0.0,
+        "team2": 0.0
+      },
+      "momentum_percent": {
+        "team1": 57.14285714285714,
+        "team2": 42.857142857142854
+      },
+      "most_likely_score": [
+        0,
+        2
+      ],
+      "top_scorelines": [
+        {
+          "team1_goals": 0,
+          "team2_goals": 2,
+          "probability": 1.0
+        }
+      ],
+      "confidence": {
+        "percent": 100.0,
+        "label": "High"
+      },
+      "reasoning": [
+        "Supplied hypothetical state: Norway currently has more goals.",
+        "Supplied hypothetical state: China has more shots on target.",
+        "Supplied hypothetical state: Norway has the higher attack pressure score.",
+        "Supplied hypothetical state: China currently has more live momentum.",
+        "Supplied hypothetical state: China has more calculated dangerous attacks.",
+        "Team ratings and match statistics are user-provided hypothetical inputs. Historical browsing does not automatically supply these ratings.",
+        "Predictions are calculated estimates, not recorded historical match results.",
+        "No future match period is modeled at minute 105. This result summarizes the supplied current score; it does not confirm an actual final result or reconstruct the minute-90 score.",
+        "Stoppage time, extra time, and penalty shootouts are not forecast.",
+        "Preview status and extra_minute are metadata; they do not establish match completion, a match phase, or a supported future prediction horizon.",
+        "Confidence is a heuristic based on the margin between the two leading outcome probabilities, not measured prediction accuracy.",
+        "Advancement uses a hypothetical clutch-weighted tiebreak assumption when the modeled score is tied (equal shares if both clutch ratings are zero); it is not a recorded shootout outcome.",
+        "For calculation, total shots are normalized upward to shots on target when shots on target exceed submitted shots. Prediction does not modify the scenario."
+      ],
+      "model": "road-to-the-final-heuristic-v2"
+    },
+    "saved": {
+      "prediction_id": 105,
+      "scenario_id": 7,
+      "generated_at": "2026-11-13T12:00:00Z",
+      "model_version": "road-to-the-final-heuristic-v2",
+      "input_snapshot": {
+        "match_minute": 105,
+        "team1_goals": 0,
+        "team1_shots": 4,
+        "team1_shots_on_target": 4,
+        "team1_big_chances": 0,
+        "team1_defender_blocks": 0,
+        "team1_goalkeeper_saves": 0,
+        "team1_corners": 0,
+        "team1_yellow_cards": 0,
+        "team1_red_cards": 0,
+        "team1_possession": 50.0,
+        "team1_modifier_total": 0.0,
+        "team2_goals": 2,
+        "team2_shots": 0,
+        "team2_shots_on_target": 0,
+        "team2_big_chances": 0,
+        "team2_defender_blocks": 0,
+        "team2_goalkeeper_saves": 0,
+        "team2_corners": 0,
+        "team2_yellow_cards": 0,
+        "team2_red_cards": 0,
+        "team2_possession": 50.0,
+        "team2_modifier_total": 0.0,
+        "title": null,
+        "team1_id": 1,
+        "team2_id": 2,
+        "match_id": null,
+        "team1_offense": 70.0,
+        "team1_defense": 70.0,
+        "team1_form": 70.0,
+        "team1_star_power": 70.0,
+        "team1_clutch": 70.0,
+        "team1_fifa_rank": null,
+        "team2_offense": 70.0,
+        "team2_defense": 70.0,
+        "team2_form": 70.0,
+        "team2_star_power": 70.0,
+        "team2_clutch": 70.0,
+        "team2_fifa_rank": null,
+        "scenario_id": 7,
+        "created_at": "2026-01-01T00:00:00Z",
+        "team1_name": "China",
+        "team2_name": "Norway",
+        "prediction_ready": true,
+        "adapter_version": "scenario-v1",
+        "extra_minute": 0,
+        "status": ""
+      },
+      "output": {
+        "team1": "China",
+        "team2": "Norway",
+        "minute": 105,
+        "status": "",
+        "probabilities": {
+          "team1": 0.0,
+          "team2": 1.0,
+          "draw": 0.0
+        },
+        "advancement": {
+          "team1": 0.0,
+          "team2": 1.0
+        },
+        "expected_goals_remaining": {
+          "team1": 0.0,
+          "team2": 0.0
+        },
+        "momentum_percent": {
+          "team1": 57.14285714285714,
+          "team2": 42.857142857142854
+        },
+        "most_likely_score": [
+          0,
+          2
+        ],
+        "top_scorelines": [
+          {
+            "team1_goals": 0,
+            "team2_goals": 2,
+            "probability": 1.0
+          }
+        ],
+        "confidence": {
+          "percent": 100.0,
+          "label": "High"
+        },
+        "reasoning": [
+          "Supplied hypothetical state: Norway currently has more goals.",
+          "Supplied hypothetical state: China has more shots on target.",
+          "Supplied hypothetical state: Norway has the higher attack pressure score.",
+          "Supplied hypothetical state: China currently has more live momentum.",
+          "Supplied hypothetical state: China has more calculated dangerous attacks.",
+          "Team ratings and match statistics are user-provided hypothetical inputs. Historical browsing does not automatically supply these ratings.",
+          "Predictions are calculated estimates, not recorded historical match results.",
+          "No future match period is modeled at minute 105. This result summarizes the supplied current score; it does not confirm an actual final result or reconstruct the minute-90 score.",
+          "Stoppage time, extra time, and penalty shootouts are not forecast.",
+          "Preview status and extra_minute are metadata; they do not establish match completion, a match phase, or a supported future prediction horizon.",
+          "Confidence is a heuristic based on the margin between the two leading outcome probabilities, not measured prediction accuracy.",
+          "Advancement uses a hypothetical clutch-weighted tiebreak assumption when the modeled score is tied (equal shares if both clutch ratings are zero); it is not a recorded shootout outcome.",
+          "For calculation, total shots are normalized upward to shots on target when shots on target exceed submitted shots. Prediction does not modify the scenario."
+        ],
+        "model": "road-to-the-final-heuristic-v2"
+      }
+    }
+  },
+  {
+    "minute": 120,
+    "request": {
+      "match_minute": 120,
+      "team1_goals": 2,
+      "team1_shots": 0,
+      "team1_shots_on_target": 4,
+      "team1_big_chances": 0,
+      "team1_defender_blocks": 0,
+      "team1_goalkeeper_saves": 0,
+      "team1_corners": 0,
+      "team1_yellow_cards": 0,
+      "team1_red_cards": 0,
+      "team1_possession": 50.0,
+      "team1_modifier_total": 0.0,
+      "team2_goals": 2,
+      "team2_shots": 0,
+      "team2_shots_on_target": 0,
+      "team2_big_chances": 0,
+      "team2_defender_blocks": 0,
+      "team2_goalkeeper_saves": 0,
+      "team2_corners": 0,
+      "team2_yellow_cards": 0,
+      "team2_red_cards": 0,
+      "team2_possession": 50.0,
+      "team2_modifier_total": 0.0,
+      "team1_id": 1,
+      "team2_id": 2,
+      "extra_minute": 0,
+      "status": "",
+      "team1_offense": 70.0,
+      "team1_defense": 70.0,
+      "team1_form": 70.0,
+      "team1_star_power": 70.0,
+      "team1_clutch": 70.0,
+      "team1_fifa_rank": null,
+      "team2_offense": 70.0,
+      "team2_defense": 70.0,
+      "team2_form": 70.0,
+      "team2_star_power": 70.0,
+      "team2_clutch": 70.0,
+      "team2_fifa_rank": null
+    },
+    "scenario": {
+      "match_minute": 120,
+      "team1_goals": 2,
+      "team1_shots": 0,
+      "team1_shots_on_target": 4,
+      "team1_big_chances": 0,
+      "team1_defender_blocks": 0,
+      "team1_goalkeeper_saves": 0,
+      "team1_corners": 0,
+      "team1_yellow_cards": 0,
+      "team1_red_cards": 0,
+      "team1_possession": 50.0,
+      "team1_modifier_total": 0.0,
+      "team2_goals": 2,
+      "team2_shots": 0,
+      "team2_shots_on_target": 0,
+      "team2_big_chances": 0,
+      "team2_defender_blocks": 0,
+      "team2_goalkeeper_saves": 0,
+      "team2_corners": 0,
+      "team2_yellow_cards": 0,
+      "team2_red_cards": 0,
+      "team2_possession": 50.0,
+      "team2_modifier_total": 0.0,
+      "title": null,
+      "team1_id": 1,
+      "team2_id": 2,
+      "match_id": null,
+      "team1_offense": 70.0,
+      "team1_defense": 70.0,
+      "team1_form": 70.0,
+      "team1_star_power": 70.0,
+      "team1_clutch": 70.0,
+      "team1_fifa_rank": null,
+      "team2_offense": 70.0,
+      "team2_defense": 70.0,
+      "team2_form": 70.0,
+      "team2_star_power": 70.0,
+      "team2_clutch": 70.0,
+      "team2_fifa_rank": null,
+      "scenario_id": 7,
+      "created_at": "2026-01-01T00:00:00Z",
+      "team1_name": "China",
+      "team2_name": "Norway",
+      "prediction_ready": true
+    },
+    "output": {
+      "team1": "China",
+      "team2": "Norway",
+      "minute": 120,
+      "status": "",
+      "probabilities": {
+        "team1": 0.0,
+        "team2": 0.0,
+        "draw": 1.0
+      },
+      "advancement": {
+        "team1": 0.5,
+        "team2": 0.5
+      },
+      "expected_goals_remaining": {
+        "team1": 0.0,
+        "team2": 0.0
+      },
+      "momentum_percent": {
+        "team1": 70.0,
+        "team2": 30.0
+      },
+      "most_likely_score": [
+        2,
+        2
+      ],
+      "top_scorelines": [
+        {
+          "team1_goals": 2,
+          "team2_goals": 2,
+          "probability": 1.0
+        }
+      ],
+      "confidence": {
+        "percent": 100.0,
+        "label": "High"
+      },
+      "reasoning": [
+        "Supplied hypothetical state: China has more shots on target.",
+        "Supplied hypothetical state: China has the higher attack pressure score.",
+        "Supplied hypothetical state: China currently has more live momentum.",
+        "Supplied hypothetical state: China has more calculated dangerous attacks.",
+        "Team ratings and match statistics are user-provided hypothetical inputs. Historical browsing does not automatically supply these ratings.",
+        "Predictions are calculated estimates, not recorded historical match results.",
+        "No future match period is modeled at minute 120. This result summarizes the supplied current score; it does not confirm an actual final result or reconstruct the minute-90 score.",
+        "Stoppage time, extra time, and penalty shootouts are not forecast.",
+        "Preview status and extra_minute are metadata; they do not establish match completion, a match phase, or a supported future prediction horizon.",
+        "Confidence is a heuristic based on the margin between the two leading outcome probabilities, not measured prediction accuracy.",
+        "Advancement uses a hypothetical clutch-weighted tiebreak assumption when the modeled score is tied (equal shares if both clutch ratings are zero); it is not a recorded shootout outcome.",
+        "For calculation, total shots are normalized upward to shots on target when shots on target exceed submitted shots. Prediction does not modify the scenario."
+      ],
+      "model": "road-to-the-final-heuristic-v2"
+    },
+    "saved": {
+      "prediction_id": 120,
+      "scenario_id": 7,
+      "generated_at": "2026-11-13T12:00:00Z",
+      "model_version": "road-to-the-final-heuristic-v2",
+      "input_snapshot": {
+        "match_minute": 120,
+        "team1_goals": 2,
+        "team1_shots": 4,
+        "team1_shots_on_target": 4,
+        "team1_big_chances": 0,
+        "team1_defender_blocks": 0,
+        "team1_goalkeeper_saves": 0,
+        "team1_corners": 0,
+        "team1_yellow_cards": 0,
+        "team1_red_cards": 0,
+        "team1_possession": 50.0,
+        "team1_modifier_total": 0.0,
+        "team2_goals": 2,
+        "team2_shots": 0,
+        "team2_shots_on_target": 0,
+        "team2_big_chances": 0,
+        "team2_defender_blocks": 0,
+        "team2_goalkeeper_saves": 0,
+        "team2_corners": 0,
+        "team2_yellow_cards": 0,
+        "team2_red_cards": 0,
+        "team2_possession": 50.0,
+        "team2_modifier_total": 0.0,
+        "title": null,
+        "team1_id": 1,
+        "team2_id": 2,
+        "match_id": null,
+        "team1_offense": 70.0,
+        "team1_defense": 70.0,
+        "team1_form": 70.0,
+        "team1_star_power": 70.0,
+        "team1_clutch": 70.0,
+        "team1_fifa_rank": null,
+        "team2_offense": 70.0,
+        "team2_defense": 70.0,
+        "team2_form": 70.0,
+        "team2_star_power": 70.0,
+        "team2_clutch": 70.0,
+        "team2_fifa_rank": null,
+        "scenario_id": 7,
+        "created_at": "2026-01-01T00:00:00Z",
+        "team1_name": "China",
+        "team2_name": "Norway",
+        "prediction_ready": true,
+        "adapter_version": "scenario-v1",
+        "extra_minute": 0,
+        "status": ""
+      },
+      "output": {
+        "team1": "China",
+        "team2": "Norway",
+        "minute": 120,
+        "status": "",
+        "probabilities": {
+          "team1": 0.0,
+          "team2": 0.0,
+          "draw": 1.0
+        },
+        "advancement": {
+          "team1": 0.5,
+          "team2": 0.5
+        },
+        "expected_goals_remaining": {
+          "team1": 0.0,
+          "team2": 0.0
+        },
+        "momentum_percent": {
+          "team1": 70.0,
+          "team2": 30.0
+        },
+        "most_likely_score": [
+          2,
+          2
+        ],
+        "top_scorelines": [
+          {
+            "team1_goals": 2,
+            "team2_goals": 2,
+            "probability": 1.0
+          }
+        ],
+        "confidence": {
+          "percent": 100.0,
+          "label": "High"
+        },
+        "reasoning": [
+          "Supplied hypothetical state: China has more shots on target.",
+          "Supplied hypothetical state: China has the higher attack pressure score.",
+          "Supplied hypothetical state: China currently has more live momentum.",
+          "Supplied hypothetical state: China has more calculated dangerous attacks.",
+          "Team ratings and match statistics are user-provided hypothetical inputs. Historical browsing does not automatically supply these ratings.",
+          "Predictions are calculated estimates, not recorded historical match results.",
+          "No future match period is modeled at minute 120. This result summarizes the supplied current score; it does not confirm an actual final result or reconstruct the minute-90 score.",
+          "Stoppage time, extra time, and penalty shootouts are not forecast.",
+          "Preview status and extra_minute are metadata; they do not establish match completion, a match phase, or a supported future prediction horizon.",
+          "Confidence is a heuristic based on the margin between the two leading outcome probabilities, not measured prediction accuracy.",
+          "Advancement uses a hypothetical clutch-weighted tiebreak assumption when the modeled score is tied (equal shares if both clutch ratings are zero); it is not a recorded shootout outcome.",
+          "For calculation, total shots are normalized upward to shots on target when shots on target exceed submitted shots. Prediction does not modify the scenario."
+        ],
+        "model": "road-to-the-final-heuristic-v2"
+      }
+    }
+  }
+]
