@@ -176,7 +176,7 @@ it("uses the real transport for authenticated bodyless generation and rejects re
 });
 
 it.each(["http://127.0.0.1:5100", "http://host.docker.internal:5100"])("forwards local GET, preview POST and scenario PATCH without credentials: %s", async origin => {
-  configure(); vi.stubEnv("NODE_ENV", "development"); vi.stubEnv("FOOTBALL_API_BASE_URL", origin); vi.stubEnv("SERVICE_API_TOKEN", "");
+  configure(); vi.stubEnv("NODE_ENV", "development"); vi.stubEnv("GOALSTATS_LOCAL_DOCKER", origin.includes("host.docker.internal") ? "1" : ""); vi.stubEnv("FOOTBALL_API_BASE_URL", origin); vi.stubEnv("SERVICE_API_TOKEN", "");
   vi.mocked(request).mockResolvedValue({data:{},status:200,mediaType:"application/json",location:null});
   for (const [method,path] of [["GET","catalog/teams"],["POST","predictions/preview"],["PATCH","scenarios/1"]] as const) {
     vi.mocked(request).mockClear();
@@ -186,7 +186,7 @@ it.each(["http://127.0.0.1:5100", "http://host.docker.internal:5100"])("forwards
   }
 });
 it.each(["production","vercel"])("rejects local HTTP destinations in %s",async mode=>{
-  configure();vi.stubEnv("NODE_ENV",mode === "production" ? "production" : "development");vi.stubEnv("VERCEL",mode === "vercel" ? "1" : "");
+  configure();vi.stubEnv("NODE_ENV",mode === "production" ? "production" : "development");vi.stubEnv("GOALSTATS_LOCAL_DOCKER","1");vi.stubEnv("VERCEL",mode === "vercel" ? "1" : "");
   for (const origin of ["http://host.docker.internal:5100","http://127.0.0.1:5100"]) {
     vi.stubEnv("FOOTBALL_API_BASE_URL",origin);
     expect((await POST(mutation(),context("scenarios"))).status).toBe(503);
@@ -194,7 +194,40 @@ it.each(["production","vercel"])("rejects local HTTP destinations in %s",async m
   }
 });
 it.each(["http://service.internal:5100","http://192.168.1.2:5100","http://host.docker.internal:5101","https://host.docker.internal:5100","http://host.docker.internal.evil.test:5100","http://host.docker.internal:5100/api/v1","http://user:password@host.docker.internal:5100"])("rejects unapproved development destination %s",async origin=>{
-  configure();vi.stubEnv("NODE_ENV","development");vi.stubEnv("FOOTBALL_API_BASE_URL",origin);
+  configure();vi.stubEnv("NODE_ENV","development");vi.stubEnv("GOALSTATS_LOCAL_DOCKER","1");vi.stubEnv("FOOTBALL_API_BASE_URL",origin);
   expect((await GET(new Request("http://localhost/api/football/catalog/teams"),context("catalog/teams"))).status).toBe(503);
   expect(request).not.toHaveBeenCalled();
+});
+
+it("allows the explicitly enabled Docker development origin without forwarding credentials", async () => {
+  configure(); vi.stubEnv("NODE_ENV", "development"); vi.stubEnv("GOALSTATS_LOCAL_DOCKER", "1");
+  vi.stubEnv("FOOTBALL_API_BASE_URL", "http://host.docker.internal:5100");
+  vi.stubEnv("SERVICE_API_TOKEN", dummyToken);
+  vi.mocked(request).mockResolvedValue({data:[],status:200,mediaType:"application/json",location:null});
+  const response = await GET(new Request("http://localhost/api/football/catalog/teams"),context("catalog/teams"));
+  expect(response.status).toBe(200);
+  expect(request).toHaveBeenCalledWith("http://host.docker.internal:5100/api/v1/catalog/teams",expect.objectContaining({headers:{}}));
+  expect((await POST(mutation(),context("scenarios"))).status).toBe(200);
+  expect(request).toHaveBeenLastCalledWith("http://host.docker.internal:5100/api/v1/scenarios",expect.objectContaining({headers:{}}));
+  expect(await response.text()).not.toContain(dummyToken);
+});
+it.each([
+  ["development", "", "", "http://host.docker.internal:5100"],
+  ["test", "", "1", "http://host.docker.internal:5100"],
+  ["production", "", "1", "http://host.docker.internal:5100"],
+  ["development", "1", "1", "http://host.docker.internal:5100"],
+  ["development", "", "1", "http://host.docker.internal:8000"],
+  ["development", "", "1", "https://host.docker.internal:5100"],
+  ["development", "", "1", "http://host.docker.internal.:5100"],
+  ["development", "", "1", "http://other.internal:5100"],
+  ["development", "", "1", "http://user:pass@host.docker.internal:5100"],
+  ["development", "", "1", "http://host.docker.internal:5100/api/v1"],
+])("rejects Docker destination outside the exact development exception: %s %s %s %s", async (mode,vercel,enabled,url) => {
+  configure();vi.stubEnv("NODE_ENV",mode);vi.stubEnv("VERCEL",vercel);vi.stubEnv("GOALSTATS_LOCAL_DOCKER",enabled);vi.stubEnv("FOOTBALL_API_BASE_URL",url);
+  expect((await GET(new Request("http://localhost/api/football/catalog/teams"),context("catalog/teams"))).status).toBe(503);
+  expect(request).not.toHaveBeenCalled();
+});
+it("keeps remote mutation authentication enabled inside local Docker", async () => {
+  remote();vi.stubEnv("NODE_ENV","development");vi.stubEnv("GOALSTATS_LOCAL_DOCKER","1");vi.stubEnv("SERVICE_API_TOKEN","");
+  expect((await POST(mutation(),context("scenarios"))).status).toBe(503);expect(request).not.toHaveBeenCalled();
 });
