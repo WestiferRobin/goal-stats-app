@@ -11,43 +11,39 @@ database and football logic. This repository is `goal-stats-app`.
 
 ## Start here
 
-Install Git, Docker with Compose v2, and GNU Make. Use macOS, Linux, WSL, or native
-Windows with Docker Desktop and Git for Windows installed in its standard location.
-You do not need to install Node or npm.
+Install Git, GNU Make, Docker with Compose V2 (target compatibility: 2.22.0), and host Node.js
+24.x with npm for native development. Docker-only deployment does not require host Node/npm. Clone both repositories side by side.
 
-Clone `goal-stats-app` and `goal-stats-service` side by side and start Docker.
+### Native development
 
-Home at `/` renders Esteban's Women's World Cup HomeView without a backend.
-The Teams, Matches, Predictions and Analytics workflows use the normalized backend.
-For an authorized development environment, start it in another terminal:
+In the backend repository, run `make setup && make run` in its own terminal.
+In this frontend repository, run `make setup && make run` in another terminal.
+Both native servers run in the foreground and stop with Ctrl+C. Frontend startup
+never starts, stops, migrates or seeds the backend.
 
-```sh
-cd goal-stats-service
-make setup
-make run
-```
+### Local Docker deployment
 
-Then, from this repository:
+In the backend repository, run `make setup && make deploy`.
+In this frontend repository, run `make setup && make deploy`. For Docker-only
+development without host Node, copy `.env.example` to `.env.local` only if the
+local file does not already exist, then run `make deploy`.
+These are separate alternatives to native development: run lifecycle commands
+sequentially, and do not run native and Docker frontends on the same port.
 
-```sh
-cd goal-stats-app
-make setup
-make run
-```
-
-Leave both terminals running and open <http://localhost:3000/> or
-<http://127.0.0.1:3000/>. Use Matches to
-select two teams and enter explicit hypothetical strengths before generating a
-preview. Predictions saves scenarios and immutable predictions in two steps.
-<http://127.0.0.1:3000/api/football/catalog/teams> returns the 44 historical teams.
+Open the URL printed by the frontend command. `APP_PORT` in `.env.local` defaults
+to 3000; choose 3001 when port 3000 belongs to Prizm Hub or another application.
+Do not stop the unrelated application. `/teams` browses the backend catalog;
+`/api/football/catalog/teams` returns 44 teams when the approved dataset is loaded.
+The frontend does not load historical data itself.
 
 | Command | Meaning |
 | --- | --- |
-| `make setup` | Prepare this repository for first use; start nothing. |
-| `make run` | Start or restart the frontend website. |
-| `make test` | Run normal contributor checks and tests. |
-| `make stop` | Stop only this repository's frontend resources. |
-| `make help` | Show the beginner commands. |
+| `make setup` | Preserve/create configuration, install host dependencies, build Docker images; start nothing |
+| `make run` | Run native Next.js in the foreground with hot reload; no Docker calls |
+| `make deploy` | Build/start the local Docker frontend and wait for readiness |
+| `make test` | Run ESLint, TypeScript, unit/component and lifecycle checks |
+| `make stop` | Stop only frontend Docker resources; preserve volumes; native mode uses Ctrl+C |
+| `make help` | Display commands, modes and URL guidance |
 
 ## Current product state
 
@@ -60,7 +56,7 @@ preview. Predictions saves scenarios and immutable predictions in two steps.
 | `/analytics` | Saved prediction charts; tournament/backtesting execution deferred |
 | `/demo` | Historical/static reference, no live requests or saves |
 
-`/about`, `/blog` and `/project` are preserved informational links awaiting implementation.
+`/about`, `/blog` and `/project` are implemented informational pages and remain unchanged.
 LandingView and the restored Item/Action modules remain inactive reference material.
 
 The Phase 1 direction remains Home, Matches, Predictions, Teams, and Analytics.
@@ -87,7 +83,7 @@ Item/Action reference code; it is not required for the product.
 ### Vercel / Render deployment
 
 Use the existing Next.js application without Docker: framework **Next.js**, root
-**.**, Node.js **22.x**, install **npm ci**, build **npm run build**, framework-default
+**.**, Node.js **24.x**, install **npm ci**, build **npm run build**, framework-default
 output directory. Deploy the reviewed committed integration branch; finish the
 existing Git reconciliation separately before deploying. No deployment is implied here.
 
@@ -131,33 +127,30 @@ been verified. Existing request validation and the 32768-character body cap rema
 shared abuse enforcement is a separate deployment decision. User authentication and
 ownership remain future product work; no account framework is introduced here.
 
-## Optional: run the frontend on your machine
+## Native and Docker configuration
 
-Docker through Make is the recommended workflow. Frontend developers may instead
-install Node.js 22 and npm, leave `goal-stats-service` running through Docker, and
-run this repository directly:
+Use Node.js 24.x for native development, matching the pinned Docker runtime major.
+`make run` validates `.env.local` and launches Next.js on its explicit `APP_PORT`;
+it does not silently select another port. Raw `npm run dev` does not read `APP_PORT`
+as its listening port or perform the lifecycle checks; use `make run`.
 
-```sh
-test -e .env.local || cp .env.example .env.local
-npm ci
-npm run dev
-```
+Keep the host-facing `FOOTBALL_API_BASE_URL=http://127.0.0.1:5100` in `.env.local`.
+Container port 8000 is not the published host port. `make deploy` selects
+`http://host.docker.internal:5100` inside Docker and supplies the development-only
+proxy flag. Switching modes does not require changing the backend URL. Explicit
+remote HTTPS origins and their server token remain supported in native/hosted mode;
+local Docker deployment always targets the local backend.
 
-Open <http://127.0.0.1:3000/>. This uses the same `.env.local`; do not change
-the backend URLs when switching between host and Docker frontend development.
-Both browser addresses work in local development. Next.js explicitly permits the
-`127.0.0.1` development origin alongside its built-in `localhost` support. After
-changing `next.config.ts`, restart host Next.js or rerun `make run` for Docker.
-These browser addresses are separate from the backend destination: Docker
-Compose overrides the host URL with `http://host.docker.internal:5100` inside the
-container and supplies a `host-gateway` mapping. Docker uses Node.js 22; the host
-alternative also requires Node.js 22. Restart host Next.js after environment changes
-or rerun `make run` for Docker configuration changes.
+Existing `.env.local` is preserved, not automatically repaired. If it contains a
+Docker alias or port 8000, correct it privately before native startup. Inherited
+conflicting configuration is rejected with values omitted. For Docker lifecycle
+commands, unset exported APP_PORT, FOOTBALL_API_BASE_URL and SERVICE_API_TOKEN;
+configure them in `.env.local` instead. Never commit that file or credentials.
 
-Docker Desktop and Linux Engine networking differ: the host-gateway mapping resolves
-the name on Linux, but does not guarantee access to a backend bound only to host
-loopback. Verify reachability on your platform; do not expose the backend publicly
-to work around a connection failure.
+After changing native configuration, stop that frontend with Ctrl+C and rerun
+`make run`. Recreate Docker frontend configuration with `make deploy`. Stop Docker
+frontend resources with `make stop`; volumes and backend services remain untouched.
+Both localhost and 127.0.0.1 browser origins retain master's development support.
 
 ## Where to work
 
@@ -176,7 +169,7 @@ and [testing](docs/TESTING.md) for maintainer detail.
 ## Common first-run errors
 
 - Docker connection error: start Docker Desktop and wait for it to finish starting.
-- Port 3000 already allocated: stop the conflicting frontend process/container.
+- Port already allocated: select another APP_PORT in .env.local; do not stop unrelated applications.
 - `Football service is not configured.`: check the server-only origin, execution
   mode, and (for remote POST/PATCH) the service token. Local Docker must use exactly
   `http://host.docker.internal:5100` in development; host development uses loopback.
@@ -184,7 +177,7 @@ and [testing](docs/TESTING.md) for maintainer detail.
 - Football proxy returns an unavailable/connection error: check that local Flask
   is running on port 5100 and reachable from the frontend environment.
 - Changes do not appear: confirm the frontend container is running, then repeat
-  `make run` if dependency or Docker configuration files changed.
+  `make deploy` for Docker configuration changes; use `make setup` for dependency changes.
 
 ## Verify local football workflows
 
@@ -201,3 +194,7 @@ prediction preview. Confirm `/api/football/predictions/preview` succeeds in the
 browser network panel. Local host and Docker development require no service token.
 Saved scenarios and predictions continue to use the existing backend contract;
 historical summary totals remain separate from hypothetical prediction ratings.
+
+## Verified runtime policy
+
+Use Node.js 24.22.3 and npm 11.19.1. Supported policy: Node >=24.22.3 <25 and npm >=11.19.1 <12. With nvm, run `nvm install` then `nvm use` in this repository; other version managers may select the same version. This selection is per project, so another project can keep Node 26. Docker uses the pinned official Node 24 Debian slim image; deploy/stop need no host Node. Verify the Vercel project runtime is aligned to Node 24 before deployment; this change does not alter Vercel settings.

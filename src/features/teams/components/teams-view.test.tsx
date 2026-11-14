@@ -67,3 +67,16 @@ it("ignores a pending old page after changing the selected team",async()=>{
  await waitFor(()=>expect(finish).toBeDefined());fireEvent.change(screen.getByRole('combobox',{name:'Team 1'}),{target:{value:'3'}});await screen.findByText(/No imported match history is available for Japan/);
  finish(Response.json({...insights,offset:50}));await waitFor(()=>expect(screen.queryByText(/1991-11-16/)).toBeNull());
 });
+
+it.each(['http','json','network'])("clears initial loading after a completed %s failure",async kind=>{
+ vi.spyOn(console,'error').mockImplementation(()=>{});
+ vi.stubGlobal('fetch',vi.fn(async()=>{
+  if(kind==='network')throw new TypeError('Network request failed');
+  return kind==='json'?new Response('not-json'):Response.json({detail:'Catalog unavailable'},{status:503});
+ }));
+ render(<TeamsView/>);
+ await waitFor(()=>expect(screen.queryByText('Loading teams...')).toBeNull());
+ expect(screen.queryByText('No teams are available.')).toBeNull();
+ expect(screen.queryByRole('combobox')).toBeNull();
+ expect(screen.getByText(kind==='http'?'Catalog unavailable':kind==='network'?'Network request failed':/JSON|Unexpected token/)).toBeTruthy();
+});
