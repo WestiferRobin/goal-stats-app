@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       target: development
     environment:
-      FOOTBALL_API_BASE_URL: ${FOOTBALL_API_BASE_URL:?Configure FOOTBALL_API_BASE_URL in .env.local}
+      FOOTBALL_API_BASE_URL: http://host.docker.internal:5100
       SERVICE_API_TOKEN: ${SERVICE_API_TOKEN:-}
       GOALSTATS_LOCAL_DOCKER: "1"
     extra_hosts:

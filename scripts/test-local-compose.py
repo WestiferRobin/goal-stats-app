@@ -23,12 +23,14 @@ class LocalComposeTests(unittest.TestCase):
         self.assertEqual(app['environment']['GOALSTATS_LOCAL_DOCKER'], '1')
         self.assertEqual(app['ports'][0]['published'], '3001')
         self.assertEqual(app['ports'][0]['host_ip'], '127.0.0.1')
-        self.assertIn('host.docker.internal=host-gateway', app['extra_hosts'])
+        # Compose 2.22 serializes ':'; newer releases normalize the separator to '='.
+        hosts = [entry.replace('=', ':', 1) for entry in app['extra_hosts']]
+        self.assertIn('host.docker.internal:host-gateway', hosts)
 
-    def test_explicit_remote_and_server_token(self):
+    def test_docker_origin_cannot_inherit_native_or_remote_namespace(self):
         token = 'dummy-compose-test-token-not-a-secret'
         app = self.resolve('https://backend.example.invalid', token)
-        self.assertEqual(app['environment']['FOOTBALL_API_BASE_URL'], 'https://backend.example.invalid')
+        self.assertEqual(app['environment']['FOOTBALL_API_BASE_URL'], 'http://host.docker.internal:5100')
         self.assertEqual(app['environment']['SERVICE_API_TOKEN'], token)
         self.assertNotIn('NEXT_PUBLIC_SERVICE_API_TOKEN', app['environment'])
 

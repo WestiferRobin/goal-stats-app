@@ -18,7 +18,7 @@ it("handles empty teams and unavailable catalog without fallback",async()=>{
  vi.stubGlobal('fetch',vi.fn(async()=>Response.json([])));const view=render(<TeamsView/>);await screen.findByText('No teams are available.');view.unmount();vi.spyOn(console,'error').mockImplementation(()=>{});vi.stubGlobal('fetch',vi.fn(async()=>Response.json({detail:'Unavailable'},{status:503})));render(<TeamsView/>);await screen.findByText('Unavailable');expect(screen.queryByRole('combobox')).toBeNull();
 });
 it("handles empty and failed history with refresh",async()=>{
- let fail=false;vi.stubGlobal('fetch',vi.fn(async(url:string)=>Response.json(url.endsWith('/teams')?teams:fail?{detail:'History unavailable'}:{...insights,head_to_head:[],team1_history:[],team2_history:[]},{status:!url.endsWith('/teams')&&fail?503:200})));render(<TeamsView/>);await screen.findByText(/No imported head-to-head/);fail=true;fireEvent.click(screen.getByRole('button',{name:'Refresh'}));await screen.findByText('History unavailable');
+ let fail=false;vi.stubGlobal('fetch',vi.fn(async(url:string)=>Response.json(url.endsWith('/teams')?teams:fail?{detail:'History unavailable'}:{...insights,head_to_head:[],team1_history:[],team2_history:[]},{status:!url.endsWith('/teams')&&fail?503:200})));render(<TeamsView/>);await screen.findByText(/No imported head-to-head/);expect(screen.getAllByText(/No imported match history/)).toHaveLength(2);fail=true;fireEvent.click(screen.getByRole('button',{name:'Refresh'}));await screen.findByText('History unavailable');expect(screen.queryByText(/No imported head-to-head/)).toBeNull();expect(screen.queryByText(/No imported match history/)).toBeNull();
 });
 it("ignores a stale response after selection changes even if fetch ignores abort",async()=>{
  let resolve!: (r:Response)=>void;const fetch=vi.fn(async(url:string)=>{
@@ -26,6 +26,13 @@ it("ignores a stale response after selection changes even if fetch ignores abort
  if(url.includes('team1_id=1'))return new Promise<Response>(r=>{resolve=r;});
  return Response.json({...insights,team1_id:3,team1_name:'Japan',head_to_head:[],team1_history:[],team2_history:[]});
  });vi.stubGlobal('fetch',fetch);render(<TeamsView/>);await waitFor(()=>expect(fetch).toHaveBeenCalledTimes(2));fireEvent.change(screen.getByRole('combobox',{name:'Team 1'}),{target:{value:'3'}});await screen.findByText(/No imported head-to-head/);resolve(Response.json(insights));await waitFor(()=>expect(screen.queryByText(/1991-11-16/)).toBeNull());
+});
+
+it("does not show empty history while a request is pending",async()=>{
+ vi.stubGlobal('fetch',vi.fn(async(url:string)=>url.endsWith('/teams')?Response.json(teams):new Promise<Response>(()=>{})));
+ render(<TeamsView/>);await screen.findAllByText('Loading history...');
+ expect(screen.queryByText(/No imported match history/)).toBeNull();
+ expect(screen.queryByText(/No imported head-to-head/)).toBeNull();
 });
 
 it.each(['http','json','network'])("clears initial loading after a completed %s failure",async kind=>{

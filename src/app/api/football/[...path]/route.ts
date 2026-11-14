@@ -16,7 +16,7 @@ function allowedMethods(path: string) {
   if (match[3]) return match[1] === "scenarios" ? ["GET", "POST"] : undefined;
   return match[1] === "scenarios" ? ["GET", "PATCH"] : ["GET"];
 }
-// Only explicitly permitted local development targets may omit service authentication.
+// Only approved local development targets may omit service authentication.
 // All other destinations must be public HTTPS hostnames configured by the server.
 function isLocalBackend(base: URL) {
   const host = base.hostname.toLowerCase().replace(/\.$/, "");
@@ -24,10 +24,8 @@ function isLocalBackend(base: URL) {
 }
 function isLocalDevelopmentBackend(base: URL) {
   if (process.env.VERCEL === "1" || process.env.NODE_ENV === "production") return false;
-  return isLocalBackend(base) || (
-    process.env.NODE_ENV === "development" && process.env.GOALSTATS_LOCAL_DOCKER === "1" &&
-    base.protocol === "http:" && base.hostname === "host.docker.internal" && base.port === "5100"
-  );
+  return isLocalBackend(base) || (process.env.NODE_ENV === "development" &&
+    process.env.GOALSTATS_LOCAL_DOCKER === "1" && base.origin === "http://host.docker.internal:5100");
 }
 function validateDestination(base: URL) {
   if (!/^https?:$/.test(base.protocol) || base.username || base.password || base.search || base.hash || base.pathname !== "/") throw new Error();

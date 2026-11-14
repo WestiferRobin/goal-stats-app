@@ -34,9 +34,9 @@ PostgreSQL, Redis and frontend stack. Never send automated writes to development
 
 Home tests verify Esteban's actual hero, feature cards, navigation, calls to action,
 responsive layout and absence of legacy requests/forms. LandingView is tested
-directly as preserved inactive UI. Root composition is tested separately. Missing
-informational destinations `/about`, `/blog`, `/project` are preserved links, not
-asserted to be implemented pages.
+directly as preserved inactive UI. Root composition is tested separately.
+Informational pages `/about`, `/blog`, `/project` are implemented; the navigation
+tests do not replace acceptance checks for their content.
 
 Default navigation tests intercept only approved read-only catalog/scenario calls.
 Demo tests verify the historical label, preserved presentation, disabled controls,
@@ -52,21 +52,23 @@ migrations or process startup. Its original script body, Compose file and live-h
 suite remain historical references. Do not reenable the frozen Item/Action backend.
 No skips, retries or timeout increases are used to hide incompatible expectations.
 
-## Local Docker backend configuration
+## Shared local lifecycle checks
 
-The local Compose service reads `FOOTBALL_API_BASE_URL` and `SERVICE_API_TOKEN`
-from `.env.local` through explicit environment interpolation. For Flask on the Mac
-host, use `FOOTBALL_API_BASE_URL=http://host.docker.internal:5100`. The example
-frontend port is 3001; change `APP_PORT` if needed. Do not use container loopback to
-reach the host. Existing environment files are preserved by `make setup`.
+`make test` also runs `node --test scripts/development/*.test.mjs`. These tests
+use temporary configurations and fake command executables, never live Docker
+teardown. Coverage includes configuration preservation, rejected overrides and
+symlinks, occupied ports, setup without service startup, native child termination,
+Docker deployment without host Node/npm, build-before-up ordering, startup failure,
+and frontend-only shutdown without volume deletion.
 
-Compose sets the server-only `GOALSTATS_LOCAL_DOCKER=1` flag. The proxy accepts the
-exact HTTP Docker hostname on port 5100 only in development outside Vercel.
-Production restrictions remain active regardless of that flag. Explicit public
-HTTPS backends remain supported; remote POST/PATCH requests require the matching
-server-only `SERVICE_API_TOKEN`. Public catalog GETs do not send credentials.
+`python3 scripts/test-local-compose.py` checks resolved Compose configuration
+without starting services. It accepts the extra_hosts serialization used by both
+Compose 2.22 and newer releases. Local Docker always targets the host gateway;
+remote HTTPS configuration remains a native/hosted option.
 
-Run `python3 scripts/test-local-compose.py` to check resolved local/remote Compose
-configuration without starting services. Proxy and Teams error/loading regressions
-run with `npm run test:unit`. After changing `.env.local`, recreate the frontend
-with `make run`; this does not start, migrate, or seed the backend.
+Before integration approval, run these checks plus lint, TypeScript, unit/component
+tests, and `npm run build` in production build mode. Verify native startup with
+Node 22.x and Docker deployment separately, including actual Compose 2.22.0.
+Use configured free ports and read-only backend requests for browser Teams checks.
+Do not manage the backend, seed data, or modify shared databases from this suite.
+The implementation transfer alone does not establish that these checks pass.
