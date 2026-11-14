@@ -51,3 +51,22 @@ unit tests cover normalized mapping, validation, persistence state and failure p
 migrations or process startup. Its original script body, Compose file and live-home
 suite remain historical references. Do not reenable the frozen Item/Action backend.
 No skips, retries or timeout increases are used to hide incompatible expectations.
+
+## Local Docker backend configuration
+
+The local Compose service reads `FOOTBALL_API_BASE_URL` and `SERVICE_API_TOKEN`
+from `.env.local` through explicit environment interpolation. For Flask on the Mac
+host, use `FOOTBALL_API_BASE_URL=http://host.docker.internal:5100`. The example
+frontend port is 3001; change `APP_PORT` if needed. Do not use container loopback to
+reach the host. Existing environment files are preserved by `make setup`.
+
+Compose sets the server-only `GOALSTATS_LOCAL_DOCKER=1` flag. The proxy accepts the
+exact HTTP Docker hostname on port 5100 only in development outside Vercel.
+Production restrictions remain active regardless of that flag. Explicit public
+HTTPS backends remain supported; remote POST/PATCH requests require the matching
+server-only `SERVICE_API_TOKEN`. Public catalog GETs do not send credentials.
+
+Run `python3 scripts/test-local-compose.py` to check resolved local/remote Compose
+configuration without starting services. Proxy and Teams error/loading regressions
+run with `npm run test:unit`. After changing `.env.local`, recreate the frontend
+with `make run`; this does not start, migrate, or seed the backend.

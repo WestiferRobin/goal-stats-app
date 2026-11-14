@@ -16,16 +16,22 @@ function allowedMethods(path: string) {
   if (match[3]) return match[1] === "scenarios" ? ["GET", "POST"] : undefined;
   return match[1] === "scenarios" ? ["GET", "PATCH"] : ["GET"];
 }
-// Only explicit loopback development targets may omit service authentication.
+// Only explicitly permitted local development targets may omit service authentication.
 // All other destinations must be public HTTPS hostnames configured by the server.
 function isLocalBackend(base: URL) {
   const host = base.hostname.toLowerCase().replace(/\.$/, "");
   return host === "localhost" || host === "[::1]" || /^127\.\d+\.\d+\.\d+$/.test(host);
 }
+function isLocalDevelopmentBackend(base: URL) {
+  if (process.env.VERCEL === "1" || process.env.NODE_ENV === "production") return false;
+  return isLocalBackend(base) || (
+    process.env.NODE_ENV === "development" && process.env.GOALSTATS_LOCAL_DOCKER === "1" &&
+    base.protocol === "http:" && base.hostname === "host.docker.internal" && base.port === "5100"
+  );
+}
 function validateDestination(base: URL) {
   if (!/^https?:$/.test(base.protocol) || base.username || base.password || base.search || base.hash || base.pathname !== "/") throw new Error();
-  const cloud = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
-  if (!cloud && isLocalBackend(base)) return;
+  if (isLocalDevelopmentBackend(base)) return;
   const host = base.hostname.toLowerCase().replace(/\.$/, "");
   if (base.protocol !== "https:" || isLocalBackend(base) || isIP(host.replace(/^\[|\]$/g, "")) ||
       !host.includes(".") || /(?:^|\.)(?:localhost|local|internal)$/.test(host)) throw new Error();
@@ -48,7 +54,7 @@ async function forward(request: Request, context: { params: Promise<{ path: stri
   } catch { return problem(503, "Football service is not configured."); }
   const protectedOperation = request.method === "POST" || request.method === "PATCH";
   const upstreamHeaders: Record<string, string> = {};
-  if (protectedOperation && !isLocalBackend(base)) {
+  if (protectedOperation && !isLocalDevelopmentBackend(base)) {
     const token = process.env.SERVICE_API_TOKEN;
     if (!token || token.length < 32 || /[^\x21-\x7e]/.test(token)) {
       return problem(503, "Football service is not configured.");

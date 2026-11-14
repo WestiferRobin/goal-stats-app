@@ -27,3 +27,16 @@ it("ignores a stale response after selection changes even if fetch ignores abort
  return Response.json({...insights,team1_id:3,team1_name:'Japan',head_to_head:[],team1_history:[],team2_history:[]});
  });vi.stubGlobal('fetch',fetch);render(<TeamsView/>);await waitFor(()=>expect(fetch).toHaveBeenCalledTimes(2));fireEvent.change(screen.getByRole('combobox',{name:'Team 1'}),{target:{value:'3'}});await screen.findByText(/No imported head-to-head/);resolve(Response.json(insights));await waitFor(()=>expect(screen.queryByText(/1991-11-16/)).toBeNull());
 });
+
+it.each(['http','json','network'])("clears initial loading after a completed %s failure",async kind=>{
+ vi.spyOn(console,'error').mockImplementation(()=>{});
+ vi.stubGlobal('fetch',vi.fn(async()=>{
+  if(kind==='network')throw new TypeError('Network request failed');
+  return kind==='json'?new Response('not-json'):Response.json({detail:'Catalog unavailable'},{status:503});
+ }));
+ render(<TeamsView/>);
+ await waitFor(()=>expect(screen.queryByText('Loading teams...')).toBeNull());
+ expect(screen.queryByText('No teams are available.')).toBeNull();
+ expect(screen.queryByRole('combobox')).toBeNull();
+ expect(screen.getByText(kind==='http'?'Catalog unavailable':kind==='network'?'Network request failed':/JSON|Unexpected token/)).toBeTruthy();
+});

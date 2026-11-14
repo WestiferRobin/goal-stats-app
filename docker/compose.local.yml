@@ -6,7 +6,9 @@ services:
       dockerfile: Dockerfile
       target: development
     environment:
-      FOOTBALL_API_BASE_URL: https://goal-stats-service.onrender.com/
+      FOOTBALL_API_BASE_URL: ${FOOTBALL_API_BASE_URL:?Configure FOOTBALL_API_BASE_URL in .env.local}
+      SERVICE_API_TOKEN: ${SERVICE_API_TOKEN:-}
+      GOALSTATS_LOCAL_DOCKER: "1"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     init: true
