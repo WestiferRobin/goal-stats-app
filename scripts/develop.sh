@@ -9,9 +9,10 @@ compose=(docker compose --env-file "$env_file" -p "$project" -f docker/compose.l
 fail() { echo "Error: $*" >&2; exit 2; }
 step() { printf '\n==> %s\n' "$1"; }
 check_node() {
-  command -v node >/dev/null || fail 'Native development requires Node.js 22.x and npm; Docker-only development can use make deploy.'
-  node -e 'if (Number(process.versions.node.split(".")[0]) !== 22) process.exit(1)' || fail 'Native development requires Node.js 22.x, matching the Docker runtime major.'
+  command -v node >/dev/null || fail 'Native development requires Node.js >=24.22.3 <25 and npm; Docker-only development can use make deploy.'
+  node scripts/development/versions.mjs node || fail 'Select Node.js >=24.22.3 <25 (nvm use); Docker deploy needs no host Node.'
   command -v npm >/dev/null || fail 'npm is required for native development.'
+  node scripts/development/versions.mjs npm "$(npm --version)" || fail 'Native development requires npm >=11.19.1 <12.'
 }
 check_docker() {
   command -v docker >/dev/null || fail 'Docker is required.'
@@ -35,7 +36,7 @@ case "$action" in
     printf '%s\n' \
       'GoalStats frontend — native or local Docker development' \
       '  make setup   Prepare configuration, host dependencies and Docker images; start nothing' \
-      '  make run     Run native Next.js in foreground; Ctrl+C stops it (Node 22.x)' \
+      '  make run     Run native Next.js in foreground; Ctrl+C stops it (Node >=24.22.3 <25; npm >=11.19.1 <12)' \
       '  make deploy  Build/start local Docker frontend; wait for readiness (no host Node required)' \
       '  make test    Run frontend quality and regression checks in isolated Docker' \
       '  make stop    Stop only frontend Docker resources; preserve volumes' \
