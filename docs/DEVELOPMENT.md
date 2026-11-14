@@ -1,7 +1,7 @@
 # Development internals
 
 The root README owns the supported contributor workflow. Docker-backed Next.js
-development is the only public local mode; source and `public/` are mounted read-only
+development is the recommended local mode; source and `public/` are mounted read-only
 and the `.next` cache is retained for hot reload.
 
 The request path is:
@@ -13,7 +13,10 @@ Browser -> Goal Stats Next.js -> /api/football/* -> Flask backend -> database/fo
 `.env.local` uses the host-facing backend address `http://127.0.0.1:5100`. Local
 Compose overrides the football server-only upstream URL with
 `http://host.docker.internal:5100` and maps that name through `host-gateway` for
-Linux compatibility. Contributors neither export URLs nor edit configuration when
+name resolution on Linux. Reachability must still be verified: Docker Desktop and
+Linux Engine differ, especially for host-loopback-only backend listeners. This exact
+Docker HTTP origin is accepted only in development outside Vercel, without a service
+token. Production rejects it. Contributors neither export URLs nor edit configuration when
 switching frontend workflows.
 
 ## Optional host frontend

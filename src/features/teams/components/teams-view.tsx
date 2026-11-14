@@ -474,7 +474,8 @@ export default function TeamsView() {
                           matches={
                             insights?.team1_history ?? []
                           }
-                          loading={insightsLoading}
+                          loading={insightsLoading || (!insights && !insightsError)}
+                          failed={Boolean(insightsError)}
                         />
 
                         <HistoryCard
@@ -482,7 +483,8 @@ export default function TeamsView() {
                           matches={
                             insights?.team2_history ?? []
                           }
-                          loading={insightsLoading}
+                          loading={insightsLoading || (!insights && !insightsError)}
+                          failed={Boolean(insightsError)}
                         />
                       </div>
                     </section>
@@ -722,10 +724,12 @@ function HistoryCard({
   teamName,
   matches,
   loading,
+  failed,
 }: {
   teamName: string;
   matches: HistoryMatch[];
   loading: boolean;
+  failed: boolean;
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/55 p-6">
@@ -741,6 +745,8 @@ function HistoryCard({
         <p className="mt-5 text-zinc-400">
           Loading history...
         </p>
+      ) : failed ? (
+        <p className="mt-5 text-zinc-400">History could not be loaded. Use Refresh to retry.</p>
       ) : (
         <div className="mt-5">
           <MatchList

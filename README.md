@@ -74,6 +74,7 @@ simplification does not make unfinished routes complete.
 ```dotenv
 APP_PORT=3000
 FOOTBALL_API_BASE_URL=http://127.0.0.1:5100
+SERVICE_API_TOKEN=
 ```
 
 `FOOTBALL_API_BASE_URL` is read only by the existing Next.js `/api/football` proxy,
@@ -106,7 +107,9 @@ GETs need no credential. Upstream 401, 403 and 429 retain safe status messages.
 
 Local Next.js targeting Render also requires this token for protected requests.
 Outside Vercel and NODE_ENV=production, explicit loopback Flask origins (localhost,
-127.x.x.x or ::1) may use HTTP and omit the token. All other destinations require
+127.x.x.x or ::1) may use HTTP and omit the token. With NODE_ENV=development,
+the exact Docker origin `http://host.docker.internal:5100` also needs no token.
+Vercel and production reject both local destinations. All other destinations require
 HTTPS and a public DNS hostname; IP literals, single-label names, and .localhost,
 .local or .internal names are rejected. Production builds/servers require the cloud
 policy even when run locally. No fallback origin is selected. DNS resolution itself
@@ -134,12 +137,22 @@ install Node.js 22 and npm, leave `goal-stats-service` running through Docker, a
 run this repository directly:
 
 ```sh
+test -e .env.local || cp .env.example .env.local
 npm ci
 npm run dev
 ```
 
 Open <http://127.0.0.1:3000/>. This uses the same `.env.local`; do not change
 the backend URLs when switching between host and Docker frontend development.
+Compose overrides the host URL with `http://host.docker.internal:5100` inside the
+container and supplies a `host-gateway` mapping. Docker uses Node.js 22; the host
+alternative also requires Node.js 22. Restart host Next.js after environment changes
+or rerun `make run` for Docker configuration changes.
+
+Docker Desktop and Linux Engine networking differ: the host-gateway mapping resolves
+the name on Linux, but does not guarantee access to a backend bound only to host
+loopback. Verify reachability on your platform; do not expose the backend publicly
+to work around a connection failure.
 
 ## Where to work
 
@@ -159,6 +172,27 @@ and [testing](docs/TESTING.md) for maintainer detail.
 
 - Docker connection error: start Docker Desktop and wait for it to finish starting.
 - Port 3000 already allocated: stop the conflicting frontend process/container.
-- Football proxy returns 502/503: start `goal-stats-service` on port 5100.
+- `Football service is not configured.`: check the server-only origin, execution
+  mode, and (for remote POST/PATCH) the service token. Local Docker must use exactly
+  `http://host.docker.internal:5100` in development; host development uses loopback.
+  Production requires the approved HTTPS service. Restart Next.js after changes.
+- Football proxy returns an unavailable/connection error: check that local Flask
+  is running on port 5100 and reachable from the frontend environment.
 - Changes do not appear: confirm the frontend container is running, then repeat
   `make run` if dependency or Docker configuration files changed.
+
+## Verify local football workflows
+
+After starting and seeding the backend using the `goal-stats-service` README,
+open `/api/football/catalog/teams`, then `/teams` and `/matches`. Confirm teams,
+dated historical scores and team comparisons load. A successful empty catalog or
+history can indicate that historical data has not been seeded; check the backend
+seed instructions and selected teams/filters. An error is not evidence of an empty
+dataset: Teams displays the request error and offers Refresh instead of claiming
+no imported history exists.
+
+In Matches, select two teams, enter explicit hypothetical strengths and generate a
+prediction preview. Confirm `/api/football/predictions/preview` succeeds in the
+browser network panel. Local host and Docker development require no service token.
+Saved scenarios and predictions continue to use the existing backend contract;
+this setup does not add historical-summary endpoints or infer unknown ratings.
