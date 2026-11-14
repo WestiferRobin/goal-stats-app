@@ -12,7 +12,7 @@ database and football logic. This repository is `goal-stats-app`.
 ## Start here
 
 Install Git, GNU Make, Docker with Compose V2 (target compatibility: 2.22.0), and host Node.js
-22.x with npm for native development. Docker-only deployment does not require host Node/npm. Clone both repositories side by side.
+24.x with npm for native development. Docker-only deployment does not require host Node/npm. Clone both repositories side by side.
 
 ### Native development
 
@@ -83,7 +83,7 @@ Item/Action reference code; it is not required for the product.
 ### Vercel / Render deployment
 
 Use the existing Next.js application without Docker: framework **Next.js**, root
-**.**, Node.js **22.x**, install **npm ci**, build **npm run build**, framework-default
+**.**, Node.js **24.x**, install **npm ci**, build **npm run build**, framework-default
 output directory. Deploy the reviewed committed integration branch; finish the
 existing Git reconciliation separately before deploying. No deployment is implied here.
 
@@ -129,7 +129,7 @@ ownership remain future product work; no account framework is introduced here.
 
 ## Native and Docker configuration
 
-Use Node.js 22.x for native development, matching the pinned Docker runtime major.
+Use Node.js 24.x for native development, matching the pinned Docker runtime major.
 `make run` validates `.env.local` and launches Next.js on its explicit `APP_PORT`;
 it does not silently select another port. Raw `npm run dev` does not read `APP_PORT`
 as its listening port or perform the lifecycle checks; use `make run`.
@@ -194,3 +194,7 @@ prediction preview. Confirm `/api/football/predictions/preview` succeeds in the
 browser network panel. Local host and Docker development require no service token.
 Saved scenarios and predictions continue to use the existing backend contract;
 this setup does not add historical-summary endpoints or infer unknown ratings.
+
+## Verified runtime policy
+
+Use Node.js 24.22.3 and npm 11.19.1. Supported policy: Node >=24.22.3 <25 and npm >=11.19.1 <12. With nvm, run `nvm install` then `nvm use` in this repository; other version managers may select the same version. This selection is per project, so another project can keep Node 26. Docker uses the pinned official Node 24 Debian slim image; deploy/stop need no host Node. Verify the Vercel project runtime is aligned to Node 24 before deployment; this change does not alter Vercel settings.

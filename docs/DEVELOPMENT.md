@@ -8,7 +8,7 @@ owned Docker resources. The frontend has no infrastructure, seed or certificatio
 `.env.local` without shell evaluation, validates the port/origin and inherited conflicts,
 checks port availability, and launches native Next.js with an explicit port. It forwards
 Ctrl+C/termination to its own child. Native mode performs no Docker operations.
-Native setup/run require Node.js 22.x and npm, matching the Docker runtime major.
+Native setup/run require Node.js 24.x and npm, matching the Docker runtime major.
 Docker deploy/stop do not invoke host Node or npm. For Docker-only use, copy the
 example environment if missing, configure APP_PORT, then run make deploy.
 
@@ -59,3 +59,7 @@ Demo is a static historical reference. Restored Item/Action modules are inactive
 `scripts/test-home.sh` exits before any provisioning. Do not use its historical
 Compose stack for current certification. Informational pages `/about`, `/blog` and
 `/project` are implemented and preserved. See TESTING.md for supported test modes.
+
+## Verified runtime policy
+
+Use Node.js 24.22.3 and npm 11.19.1. Supported policy: Node >=24.22.3 <25 and npm >=11.19.1 <12. With nvm, run `nvm install` then `nvm use` in this repository; other version managers may select the same version. This selection is per project, so another project can keep Node 26. Docker uses the pinned official Node 24 Debian slim image; deploy/stop need no host Node. Verify the Vercel project runtime is aligned to Node 24 before deployment; this change does not alter Vercel settings.

@@ -15,6 +15,7 @@ function fixture(t, configured = true) {
   mkdirSync(join(root, 'bin'));
   mkdirSync(join(root, 'node_modules/next/dist/bin'), { recursive: true });
   copyFileSync(script, join(root, 'scripts/develop.sh'));
+  copyFileSync(fileURLToPath(new URL('./versions.mjs', import.meta.url)), join(root, 'scripts/development/versions.mjs'));
   const config = 'APP_PORT=3001\nFOOTBALL_API_BASE_URL=http://127.0.0.1:5100\n';
   writeFileSync(join(root, '.env.example'), config);
   if (configured) writeFileSync(join(root, '.env.local'), config);

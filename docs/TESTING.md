@@ -1,6 +1,6 @@
 # Frontend testing
 
-Use the existing scripts with installed dependencies (Node.js 22 for host tests):
+Use the existing scripts with installed dependencies (Node.js 24 for host tests):
 
 ```sh
 npm run lint
@@ -68,7 +68,13 @@ remote HTTPS configuration remains a native/hosted option.
 
 Before integration approval, run these checks plus lint, TypeScript, unit/component
 tests, and `npm run build` in production build mode. Verify native startup with
-Node 22.x and Docker deployment separately, including actual Compose 2.22.0.
+Node 24.x and Docker deployment separately, including actual Compose 2.22.0.
 Use configured free ports and read-only backend requests for browser Teams checks.
 Do not manage the backend, seed data, or modify shared databases from this suite.
 The implementation transfer alone does not establish that these checks pass.
+
+## Verified runtime policy
+
+Use Node.js 24.22.3 and npm 11.19.1. Supported policy: Node >=24.22.3 <25 and npm >=11.19.1 <12. With nvm, run `nvm install` then `nvm use` in this repository; other version managers may select the same version. This selection is per project, so another project can keep Node 26. Docker uses the pinned official Node 24 Debian slim image; deploy/stop need no host Node. Verify the Vercel project runtime is aligned to Node 24 before deployment; this change does not alter Vercel settings.
+
+Security update baseline: Next/eslint-config-next 16.4.6, React/React DOM 19.2.9, Vitest 4.1.12. Compatible lockfile refreshes patch sharp, source-map-js, Undici, Vite, Zod and brace-expansion. Seven moderate development-only audit entries remain in the TypeScript-ESLint/minimatch dependency chain; no production advisories remain. Do not force a minimatch major override or an ESLint major migration to suppress them. Recheck npm audit before release.
