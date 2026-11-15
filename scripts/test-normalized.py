@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Owned, port-free Docker integration runner. Never reads .env.local."""
-import json
 import hashlib
-import os
-from pathlib import Path
+import json
 import signal
 import subprocess
 import sys
 import uuid
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BACKEND = ROOT.parent / 'goal-stats-service'
@@ -24,6 +23,35 @@ def command(*args, capture=False):
     result = subprocess.run(args, cwd=ROOT, check=True, text=True,
                             stdout=subprocess.PIPE if capture else None)
     return result.stdout.strip() if capture else None
+
+
+def repository_state(repo):
+    """Inspect an existing worktree without requiring or changing its branch."""
+    repo = repo.resolve()
+    if not repo.is_dir():
+        raise RuntimeError(f'Repository directory is missing: {repo}')
+    try:
+        top = command('git', '-C', str(repo), 'rev-parse', '--show-toplevel', capture=True)
+        if Path(top).resolve() != repo:
+            raise RuntimeError(f'Expected a Git repository root: {repo}; found {top}')
+        head = command('git', '-C', str(repo), 'rev-parse', '--verify', 'HEAD^{commit}', capture=True)
+        branch = command('git', '-C', str(repo), 'branch', '--show-current', capture=True)
+        return {
+            'path': str(repo),
+            'branch': branch or None,
+            'detached_head': not bool(branch),
+            'head': head,
+            'status': command('git', '-C', str(repo), 'status', '--porcelain', capture=True),
+            'tracked_diff_sha256': hashlib.sha256(
+                command('git', '-C', str(repo), 'diff', 'HEAD', capture=True).encode()
+            ).hexdigest(),
+        }
+    except FileNotFoundError:
+        raise RuntimeError('Git is required to inspect the test repositories') from None
+    except subprocess.CalledProcessError:
+        raise RuntimeError(
+            f'Cannot inspect repository {repo}: a Git worktree with a committed HEAD is required'
+        ) from None
 
 
 def inspect_owned(kind, identity):
@@ -43,18 +71,11 @@ def launch(name, *args):
 
 def main():
     global network
-    for repo in (ROOT, BACKEND):
-        if command('git', '-C', str(repo), 'branch', '--show-current', capture=True) != 'member/wes':
-            raise RuntimeError(f'{repo.name} must already be on member/wes')
+    repositories = {repo.name: repository_state(repo) for repo in (ROOT, BACKEND)}
     command('docker', 'info', '--format', '{{.ServerVersion}}')
     ARTIFACTS.mkdir(parents=True, exist_ok=False)
     baseline = command('docker', 'volume', 'ls', '-q', capture=True).splitlines()
-    metadata = {'project': PROJECT, 'baseline_volumes': baseline, 'repositories': {}}
-    for repo in (ROOT, BACKEND):
-        metadata['repositories'][repo.name] = {
-            'head': command('git', '-C', str(repo), 'rev-parse', 'HEAD', capture=True),
-            'status': command('git', '-C', str(repo), 'status', '--porcelain', capture=True),
-            'tracked_diff_sha256': hashlib.sha256(command('git', '-C', str(repo), 'diff', 'HEAD', capture=True).encode()).hexdigest()}
+    metadata = {'project': PROJECT, 'baseline_volumes': baseline, 'repositories': repositories}
     (ARTIFACTS / 'baseline.json').write_text(json.dumps(metadata, indent=2))
     source = BACKEND / 'data/raw/martj42-womens-results/1855e313ae8bcd0330426e62c8e4cf15ce45077c'
     if not (source / 'results.csv').is_file():
