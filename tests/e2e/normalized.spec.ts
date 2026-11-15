@@ -84,7 +84,7 @@ test('Teams distinguishes delayed, empty and failed catalog responses',async({pa
  await expect(page.getByText('No teams are available. Comparison requires at least two teams.')).toBeVisible();
  await page.unrouteAll({behavior:'wait'});
  await page.route('**/api/football/catalog/teams',route=>route.fulfill({status:503,json:{detail:'Injected catalog failure'}}));
- await page.reload();await expect(page.getByText('Injected catalog failure')).toBeVisible();await expect(page.getByText(/No teams are available/)).toHaveCount(0);
+ await page.reload();await expect(page.getByRole('main').getByText('Injected catalog failure',{exact:true})).toBeVisible();await expect(page.getByText(/No teams are available/)).toHaveCount(0);
 });
 
 test('Teams ignores a delayed old page after selection and labels an empty later page',async({page})=>{
