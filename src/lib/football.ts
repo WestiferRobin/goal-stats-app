@@ -10,8 +10,22 @@ export type Team = {
   clutch: number | null;
   fifa_rank: number | null;
   ranking_date: string | null;
+  fifa_points?: number | null;
+  ranking_source?: string | null;
+  ranking_release_id?: string | null;
+  ranking_status?: "ranked" | "unranked" | "unavailable";
+  ratings_metadata?: RatingsMetadata | null;
   prediction_ready: false;
 };
+export type RatingsMetadata = {
+  run_id: string; model: string; cutoff: string; source: string; source_sha256: string;
+  status: "experimental";
+  evidence: {reason?: string | null; last_match?: string; matches?: number; form_matches?: number};
+};
+export function comparableRatings(first: Team, second: Team): boolean {
+  const a = first.ratings_metadata, b = second.ratings_metadata;
+  return Boolean(a && b && a.run_id === b.run_id && a.model === b.model && a.cutoff === b.cutoff && a.source_sha256 === b.source_sha256);
+}
 export type Competition = {
   competition_id: number;
   name: string;
@@ -70,13 +84,24 @@ function rows<T>(value: unknown, check: (row: unknown) => void): T[] {
   return value as T[];
 }
 export function parseTeams(value: unknown): Team[] {
-  return rows<Team>(value, row => requireFields(row, {
+  return rows<Team>(value, row => {
+    requireFields(row, {
     team_id: isCatalogId, name: string, category: string,
     offense: nullableRating, defense: nullableRating, form: nullableRating,
     star_power: nullableRating, clutch: nullableRating,
     fifa_rank: value => value === null || isCatalogId(value),
     ranking_date: value => value === null || date(value), prediction_ready: value => value === false,
-  }));
+    });
+    const item = object(row);
+    if (item.fifa_points !== undefined && item.fifa_points !== null && !(typeof item.fifa_points === "number" && Number.isFinite(item.fifa_points) && item.fifa_points >= 0)) throw new Error("Invalid FIFA points.");
+    for (const field of ["ranking_source", "ranking_release_id"]) if (item[field] !== undefined && !nullableString(item[field])) throw new Error("Invalid ranking provenance.");
+    if (item.ranking_status !== undefined && !["ranked", "unranked", "unavailable"].includes(String(item.ranking_status))) throw new Error("Invalid ranking status.");
+    if (item.ratings_metadata !== undefined && item.ratings_metadata !== null) {
+      const meta = object(item.ratings_metadata);
+      if (typeof meta.run_id !== "string" || !/^[a-f0-9]{64}$/.test(meta.run_id) || !string(meta.model) || !date(meta.cutoff) || !string(meta.source) || typeof meta.source_sha256 !== "string" || !/^[a-f0-9]{64}$/.test(meta.source_sha256) || meta.status !== "experimental") throw new Error("Invalid rating provenance.");
+      object(meta.evidence);
+    }
+  });
 }
 export function parseCompetitions(value: unknown): Competition[] {
   return rows<Competition>(value, row => requireFields(row, {

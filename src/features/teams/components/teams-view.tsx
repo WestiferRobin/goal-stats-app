@@ -4,7 +4,7 @@ import React from "react";
 import ViewNavigation from "@/components/view-navigation";
 import TeamSummaryCard from "./team-summary";
 
-import { parseTeams, parseInsights, type Team, type HistoryMatch, type InsightsResponse } from "@/lib/football";
+import { parseTeams, parseInsights, comparableRatings, type Team, type HistoryMatch, type InsightsResponse } from "@/lib/football";
 
 export default function TeamsView() {
   const [teams, setTeams] = React.useState<Team[]>([]);
@@ -287,10 +287,10 @@ export default function TeamsView() {
                         <ComparisonRow
                           label="FIFA Points"
                           team1Value={displayValue(
-                            null
+                            team1.fifa_points
                           )}
                           team2Value={displayValue(
-                            null
+                            team2.fifa_points
                           )}
                         />
 
@@ -324,25 +324,6 @@ export default function TeamsView() {
                           )}
                         />
 
-                        <ComparisonRow
-                          label="Star Power"
-                          team1Value={displayValue(
-                            team1.star_power
-                          )}
-                          team2Value={displayValue(
-                            team2.star_power
-                          )}
-                        />
-
-                        <ComparisonRow
-                          label="Clutch"
-                          team1Value={displayValue(
-                            team1.clutch
-                          )}
-                          team2Value={displayValue(
-                            team2.clutch
-                          )}
-                        />
                       </div>
                     </section>
 
@@ -382,19 +363,6 @@ export default function TeamsView() {
                           field="form"
                         />
 
-                        <AdvantageCard
-                          label="Star Power"
-                          team1={team1}
-                          team2={team2}
-                          field="star_power"
-                        />
-
-                        <AdvantageCard
-                          label="Clutch"
-                          team1={team1}
-                          team2={team2}
-                          field="clutch"
-                        />
                       </div>
                     </section>
 
@@ -569,30 +537,29 @@ function TeamCard({
         />
 
         <RatingBox
-          label="Star Power"
-          value={displayValue(team.star_power)}
-        />
-
-        <RatingBox
-          label="Clutch"
-          value={displayValue(team.clutch)}
-        />
-
-        <RatingBox
           label="FIFA Points"
-          value={displayValue(null)}
+          value={displayValue(team.fifa_points)}
         />
       </div>
 
+      {team.ratings_metadata && <div className="mt-5 text-sm text-zinc-400">
+        <p>Experimental GoalStats ratings · results through {team.ratings_metadata.cutoff}</p>
+        <p>Model: {team.ratings_metadata.model}</p>
+        <p>Latest team match: {team.ratings_metadata.evidence.last_match ?? "Unavailable"}</p>
+        <p>Relative scores within this dated international cohort; not calibrated predictions.</p>
+        {team.ratings_metadata.evidence.reason && <p>Some ratings lack sufficient recent match evidence.</p>}
+      </div>}
       <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-4">
         <p className="text-sm text-zinc-400">
-          Ranking dataset
+          FIFA ranking publication date
         </p>
 
         <p className="mt-1 font-semibold">
           {team.ranking_date ||
             "Ranking date unavailable"}
         </p>
+        {team.ranking_source && <p className="mt-2 text-sm text-zinc-400">Source: FIFA/Coca-Cola Women’s World Ranking</p>}
+        {team.ranking_status === "unranked" && <p>Not ranked in this release.</p>}
       </div>
     </div>
   );
@@ -663,18 +630,19 @@ function AdvantageCard({
   const first = team1[field];
   const second = team2[field];
 
-  let result = "Unavailable";
+  let result = comparableRatings(team1, team2) ? "Unavailable" : "Not comparable";
 
   if (
+    comparableRatings(team1, team2) &&
     first !== null &&
     first !== undefined &&
     second !== null &&
     second !== undefined
   ) {
     if (first > second) {
-      result = `${team1.name} +${first - second}`;
+      result = `${team1.name} +${Number((first - second).toFixed(2))}`;
     } else if (second > first) {
-      result = `${team2.name} +${second - first}`;
+      result = `${team2.name} +${Number((second - first).toFixed(2))}`;
     } else {
       result = "Even";
     }
