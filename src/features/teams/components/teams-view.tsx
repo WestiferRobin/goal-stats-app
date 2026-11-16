@@ -2,32 +2,14 @@
 
 import React from "react";
 import ViewNavigation from "@/components/view-navigation";
-
-type Team = {
-  name: string;
-  fifa_rank?: number | null;
-  fifa_points?: number | null;
-  ranking_date?: string | null;
-  offense?: number | null;
-  defense?: number | null;
-  form?: number | null;
-  star_power?: number | null;
-  clutch?: number | null;
-};
-
-type HistoryMatch = {
-  team1: string;
-  team2: string;
-  final_team1_goals: number;
-  final_team2_goals: number;
-};
-
-type InsightsResponse = {
-  note?: string;
-  head_to_head?: HistoryMatch[];
-  team1_history?: HistoryMatch[];
-  team2_history?: HistoryMatch[];
-};
+import { getHttpErrorMessage } from "@/lib/api/error";
+import {
+  getTeams,
+  getTeamInsights,
+  type Team,
+  type HistoryMatch,
+  type InsightsResponse,
+} from "@/features/teams/api/teams-api";
 
 export default function TeamsView() {
   const [teams, setTeams] = React.useState<Team[]>([]);
@@ -49,24 +31,11 @@ export default function TeamsView() {
 
   React.useEffect(() => {
     async function loadTeams() {
+      setLoading(true);
+      setError("");
+
       try {
-        const response = await fetch("/api/football/teams");
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data?.detail || "Unable to load team data."
-          );
-        }
-
-        if (!Array.isArray(data)) {
-          throw new Error(
-            "Team data returned an invalid response."
-          );
-        }
-
-        const loadedTeams = data as Team[];
+        const loadedTeams = await getTeams();
 
         setTeams(loadedTeams);
 
@@ -77,11 +46,25 @@ export default function TeamsView() {
       } catch (err) {
         console.error("TEAM LOAD ERROR:", err);
 
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Unable to load team data."
-        );
+        if (err instanceof Error) {
+          const status = Number(err.message);
+
+          if (Number.isFinite(status)) {
+            setError(getHttpErrorMessage(status));
+          } else if (err.message === "contract") {
+            setError(
+              "The server returned an unexpected response. Please try again."
+            );
+          } else {
+            setError(
+              "Unable to connect to the server. Please try again."
+            );
+          }
+        } else {
+          setError(
+            "Unable to connect to the server. Please try again."
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -110,49 +93,58 @@ export default function TeamsView() {
     setInsightsError("");
 
     try {
-      const params = new URLSearchParams({
-        team1: firstTeam,
-        team2: secondTeam,
-      });
-
-      const response = await fetch(
-        `/api/football/insights?${params.toString()}`
+      const data = await getTeamInsights(
+        firstTeam,
+        secondTeam
       );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.detail || "Unable to load team insights."
-        );
-      }
-
-      setInsights(data as InsightsResponse);
+      setInsights(data);
     } catch (err) {
       console.error("TEAM INSIGHTS ERROR:", err);
 
       setInsights(null);
 
-      setInsightsError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load team insights."
-      );
+      if (err instanceof Error) {
+        const status = Number(err.message);
+
+        if (Number.isFinite(status)) {
+          setInsightsError(
+            getHttpErrorMessage(status)
+          );
+        } else if (err.message === "contract") {
+          setInsightsError(
+            "The server returned an unexpected response. Please try again."
+          );
+        } else {
+          setInsightsError(
+            "Unable to connect to the server. Please try again."
+          );
+        }
+      } else {
+        setInsightsError(
+          "Unable to connect to the server. Please try again."
+        );
+      }
     } finally {
       setInsightsLoading(false);
     }
   }
 
   const team1 =
-    teams.find((team) => team.name === team1Name) ?? null;
+    teams.find((team) => team.name === team1Name) ??
+    null;
 
   const team2 =
-    teams.find((team) => team.name === team2Name) ?? null;
+    teams.find((team) => team.name === team2Name) ??
+    null;
 
   function displayValue(
     value: number | null | undefined
   ) {
-    if (value === null || value === undefined) {
+    if (
+      value === null ||
+      value === undefined
+    ) {
       return "Unavailable";
     }
 
@@ -318,13 +310,15 @@ export default function TeamsView() {
                           label="FIFA Rank"
                           team1Value={
                             team1.fifa_rank !== null &&
-                            team1.fifa_rank !== undefined
+                            team1.fifa_rank !==
+                              undefined
                               ? `#${team1.fifa_rank}`
                               : "Unavailable"
                           }
                           team2Value={
                             team2.fifa_rank !== null &&
-                            team2.fifa_rank !== undefined
+                            team2.fifa_rank !==
+                              undefined
                               ? `#${team2.fifa_rank}`
                               : "Unavailable"
                           }
@@ -528,7 +522,8 @@ export default function TeamsView() {
                         <HistoryCard
                           teamName={team1.name}
                           matches={
-                            insights?.team1_history ?? []
+                            insights?.team1_history ??
+                            []
                           }
                           loading={insightsLoading}
                         />
@@ -536,7 +531,8 @@ export default function TeamsView() {
                         <HistoryCard
                           teamName={team2.name}
                           matches={
-                            insights?.team2_history ?? []
+                            insights?.team2_history ??
+                            []
                           }
                           loading={insightsLoading}
                         />

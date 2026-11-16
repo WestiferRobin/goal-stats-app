@@ -3,94 +3,16 @@
 import Link from "next/link";
 import React from "react";
 import ViewNavigation from "@/components/view-navigation";
-
-type PredictionResponse = {
-  team1: string;
-  team2: string;
-  minute: number;
-  status?: string;
-
-  probabilities: {
-    team1: number;
-    draw: number;
-    team2: number;
-  };
-
-  expected_goals_remaining?: {
-    team1: number;
-    team2: number;
-  };
-
-  most_likely_score?: [number, number];
-
-  top_scorelines?: {
-    team1_goals: number;
-    team2_goals: number;
-    probability: number;
-  }[];
-
-  confidence?: {
-    label: string;
-    percent: number;
-  };
-
-  momentum_percent?: {
-    team1: number;
-    team2: number;
-  };
-
-  advancement?: {
-    team1: number;
-    team2: number;
-  };
-
-  reasoning?: string[];
-
-  events?: {
-    minute: number | string;
-    team: string;
-    type: string;
-    detail: string;
-  }[];
-};
-
-type TeamStats = {
-  goals: number;
-  possession: number;
-  shots: number;
-  shots_on_target: number;
-  big_chances: number;
-  defender_blocks: number;
-  goalkeeper_saves: number;
-  corners: number;
-  yellow_cards: number;
-  red_cards: number;
-};
-
-type ScenarioState = {
-  team1: string;
-  team2: string;
-  minute: number;
-  extra_minute?: number;
-  status?: string;
-
-  team1_stats: TeamStats;
-  team2_stats: TeamStats;
-};
-
-type StoredPrediction = {
-  prediction: PredictionResponse;
-  scenario: ScenarioState;
-};
-
-type SnapshotRecord = {
-  id?: string;
-  uuid?: string;
-  snapshot_id?: string;
-  created_at?: string;
-  state: ScenarioState;
-  prediction: PredictionResponse;
-};
+import { getHttpErrorMessage } from "@/lib/api/error";
+import {
+  getPredictionHistory,
+  savePredictionSnapshot,
+  type PredictionResponse,
+  type ScenarioState,
+  type SnapshotRecord,
+  type StoredPrediction,
+  type TeamStats,
+} from "@/features/predictions/api/predictions-api";
 
 export default function PredictionsView() {
   const [result, setResult] =
@@ -134,7 +56,10 @@ export default function PredictionsView() {
       return;
     }
 
-    void loadHistory(result.scenario.team1, result.scenario.team2);
+    void loadHistory(
+      result.scenario.team1,
+      result.scenario.team2
+    );
   }, [result?.scenario.team1, result?.scenario.team2]);
 
   function percentFraction(value: number) {
@@ -143,6 +68,24 @@ export default function PredictionsView() {
 
   function percentValue(value: number) {
     return `${Number(value).toFixed(1)}%`;
+  }
+
+  function getRequestErrorMessage(err: unknown) {
+    if (!(err instanceof Error)) {
+      return "Unable to connect to the server. Please try again.";
+    }
+
+    const status = Number(err.message);
+
+    if (Number.isFinite(status)) {
+      return getHttpErrorMessage(status);
+    }
+
+    if (err.message === "contract") {
+      return "The server returned an unexpected response. Please try again.";
+    }
+
+    return "Unable to connect to the server. Please try again.";
   }
 
   async function saveSnapshot() {
@@ -155,26 +98,20 @@ export default function PredictionsView() {
     setSaveMessage("");
 
     try {
-      const response = await fetch("/api/football/snapshots", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(result.scenario),
-      });
+      const data = await savePredictionSnapshot(
+        result.scenario
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.detail || "Unable to save snapshot."
-        );
-      }
-
-      if (data?.prediction) {
+      if (
+        data &&
+        typeof data === "object" &&
+        "prediction" in data &&
+        data.prediction
+      ) {
         const updated: StoredPrediction = {
           scenario: result.scenario,
-          prediction: data.prediction as PredictionResponse,
+          prediction:
+            data.prediction as PredictionResponse,
         };
 
         setResult(updated);
@@ -195,20 +132,28 @@ export default function PredictionsView() {
       console.error("SNAPSHOT SAVE ERROR:", err);
 
       setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to save snapshot."
+        getRequestErrorMessage(err)
       );
     } finally {
       setSaving(false);
     }
   }
 
-  async function loadHistory(team1?: string, team2?: string) {
-    const firstTeam = team1 ?? result?.scenario.team1;
-    const secondTeam = team2 ?? result?.scenario.team2;
+  async function loadHistory(
+    team1?: string,
+    team2?: string
+  ) {
+    const firstTeam =
+      team1 ?? result?.scenario.team1;
 
-    if (!firstTeam || !secondTeam || loadingHistory) {
+    const secondTeam =
+      team2 ?? result?.scenario.team2;
+
+    if (
+      !firstTeam ||
+      !secondTeam ||
+      loadingHistory
+    ) {
       return;
     }
 
@@ -216,45 +161,39 @@ export default function PredictionsView() {
     setHistoryError("");
 
     try {
-      const params = new URLSearchParams({
-        team1: firstTeam,
-        team2: secondTeam,
-        limit: "50",
-      });
-
-      const response = await fetch(
-        `/api/football/snapshots?${params.toString()}`
+      const data = await getPredictionHistory(
+        firstTeam,
+        secondTeam
       );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.detail || "Unable to load prediction history."
-        );
-      }
-
-      if (!Array.isArray(data)) {
-        throw new Error("Prediction history returned an invalid response.");
-      }
-
-      setHistory(data as SnapshotRecord[]);
+      setHistory(data);
     } catch (err) {
-      console.error("SNAPSHOT HISTORY ERROR:", err);
+      console.error(
+        "SNAPSHOT HISTORY ERROR:",
+        err
+      );
+
+      setHistory([]);
 
       setHistoryError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load prediction history."
+        getRequestErrorMessage(err)
       );
     } finally {
       setLoadingHistory(false);
     }
   }
 
-  function loadSnapshot(snapshot: SnapshotRecord) {
-    if (!snapshot?.state || !snapshot?.prediction) {
-      setHistoryError("This saved snapshot is incomplete.");
+  function loadSnapshot(
+    snapshot: SnapshotRecord
+  ) {
+    if (
+      !snapshot?.state ||
+      !snapshot?.prediction
+    ) {
+      setHistoryError(
+        "This saved snapshot is incomplete."
+      );
+
       return;
     }
 
@@ -270,7 +209,10 @@ export default function PredictionsView() {
       JSON.stringify(stored)
     );
 
-    setSaveMessage("Saved prediction loaded.");
+    setSaveMessage(
+      "Saved prediction loaded."
+    );
+
     setHistoryError("");
 
     window.scrollTo({
@@ -279,7 +221,9 @@ export default function PredictionsView() {
     });
   }
 
-  function formatSavedDate(value?: string) {
+  function formatSavedDate(
+    value?: string
+  ) {
     if (!value) {
       return "Saved prediction";
     }
@@ -354,7 +298,8 @@ export default function PredictionsView() {
           <div
             className="pointer-events-none absolute right-[-70px] top-[-50px] h-[380px] w-[380px] bg-contain bg-center bg-no-repeat opacity-10"
             style={{
-              backgroundImage: "url('/images/matches-watermark.png')",
+              backgroundImage:
+                "url('/images/matches-watermark.png')",
             }}
           />
 
@@ -367,15 +312,21 @@ export default function PredictionsView() {
               <div>
                 <h1 className="text-4xl font-bold md:text-5xl">
                   {prediction.team1}
-                  <span className="mx-3 text-zinc-500">vs</span>
+
+                  <span className="mx-3 text-zinc-500">
+                    vs
+                  </span>
+
                   {prediction.team2}
                 </h1>
 
                 <p className="mt-3 text-zinc-300">
                   Minute {scenario.minute}
+
                   {scenario.extra_minute
                     ? `+${scenario.extra_minute}`
                     : ""}
+
                   {scenario.status
                     ? ` · ${scenario.status}`
                     : ""}
@@ -389,7 +340,11 @@ export default function PredictionsView() {
 
                 <p className="mt-1 text-2xl font-bold">
                   {scenario.team1_stats.goals}
-                  <span className="mx-3 text-zinc-500">–</span>
+
+                  <span className="mx-3 text-zinc-500">
+                    –
+                  </span>
+
                   {scenario.team2_stats.goals}
                 </p>
               </div>
@@ -402,12 +357,16 @@ export default function PredictionsView() {
                 disabled={saving}
                 className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {saving ? "Saving..." : "Save Snapshot"}
+                {saving
+                  ? "Saving..."
+                  : "Save Snapshot"}
               </button>
 
               <button
                 type="button"
-                onClick={() => void loadHistory()}
+                onClick={() =>
+                  void loadHistory()
+                }
                 disabled={loadingHistory}
                 className="rounded-xl border border-white/20 bg-black/40 px-6 py-3 font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -467,9 +426,11 @@ export default function PredictionsView() {
                   <p className="text-3xl font-bold">
                     {prediction.team1}{" "}
                     {prediction.most_likely_score[0]}
+
                     <span className="mx-3 text-zinc-500">
                       –
                     </span>
+
                     {prediction.most_likely_score[1]}{" "}
                     {prediction.team2}
                   </p>
@@ -607,9 +568,11 @@ export default function PredictionsView() {
                           <span className="font-medium">
                             {prediction.team1}{" "}
                             {row.team1_goals}
+
                             <span className="mx-2 text-zinc-500">
                               –
                             </span>
+
                             {row.team2_goals}{" "}
                             {prediction.team2}
                           </span>
@@ -663,11 +626,13 @@ export default function PredictionsView() {
                           className="rounded-xl border border-white/10 bg-black/55 p-4"
                         >
                           <p className="font-semibold">
-                            {event.minute}′ · {event.team}
+                            {event.minute}′ ·{" "}
+                            {event.team}
                           </p>
 
                           <p className="mt-1 text-sm text-zinc-400">
                             {event.type}
+
                             {event.detail
                               ? ` — ${event.detail}`
                               : ""}
@@ -712,14 +677,17 @@ export default function PredictionsView() {
                   </h2>
 
                   <p className="mt-2 text-sm text-zinc-400">
-                    Saved snapshots for {scenario.team1} vs{" "}
+                    Saved snapshots for{" "}
+                    {scenario.team1} vs{" "}
                     {scenario.team2}.
                   </p>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => void loadHistory()}
+                  onClick={() =>
+                    void loadHistory()
+                  }
                   disabled={loadingHistory}
                   className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-50"
                 >
@@ -749,88 +717,107 @@ export default function PredictionsView() {
 
               {history.length > 0 && (
                 <div className="mt-5 space-y-3">
-                  {history.map((snapshot, index) => {
-                    const savedPrediction =
-                      snapshot.prediction;
+                  {history.map(
+                    (snapshot, index) => {
+                      const savedPrediction =
+                        snapshot.prediction;
 
-                    const savedState =
-                      snapshot.state;
+                      const savedState =
+                        snapshot.state;
 
-                    return (
-                      <div
-                        key={
-                          snapshot.id ??
-                          snapshot.uuid ??
-                          snapshot.snapshot_id ??
-                          `${snapshot.created_at}-${index}`
-                        }
-                        className="rounded-xl border border-white/10 bg-white/5 p-5"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                          <div>
-                            <p className="text-sm text-zinc-400">
-                              {formatSavedDate(
-                                snapshot.created_at
-                              )}
-                            </p>
+                      return (
+                        <div
+                          key={
+                            snapshot.id ??
+                            snapshot.uuid ??
+                            snapshot.snapshot_id ??
+                            `${snapshot.created_at}-${index}`
+                          }
+                          className="rounded-xl border border-white/10 bg-white/5 p-5"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                              <p className="text-sm text-zinc-400">
+                                {formatSavedDate(
+                                  snapshot.created_at
+                                )}
+                              </p>
 
-                            <p className="mt-1 text-lg font-bold">
-                              {savedState.team1}{" "}
-                              {savedState.team1_stats.goals}
-                              <span className="mx-2 text-zinc-500">
-                                –
-                              </span>
-                              {savedState.team2_stats.goals}{" "}
-                              {savedState.team2}
-                            </p>
+                              <p className="mt-1 text-lg font-bold">
+                                {savedState.team1}{" "}
+                                {
+                                  savedState
+                                    .team1_stats
+                                    .goals
+                                }
 
-                            <p className="mt-1 text-sm text-zinc-400">
-                              Minute {savedState.minute}
-                              {savedState.extra_minute
-                                ? `+${savedState.extra_minute}`
-                                : ""}
-                            </p>
+                                <span className="mx-2 text-zinc-500">
+                                  –
+                                </span>
+
+                                {
+                                  savedState
+                                    .team2_stats
+                                    .goals
+                                }{" "}
+                                {savedState.team2}
+                              </p>
+
+                              <p className="mt-1 text-sm text-zinc-400">
+                                Minute{" "}
+                                {savedState.minute}
+
+                                {savedState.extra_minute
+                                  ? `+${savedState.extra_minute}`
+                                  : ""}
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                loadSnapshot(
+                                  snapshot
+                                )
+                              }
+                              className="rounded-lg bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-600"
+                            >
+                              Load Snapshot
+                            </button>
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              loadSnapshot(snapshot)
-                            }
-                            className="rounded-lg bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-600"
-                          >
-                            Load Snapshot
-                          </button>
+                          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                            <SmallProbability
+                              label={`${savedPrediction.team1} Win`}
+                              value={percentFraction(
+                                savedPrediction
+                                  .probabilities
+                                  .team1
+                              )}
+                            />
+
+                            <SmallProbability
+                              label="Draw"
+                              value={percentFraction(
+                                savedPrediction
+                                  .probabilities
+                                  .draw
+                              )}
+                            />
+
+                            <SmallProbability
+                              label={`${savedPrediction.team2} Win`}
+                              value={percentFraction(
+                                savedPrediction
+                                  .probabilities
+                                  .team2
+                              )}
+                            />
+                          </div>
                         </div>
-
-                        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                          <SmallProbability
-                            label={`${savedPrediction.team1} Win`}
-                            value={percentFraction(
-                              savedPrediction.probabilities
-                                .team1
-                            )}
-                          />
-
-                          <SmallProbability
-                            label="Draw"
-                            value={percentFraction(
-                              savedPrediction.probabilities
-                                .draw
-                            )}
-                          />
-
-                          <SmallProbability
-                            label={`${savedPrediction.team2} Win`}
-                            value={percentFraction(
-                              savedPrediction.probabilities
-                                .team2
-                            )}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    }
+                  )}
                 </div>
               )}
             </section>
@@ -910,7 +897,9 @@ function InfoPanel({
         {title}
       </p>
 
-      <div className="mt-3">{children}</div>
+      <div className="mt-3">
+        {children}
+      </div>
     </div>
   );
 }

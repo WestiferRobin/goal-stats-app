@@ -2,6 +2,7 @@
 
 import React from "react";
 import ViewNavigation from "@/components/view-navigation";
+import { getHttpErrorMessage } from "@/lib/api/error";
 
 type Team = {
   name: string;
@@ -115,14 +116,15 @@ export default function MatchesView() {
         const response = await fetch("/api/football/teams");
 
         if (!response.ok) {
-          throw new Error("Could not load teams.");
+          setError(getHttpErrorMessage(response.status));
+          return;
         }
 
         const data: Team[] = await response.json();
         setTeams(data);
       } catch (err) {
         console.error("TEAM LOAD ERROR:", err);
-        setError("Unable to load team data.");
+        setError("Unable to connect to the server. Please try again.");
       }
     }
 
@@ -244,14 +246,12 @@ export default function MatchesView() {
         body: JSON.stringify(scenario),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(
-          data?.detail || "Unable to calculate prediction."
-        );
+        setError(getHttpErrorMessage(response.status));
+        return;
       }
 
+      const data = await response.json();
       const predictionData = data as PredictionResponse;
 
       setPrediction(predictionData);
@@ -267,12 +267,7 @@ export default function MatchesView() {
       window.location.href = "/predictions";
     } catch (err) {
       console.error("PREDICTION ERROR:", err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to calculate prediction."
-      );
+      setError("Unable to connect to the server. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -702,6 +697,7 @@ function ProbabilityCard({
   return (
     <div className="rounded-xl border border-pink-400/20 bg-pink-500/10 p-5 text-center">
       <p className="text-sm text-zinc-300">{label}</p>
+
       <p className="mt-2 text-3xl font-bold text-pink-400">
         {value}
       </p>

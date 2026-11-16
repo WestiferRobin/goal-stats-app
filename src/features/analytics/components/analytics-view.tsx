@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React from "react";
 import ViewNavigation from "@/components/view-navigation";
+import { getHttpErrorMessage } from "@/lib/api/error";
 
 type PredictionResponse = {
   team1: string;
@@ -195,50 +196,53 @@ export default function AnalyticsView() {
     }
   }, []);
 
-  React.useEffect(() => {
-    async function loadTeams() {
-      setTeamsLoading(true);
-      setTeamsError("");
+ React.useEffect(() => {
+  async function loadTeams() {
+    setTeamsLoading(true);
+    setTeamsError("");
 
-      try {
-        const response = await fetch(
-          "/api/football/teams"
-        );
+    try {
+      const response = await fetch(
+        "/api/football/teams"
+      );
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data?.detail ||
-              "Unable to load tournament teams."
-          );
-        }
-
-        if (!Array.isArray(data)) {
-          throw new Error(
-            "Team data returned an invalid response."
-          );
-        }
-
-        setTeams(data as Team[]);
-      } catch (err) {
-        console.error(
-          "TOURNAMENT TEAM LOAD ERROR:",
-          err
-        );
-
+      if (!response.ok) {
+        setTeams([]);
         setTeamsError(
-          err instanceof Error
-            ? err.message
-            : "Unable to load tournament teams."
+          getHttpErrorMessage(response.status)
         );
-      } finally {
-        setTeamsLoading(false);
+        return;
       }
-    }
 
-    void loadTeams();
-  }, []);
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        setTeams([]);
+        setTeamsError(
+          "The server returned an unexpected response. Please try again."
+        );
+        return;
+      }
+
+      setTeams(data as Team[]);
+    } catch (err) {
+      console.error(
+        "TOURNAMENT TEAM LOAD ERROR:",
+        err
+      );
+
+      setTeams([]);
+
+      setTeamsError(
+        "Unable to connect to the server. Please try again."
+      );
+    } finally {
+      setTeamsLoading(false);
+    }
+  }
+
+  void loadTeams();
+}, []);
 
   React.useEffect(() => {
     void loadBacktests();
@@ -259,119 +263,123 @@ export default function AnalyticsView() {
   ]);
 
   async function loadBacktests() {
-    setBacktestLoading(true);
-    setBacktestError("");
+  setBacktestLoading(true);
+  setBacktestError("");
 
-    try {
-      const response = await fetch(
-        "/api/football/backtests"
-      );
+  try {
+    const response = await fetch(
+      "/api/football/backtests"
+    );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.detail ||
-            "Unable to load backtesting results."
-        );
-      }
-
-      if (
-        !data ||
-        !Array.isArray(data.results)
-      ) {
-        throw new Error(
-          "Backtesting returned an invalid response."
-        );
-      }
-
-      setBacktestResult(
-        data as BacktestResult
-      );
-    } catch (err) {
-      console.error(
-        "BACKTEST LOAD ERROR:",
-        err
-      );
-
+    if (!response.ok) {
       setBacktestResult(null);
-
       setBacktestError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load backtesting results."
+        getHttpErrorMessage(response.status)
       );
-    } finally {
-      setBacktestLoading(false);
-    }
-  }
-
-  async function loadHistory(
-    team1?: string,
-    team2?: string
-  ) {
-    const firstTeam =
-      team1 ?? current?.scenario.team1;
-
-    const secondTeam =
-      team2 ?? current?.scenario.team2;
-
-    if (
-      !firstTeam ||
-      !secondTeam ||
-      loadingHistory
-    ) {
       return;
     }
 
-    setLoadingHistory(true);
-    setHistoryError("");
+    const data = await response.json();
 
-    try {
-      const params =
-        new URLSearchParams({
-          team1: firstTeam,
-          team2: secondTeam,
-          limit: "50",
-        });
-
-      const response = await fetch(
-        `/api/football/snapshots?${params.toString()}`
+    if (
+      !data ||
+      !Array.isArray(data.results)
+    ) {
+      setBacktestResult(null);
+      setBacktestError(
+        "The server returned an unexpected response. Please try again."
       );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.detail ||
-            "Unable to load saved analytics history."
-        );
-      }
-
-      if (!Array.isArray(data)) {
-        throw new Error(
-          "Snapshot history returned an invalid response."
-        );
-      }
-
-      setHistory(
-        data as SnapshotRecord[]
-      );
-    } catch (err) {
-      console.error(
-        "ANALYTICS HISTORY ERROR:",
-        err
-      );
-
-      setHistoryError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load saved analytics history."
-      );
-    } finally {
-      setLoadingHistory(false);
+      return;
     }
+
+    setBacktestResult(
+      data as BacktestResult
+    );
+  } catch (err) {
+    console.error(
+      "BACKTEST LOAD ERROR:",
+      err
+    );
+
+    setBacktestResult(null);
+
+    setBacktestError(
+      "Unable to connect to the server. Please try again."
+    );
+  } finally {
+    setBacktestLoading(false);
   }
+}
+
+ async function loadHistory(
+  team1?: string,
+  team2?: string
+) {
+  const firstTeam =
+    team1 ?? current?.scenario.team1;
+
+  const secondTeam =
+    team2 ?? current?.scenario.team2;
+
+  if (
+    !firstTeam ||
+    !secondTeam ||
+    loadingHistory
+  ) {
+    return;
+  }
+
+  setLoadingHistory(true);
+  setHistoryError("");
+
+  try {
+    const params =
+      new URLSearchParams({
+        team1: firstTeam,
+        team2: secondTeam,
+        limit: "50",
+      });
+
+    const response = await fetch(
+      `/api/football/snapshots?${params.toString()}`
+    );
+
+    if (!response.ok) {
+      setHistory([]);
+      setHistoryError(
+        getHttpErrorMessage(response.status)
+      );
+      return;
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      setHistory([]);
+      setHistoryError(
+        "The server returned an unexpected response. Please try again."
+      );
+      return;
+    }
+
+    setHistory(
+      data as SnapshotRecord[]
+    );
+  } catch (err) {
+    console.error(
+      "ANALYTICS HISTORY ERROR:",
+      err
+    );
+
+    setHistory([]);
+
+    setHistoryError(
+      "Unable to connect to the server. Please try again."
+    );
+  } finally {
+    setLoadingHistory(false);
+  }
+}
 
   function toggleTournamentTeam(
     teamName: string
@@ -442,88 +450,87 @@ export default function AnalyticsView() {
   }
 
   async function runTournamentSimulation() {
-    setTournamentError("");
-    setTournamentResult(null);
+  setTournamentError("");
+  setTournamentResult(null);
 
-    if (
-      selectedTeams.length !==
-      tournamentSize
-    ) {
-      setTournamentError(
-        `Please select exactly ${tournamentSize} teams.`
-      );
+  if (
+    selectedTeams.length !==
+    tournamentSize
+  ) {
+    setTournamentError(
+      `Please select exactly ${tournamentSize} teams.`
+    );
 
-      return;
-    }
-
-    if (
-      !Number.isFinite(simulations) ||
-      simulations <= 0
-    ) {
-      setTournamentError(
-        "Simulation count must be greater than 0."
-      );
-
-      return;
-    }
-
-    setTournamentLoading(true);
-
-    try {
-      const response = await fetch(
-        "/api/football/tournaments/simulate",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            simulations,
-            teams: selectedTeams,
-          }),
-        }
-      );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.detail ||
-            "Unable to run tournament simulation."
-        );
-      }
-
-      if (
-        !data ||
-        !Array.isArray(data.results)
-      ) {
-        throw new Error(
-          "Tournament simulator returned an invalid response."
-        );
-      }
-
-      setTournamentResult(
-        data as TournamentResult
-      );
-    } catch (err) {
-      console.error(
-        "TOURNAMENT SIMULATION ERROR:",
-        err
-      );
-
-      setTournamentError(
-        err instanceof Error
-          ? err.message
-          : "Unable to run tournament simulation."
-      );
-    } finally {
-      setTournamentLoading(false);
-    }
+    return;
   }
+
+  if (
+    !Number.isFinite(simulations) ||
+    simulations <= 0
+  ) {
+    setTournamentError(
+      "Simulation count must be greater than 0."
+    );
+
+    return;
+  }
+
+  setTournamentLoading(true);
+
+  try {
+    const response = await fetch(
+      "/api/football/tournaments/simulate",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+
+        body: JSON.stringify({
+          simulations,
+          teams: selectedTeams,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      setTournamentError(
+        getHttpErrorMessage(response.status)
+      );
+      return;
+    }
+
+    const data =
+      await response.json();
+
+    if (
+      !data ||
+      !Array.isArray(data.results)
+    ) {
+      setTournamentError(
+        "The server returned an unexpected response. Please try again."
+      );
+      return;
+    }
+
+    setTournamentResult(
+      data as TournamentResult
+    );
+  } catch (err) {
+    console.error(
+      "TOURNAMENT SIMULATION ERROR:",
+      err
+    );
+
+    setTournamentError(
+      "Unable to connect to the server. Please try again."
+    );
+  } finally {
+    setTournamentLoading(false);
+  }
+}
 
   if (!current) {
     return (
