@@ -6,7 +6,6 @@ services:
       dockerfile: Dockerfile
       target: runtime
     environment:
-      SERVICE_API_BASE_URL: ${SERVICE_API_BASE_URL:-}
       FOOTBALL_API_BASE_URL: ${FOOTBALL_API_BASE_URL:-}
     init: true
     ports:

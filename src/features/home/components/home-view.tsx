@@ -15,7 +15,7 @@ const featureCards = [
     href: "/matches",
   },
   {
-    title: "AI Predictions",
+    title: "Match Predictions",
     text: "View win probabilities, likely scores, and prediction insights.",
     href: "/predictions",
   },
@@ -26,7 +26,7 @@ const featureCards = [
   },
   {
     title: "Analytics",
-    text: "Explore momentum, possession, and deeper match statistics.",
+    text: "Explore model-estimated momentum and saved hypothetical prediction history.",
     href: "/analytics",
   },
 ];

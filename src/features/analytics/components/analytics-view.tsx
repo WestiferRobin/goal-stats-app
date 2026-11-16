@@ -3,73 +3,8 @@
 import Link from "next/link";
 import React from "react";
 import ViewNavigation from "@/components/view-navigation";
-import { getHttpErrorMessage } from "@/lib/api/error";
 
-type PredictionResponse = {
-  team1: string;
-  team2: string;
-  minute: number;
-  status?: string;
-
-  probabilities: {
-    team1: number;
-    draw: number;
-    team2: number;
-  };
-
-  expected_goals_remaining?: {
-    team1: number;
-    team2: number;
-  };
-
-  momentum_percent?: {
-    team1: number;
-    team2: number;
-  };
-};
-
-type TeamStats = {
-  goals: number;
-  possession: number;
-  shots: number;
-  shots_on_target: number;
-  big_chances: number;
-  defender_blocks: number;
-  goalkeeper_saves: number;
-  corners: number;
-  yellow_cards: number;
-  red_cards: number;
-};
-
-type ScenarioState = {
-  team1: string;
-  team2: string;
-  minute: number;
-  extra_minute?: number;
-  status?: string;
-
-  team1_stats: TeamStats;
-  team2_stats: TeamStats;
-};
-
-type StoredPrediction = {
-  prediction: PredictionResponse;
-  scenario: ScenarioState;
-};
-
-type SnapshotRecord = {
-  id?: string;
-  uuid?: string;
-  snapshot_id?: string;
-  created_at?: string;
-  state: ScenarioState;
-  prediction: PredictionResponse;
-};
-
-type Team = {
-  name: string;
-  fifa_rank?: number | null;
-};
+import {parseTeams,parseSavedPrediction,parsePredictionHistory,parsePreviewSession,previewPredictionView,savedPredictionView,previewStorageKey,routeId,strengthFields,type TeamStats,type Team,type PredictionView as StoredPrediction,type SavedPrediction as SnapshotRecord} from "@/lib/football";
 
 type TournamentResultRow = {
   team: string;
@@ -139,7 +74,7 @@ export default function AnalyticsView() {
     React.useState(4);
 
   const [selectedTeams, setSelectedTeams] =
-    React.useState<string[]>([]);
+    React.useState<number[]>([]);
 
   const [simulations, setSimulations] =
     React.useState(1000);
@@ -147,245 +82,104 @@ export default function AnalyticsView() {
   const [tournamentResult, setTournamentResult] =
     React.useState<TournamentResult | null>(null);
 
-  const [tournamentLoading, setTournamentLoading] =
-    React.useState(false);
 
   const [tournamentError, setTournamentError] =
-    React.useState("");
+    React.useState("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
 
-  const [backtestResult, setBacktestResult] =
+  const [backtestResult] =
     React.useState<BacktestResult | null>(null);
 
-  const [backtestLoading, setBacktestLoading] =
-    React.useState(true);
+  const [backtestLoading] =
+    React.useState(false);
 
   const [backtestError, setBacktestError] =
-    React.useState("");
+    React.useState("Backtesting is deferred: the approved backend does not provide an accuracy or backtesting endpoint.");
 
+  const [scenarioId, setScenarioId] = React.useState<number | null>(null);
+  const [initialLoading, setInitialLoading] = React.useState(true);
+  const [historyOffset, setHistoryOffset] = React.useState(0);
+  const [historyRefresh, setHistoryRefresh] = React.useState(0);
+  const pageSize = 50;
   React.useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(
-        "goalstats-current-prediction"
-      );
-
-      if (!stored) {
-        return;
-      }
-
-      const parsed =
-        JSON.parse(stored) as StoredPrediction;
-
-      if (!parsed?.prediction || !parsed?.scenario) {
-        throw new Error(
-          "Stored prediction is incomplete."
-        );
-      }
-
-      setCurrent(parsed);
-    } catch (err) {
-      console.error(
-        "ANALYTICS LOAD ERROR:",
-        err
-      );
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load current analytics."
-      );
+    const controller = new AbortController();
+    async function loadCurrent() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const predictionId = routeId(params.get("prediction_id"));
+        const requestedScenario = routeId(params.get("scenario_id"));
+        if (predictionId && requestedScenario) throw new Error("Open either a saved prediction or a scenario.");
+        if (predictionId) {
+          const response = await fetch(`/api/football/predictions/${predictionId}`,{signal:controller.signal});
+          const data = await response.json();
+          if (!response.ok) throw new Error(data?.detail || "Unable to load saved analytics.");
+          const record = parseSavedPrediction(data);
+          if (record.prediction_id !== predictionId) throw new Error("Invalid prediction identity.");
+          if (!controller.signal.aborted) { setCurrent(savedPredictionView(record)); setScenarioId(record.scenario_id); }
+        } else if (requestedScenario) {
+          const response = await fetch(`/api/football/scenarios/${requestedScenario}/predictions?limit=1&offset=0`,{signal:controller.signal});
+          const data = await response.json();
+          if (!response.ok) throw new Error(data?.detail || "Unable to load scenario predictions.");
+          const records = parsePredictionHistory(data,requestedScenario);
+          if (controller.signal.aborted) return;
+          setScenarioId(requestedScenario);
+          if (records[0]) setCurrent(savedPredictionView(records[0]));
+          else setError("This scenario has no saved predictions yet. Open Predictions to generate one explicitly.");
+        } else {
+          const stored = sessionStorage.getItem(previewStorageKey);
+          if (stored) setCurrent(previewPredictionView(parsePreviewSession(JSON.parse(stored))));
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) setError(err instanceof Error ? err.message : "Unable to load analytics.");
+      } finally { if (!controller.signal.aborted) setInitialLoading(false); }
     }
-  }, []);
-
- React.useEffect(() => {
-  async function loadTeams() {
-    setTeamsLoading(true);
-    setTeamsError("");
-
-    try {
-      const response = await fetch(
-        "/api/football/teams"
-      );
-
-      if (!response.ok) {
-        setTeams([]);
-        setTeamsError(
-          getHttpErrorMessage(response.status)
-        );
-        return;
-      }
-
-      const data = await response.json();
-
-      if (!Array.isArray(data)) {
-        setTeams([]);
-        setTeamsError(
-          "The server returned an unexpected response. Please try again."
-        );
-        return;
-      }
-
-      setTeams(data as Team[]);
-    } catch (err) {
-      console.error(
-        "TOURNAMENT TEAM LOAD ERROR:",
-        err
-      );
-
-      setTeams([]);
-
-      setTeamsError(
-        "Unable to connect to the server. Please try again."
-      );
-    } finally {
-      setTeamsLoading(false);
-    }
-  }
-
-  void loadTeams();
-}, []);
-
-  React.useEffect(() => {
-    void loadBacktests();
+    void loadCurrent();
+    return () => controller.abort();
   }, []);
 
   React.useEffect(() => {
-    if (!current) {
-      return;
+    const controller = new AbortController();
+    async function loadTeams() {
+      try {
+        const response = await fetch("/api/football/catalog/teams",{signal:controller.signal});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.detail || "Unable to load tournament teams.");
+        const records = parseTeams(data);
+        if (!controller.signal.aborted) setTeams(records);
+      } catch (err) {
+        if (!controller.signal.aborted) setTeamsError(err instanceof Error ? err.message : "Unable to load tournament teams.");
+      } finally { if (!controller.signal.aborted) setTeamsLoading(false); }
     }
+    void loadTeams();
+    return () => controller.abort();
+  }, []);
 
-    void loadHistory(
-      current.scenario.team1,
-      current.scenario.team2
-    );
-  }, [
-    current?.scenario.team1,
-    current?.scenario.team2,
-  ]);
-
-  async function loadBacktests() {
-  setBacktestLoading(true);
-  setBacktestError("");
-
-  try {
-    const response = await fetch(
-      "/api/football/backtests"
-    );
-
-    if (!response.ok) {
-      setBacktestResult(null);
-      setBacktestError(
-        getHttpErrorMessage(response.status)
-      );
-      return;
+  React.useEffect(() => {
+    const controller = new AbortController();
+    async function historyPage() {
+      if (!scenarioId) return;
+      setLoadingHistory(true); setHistoryError(""); setHistory([]);
+      try {
+        const response = await fetch(`/api/football/scenarios/${scenarioId}/predictions?limit=${pageSize}&offset=${historyOffset}`,{signal:controller.signal});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.detail || "Unable to load saved analytics history.");
+        const records = parsePredictionHistory(data,scenarioId);
+        if (!controller.signal.aborted) setHistory(records);
+      } catch (err) {
+        if (!controller.signal.aborted) setHistoryError(err instanceof Error ? err.message : "Unable to load saved analytics history.");
+      } finally { if (!controller.signal.aborted) setLoadingHistory(false); }
     }
+    void historyPage();
+    return () => controller.abort();
+  }, [scenarioId, historyOffset, historyRefresh]);
 
-    const data = await response.json();
-
-    if (
-      !data ||
-      !Array.isArray(data.results)
-    ) {
-      setBacktestResult(null);
-      setBacktestError(
-        "The server returned an unexpected response. Please try again."
-      );
-      return;
-    }
-
-    setBacktestResult(
-      data as BacktestResult
-    );
-  } catch (err) {
-    console.error(
-      "BACKTEST LOAD ERROR:",
-      err
-    );
-
-    setBacktestResult(null);
-
-    setBacktestError(
-      "Unable to connect to the server. Please try again."
-    );
-  } finally {
-    setBacktestLoading(false);
-  }
-}
-
- async function loadHistory(
-  team1?: string,
-  team2?: string
-) {
-  const firstTeam =
-    team1 ?? current?.scenario.team1;
-
-  const secondTeam =
-    team2 ?? current?.scenario.team2;
-
-  if (
-    !firstTeam ||
-    !secondTeam ||
-    loadingHistory
-  ) {
-    return;
-  }
-
-  setLoadingHistory(true);
-  setHistoryError("");
-
-  try {
-    const params =
-      new URLSearchParams({
-        team1: firstTeam,
-        team2: secondTeam,
-        limit: "50",
-      });
-
-    const response = await fetch(
-      `/api/football/snapshots?${params.toString()}`
-    );
-
-    if (!response.ok) {
-      setHistory([]);
-      setHistoryError(
-        getHttpErrorMessage(response.status)
-      );
-      return;
-    }
-
-    const data = await response.json();
-
-    if (!Array.isArray(data)) {
-      setHistory([]);
-      setHistoryError(
-        "The server returned an unexpected response. Please try again."
-      );
-      return;
-    }
-
-    setHistory(
-      data as SnapshotRecord[]
-    );
-  } catch (err) {
-    console.error(
-      "ANALYTICS HISTORY ERROR:",
-      err
-    );
-
-    setHistory([]);
-
-    setHistoryError(
-      "Unable to connect to the server. Please try again."
-    );
-  } finally {
-    setLoadingHistory(false);
-  }
-}
+  function loadHistory() { setHistoryRefresh(value=>value+1); }
+  function loadBacktests() { setBacktestError("Backtesting is deferred: the approved backend does not provide an accuracy or backtesting endpoint."); }
 
   function toggleTournamentTeam(
-    teamName: string
+    teamName: number
   ) {
     setTournamentResult(null);
-    setTournamentError("");
+    setTournamentError("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
 
     setSelectedTeams((previous) => {
       if (previous.includes(teamName)) {
@@ -419,11 +213,11 @@ export default function AnalyticsView() {
     );
 
     setTournamentResult(null);
-    setTournamentError("");
+    setTournamentError("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
   }
 
   function selectTopRankedTeams() {
-    const ranked = [...teams]
+    const ranked = teams.filter(team=>team.fifa_rank!==null)
       .sort((a, b) => {
         const rankA =
           a.fifa_rank ??
@@ -436,101 +230,20 @@ export default function AnalyticsView() {
         return rankA - rankB;
       })
       .slice(0, tournamentSize)
-      .map((team) => team.name);
+      .map((team) => team.team_id);
 
     setSelectedTeams(ranked);
     setTournamentResult(null);
-    setTournamentError("");
+    setTournamentError("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
   }
 
   function clearTournamentTeams() {
     setSelectedTeams([]);
     setTournamentResult(null);
-    setTournamentError("");
+    setTournamentError("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
   }
 
-  async function runTournamentSimulation() {
-  setTournamentError("");
-  setTournamentResult(null);
-
-  if (
-    selectedTeams.length !==
-    tournamentSize
-  ) {
-    setTournamentError(
-      `Please select exactly ${tournamentSize} teams.`
-    );
-
-    return;
-  }
-
-  if (
-    !Number.isFinite(simulations) ||
-    simulations <= 0
-  ) {
-    setTournamentError(
-      "Simulation count must be greater than 0."
-    );
-
-    return;
-  }
-
-  setTournamentLoading(true);
-
-  try {
-    const response = await fetch(
-      "/api/football/tournaments/simulate",
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-
-        body: JSON.stringify({
-          simulations,
-          teams: selectedTeams,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      setTournamentError(
-        getHttpErrorMessage(response.status)
-      );
-      return;
-    }
-
-    const data =
-      await response.json();
-
-    if (
-      !data ||
-      !Array.isArray(data.results)
-    ) {
-      setTournamentError(
-        "The server returned an unexpected response. Please try again."
-      );
-      return;
-    }
-
-    setTournamentResult(
-      data as TournamentResult
-    );
-  } catch (err) {
-    console.error(
-      "TOURNAMENT SIMULATION ERROR:",
-      err
-    );
-
-    setTournamentError(
-      "Unable to connect to the server. Please try again."
-    );
-  } finally {
-    setTournamentLoading(false);
-  }
-}
+  function runTournamentSimulation() { setTournamentError("Tournament simulation is deferred until explicit strengths and bracket inputs are available."); }
 
   if (!current) {
     return (
@@ -552,14 +265,14 @@ export default function AnalyticsView() {
             </p>
 
             <h1 className="mt-3 text-5xl font-bold">
-              No Match Loaded
+              {initialLoading ? "Loading analytics..." : "No Match Loaded"}
             </h1>
 
             <p className="mt-4 max-w-2xl text-zinc-300">
               Create a match prediction first.
               Goal Stats will then use the current
-              match and its saved snapshots to
-              build trend and historical analytics.
+              hypothetical scenario and its saved predictions to
+              display model revisions.
             </p>
 
             {error && (
@@ -569,11 +282,12 @@ export default function AnalyticsView() {
             )}
 
             <Link
-              href="/matches"
+              href={scenarioId ? `/matches?scenario_id=${scenarioId}` : "/matches?preview=1"}
               className="mt-6 inline-block rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600"
             >
               Build a Match Scenario →
             </Link>
+            <Link href={scenarioId ? `/predictions?scenario_id=${scenarioId}` : "/predictions"}>Browse saved predictions</Link>
           </section>
         </div>
       </main>
@@ -600,6 +314,11 @@ export default function AnalyticsView() {
         <ViewNavigation
           currentPath="/analytics"
         />
+        <p className="mt-4 text-sm text-zinc-400">{current.saved ? `Saved prediction #${current.saved.prediction_id} · ${formatDate(current.saved.generated_at)} · ${current.saved.model_version}` : `Unsaved hypothetical preview · ${current.prediction.model}`}</p>
+        <p>Saved Hypothetical Scenario Revisions — not live or historical match telemetry. History follows prediction generation time, which need not follow match-minute order.</p>
+        <details><summary>Hypothetical strength assumptions</summary>{(["team1","team2"] as const).map(side=><p key={side}>{current.scenario[side]}: {strengthFields.map(f=>`${f.replace("_"," ")} ${current.scenario.input[`${side}_${f}`]}`).join(" · ")}</p>)}</details>
+        {scenarioId && <div><button type="button" disabled={loadingHistory||historyOffset===0} onClick={()=>setHistoryOffset(v=>Math.max(0,v-pageSize))}>Previous predictions</button><span>Prediction page {historyOffset/pageSize+1}</span><button type="button" disabled={loadingHistory||!!historyError||history.length<pageSize} onClick={()=>setHistoryOffset(v=>v+pageSize)}>Next predictions</button></div>}
+
 
         <section className="relative mt-8 overflow-hidden rounded-3xl border border-white/10 bg-[#071522]/90 p-6 shadow-2xl backdrop-blur-md md:p-8">
           <div
@@ -665,14 +384,11 @@ export default function AnalyticsView() {
               </p>
 
               <h2 className="mt-2 text-3xl font-bold">
-                How the Match Is Changing
+                Compare Hypothetical Scenario Revisions
               </h2>
 
               <p className="mt-3 max-w-3xl text-zinc-400">
-                Analyze momentum and compare
-                saved match states to see how
-                the model and match statistics
-                change over time.
+                Compare probabilities, possession assumptions, and expected goals across saved hypothetical states. Momentum is a model estimate for the selected prediction.
               </p>
             </section>
 
@@ -687,8 +403,7 @@ export default function AnalyticsView() {
                 </h2>
 
                 <p className="mt-2 text-sm text-zinc-400">
-                  Current momentum from the
-                  prediction model.
+                  Model-estimated momentum for the selected hypothetical state.
                 </p>
 
                 <div className="mt-6 grid gap-5 md:grid-cols-2">
@@ -717,7 +432,7 @@ export default function AnalyticsView() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-pink-400">
-                    Saved Snapshots
+                    Saved Predictions
                   </p>
 
                   <h2 className="mt-2 text-2xl font-semibold">
@@ -725,9 +440,7 @@ export default function AnalyticsView() {
                   </h2>
 
                   <p className="mt-2 text-sm text-zinc-400">
-                    See how win and draw probabilities
-                    changed across saved moments in
-                    the match.
+                    Compare win and draw probabilities across saved hypothetical revisions, ordered by generation time.
                   </p>
                 </div>
 
@@ -777,7 +490,7 @@ export default function AnalyticsView() {
               <TrendPanel
                 eyebrow="Match Trend"
                 title="Possession History"
-                description="Possession values across saved match snapshots."
+                description="Possession assumptions across saved hypothetical revisions."
               >
                 {chartHistory.length > 0 ? (
                   <PossessionHistory
@@ -793,7 +506,7 @@ export default function AnalyticsView() {
               <TrendPanel
                 eyebrow="Model Trend"
                 title="Expected Goals Remaining"
-                description="Remaining expected goals across saved model predictions."
+                description="Model-estimated remaining goals across saved hypothetical predictions."
               >
                 {chartHistory.length > 0 ? (
                   <ExpectedGoalsHistory
@@ -817,9 +530,7 @@ export default function AnalyticsView() {
               </h2>
 
               <p className="mt-2 text-sm text-zinc-400">
-                Each snapshot records the state
-                of the match and its prediction
-                at that moment.
+                Each snapshot preserves hypothetical inputs and the prediction generated from them.
               </p>
 
               {history.length === 0 ? (
@@ -829,13 +540,10 @@ export default function AnalyticsView() {
               ) : (
                 <div className="mt-5 space-y-3">
                   {history.map(
-                    (snapshot, index) => (
+                    (snapshot) => (
                       <SnapshotRow
                         key={
-                          snapshot.id ??
-                          snapshot.uuid ??
-                          snapshot.snapshot_id ??
-                          `${snapshot.created_at}-${index}`
+                          snapshot.prediction_id
                         }
                         snapshot={snapshot}
                       />
@@ -855,9 +563,7 @@ export default function AnalyticsView() {
               </h2>
 
               <p className="mt-2 text-sm text-zinc-400">
-                The current match state used
-                by the analytics and prediction
-                model.
+                Hypothetical match statistics used to generate the selected prediction.
               </p>
 
               <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -887,10 +593,7 @@ export default function AnalyticsView() {
                   </h2>
 
                   <p className="mt-3 max-w-3xl text-zinc-400">
-                    Evaluate how the Goal Stats
-                    prediction model performs
-                    against imported historical
-                    match results.
+                    Historical backtesting is deferred in Phase 1. This website does not evaluate prediction accuracy against imported historical results.
                   </p>
                 </div>
 
@@ -899,12 +602,10 @@ export default function AnalyticsView() {
                   onClick={() =>
                     void loadBacktests()
                   }
-                  disabled={backtestLoading}
+                  disabled={true}
                   className="rounded-lg border border-white/20 bg-black/30 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-50"
                 >
-                  {backtestLoading
-                    ? "Loading..."
-                    : "Refresh Backtest"}
+                  Backtesting unavailable in Phase 1
                 </button>
               </div>
 
@@ -1098,11 +799,7 @@ export default function AnalyticsView() {
               </h2>
 
               <p className="mt-3 max-w-3xl text-zinc-400">
-                Choose teams and run the existing
-                Goal Stats tournament simulator to
-                estimate each team&apos;s chances of
-                reaching later rounds and winning
-                the tournament.
+                Tournament simulation execution is unavailable through the Phase 1 website. The backend includes a simulator requiring explicit participant strengths and bracket ordering; this interface does not execute it.
               </p>
 
               <div className="mt-6 rounded-2xl border border-pink-400/20 bg-pink-500/10 p-6">
@@ -1186,7 +883,7 @@ export default function AnalyticsView() {
                       onClick={
                         selectTopRankedTeams
                       }
-                      disabled={teamsLoading}
+                      disabled={teamsLoading || teams.every(team=>team.fifa_rank===null)}
                       className="rounded-lg border border-white/20 bg-black/30 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-50"
                     >
                       Select Top Ranked
@@ -1223,7 +920,7 @@ export default function AnalyticsView() {
                         (team) => {
                           const selected =
                             selectedTeams.includes(
-                              team.name
+                              team.team_id
                             );
 
                           const disabled =
@@ -1233,14 +930,14 @@ export default function AnalyticsView() {
 
                           return (
                             <button
-                              key={team.name}
+                              key={team.team_id}
                               type="button"
                               disabled={
                                 disabled
                               }
                               onClick={() =>
                                 toggleTournamentTeam(
-                                  team.name
+                                  team.team_id
                                 )
                               }
                               className={`rounded-xl border p-4 text-left transition ${
@@ -1289,23 +986,14 @@ export default function AnalyticsView() {
                   onClick={() =>
                     void runTournamentSimulation()
                   }
-                  disabled={
-                    tournamentLoading ||
-                    selectedTeams.length !==
-                      tournamentSize
-                  }
+                  disabled={true}
                   className="mt-6 rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {tournamentLoading
-                    ? "Running Simulation..."
-                    : "Run Monte Carlo Simulation"}
+                  Tournament execution unavailable in Phase 1
                 </button>
 
                 <p className="mt-3 text-xs text-zinc-400">
-                  The simulator uses the real
-                  backend endpoint. Results are
-                  not generated or hard-coded
-                  in the frontend.
+                  These setup controls do not run a simulation or produce tournament results in Phase 1.
                 </p>
               </div>
 
@@ -1431,14 +1119,14 @@ export default function AnalyticsView() {
 
             <div className="mt-10 flex flex-wrap gap-4 border-t border-white/10 pt-8">
               <Link
-                href="/predictions"
+                href={current.saved ? `/predictions?prediction_id=${current.saved.prediction_id}` : "/predictions"}
                 className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600"
               >
                 Back to Prediction
               </Link>
 
               <Link
-                href="/matches"
+                href={scenarioId ? `/matches?scenario_id=${scenarioId}` : "/matches?preview=1"}
                 className="rounded-xl border border-white/20 bg-black/40 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
               >
                 Edit Match Scenario
@@ -1624,7 +1312,7 @@ function ProbabilityHistory({
       {history.map(
         (snapshot, index) => {
           const probabilities =
-            snapshot.prediction
+            snapshot.output
               .probabilities;
 
           const team1Percent =
@@ -1641,15 +1329,15 @@ function ProbabilityHistory({
 
           return (
             <div
-              key={`${snapshot.created_at}-${index}`}
+              key={`${snapshot.generated_at}-${index}`}
               className="rounded-xl border border-white/10 bg-white/5 p-4"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="font-semibold">
-                  {snapshot.state.minute}
+                  {snapshot.input_snapshot.match_minute}
 
-                  {snapshot.state.extra_minute
-                    ? `+${snapshot.state.extra_minute}`
+                  {snapshot.input_snapshot.extra_minute
+                    ? `+${snapshot.input_snapshot.extra_minute}`
                     : ""}
 
                   &apos;
@@ -1657,7 +1345,7 @@ function ProbabilityHistory({
 
                 <span className="text-sm text-zinc-400">
                   {formatDate(
-                    snapshot.created_at
+                    snapshot.generated_at
                   )}
                 </span>
               </div>
@@ -1741,22 +1429,18 @@ function PossessionHistory({
       {history.map(
         (snapshot, index) => {
           const first =
-            snapshot.state
-              .team1_stats
-              .possession;
+            snapshot.input_snapshot.team1_possession;
 
           const second =
-            snapshot.state
-              .team2_stats
-              .possession;
+            snapshot.input_snapshot.team2_possession;
 
           return (
             <div
-              key={`${snapshot.created_at}-possession-${index}`}
+              key={`${snapshot.generated_at}-possession-${index}`}
             >
               <div className="flex items-center justify-between gap-4 text-sm">
                 <span>
-                  {snapshot.state.minute}
+                  {snapshot.input_snapshot.match_minute}
                   &apos;
                 </span>
 
@@ -1813,7 +1497,7 @@ function ExpectedGoalsHistory({
   const usable =
     history.filter(
       (snapshot) =>
-        snapshot.prediction
+        snapshot.output
           .expected_goals_remaining !==
         undefined
     );
@@ -1827,16 +1511,16 @@ function ExpectedGoalsHistory({
       {usable.map(
         (snapshot, index) => {
           const xg =
-            snapshot.prediction
+            snapshot.output
               .expected_goals_remaining!;
 
           return (
             <div
-              key={`${snapshot.created_at}-xg-${index}`}
+              key={`${snapshot.generated_at}-xg-${index}`}
               className="grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-lg border border-white/10 bg-white/5 px-4 py-3"
             >
               <span className="text-zinc-400">
-                {snapshot.state.minute}
+                {snapshot.input_snapshot.match_minute}
                 &apos;
               </span>
 
@@ -1880,28 +1564,28 @@ function SnapshotRow({
         <div>
           <p className="text-sm text-zinc-400">
             {formatDate(
-              snapshot.created_at
+              snapshot.generated_at
             )}
           </p>
 
           <p className="mt-1 text-lg font-bold">
-            {snapshot.state.team1}{" "}
-            {snapshot.state.team1_stats.goals}
+            {snapshot.input_snapshot.team1_name}{" "}
+            {snapshot.input_snapshot.team1_goals}
 
             <span className="mx-2 text-zinc-500">
               –
             </span>
 
-            {snapshot.state.team2_stats.goals}{" "}
-            {snapshot.state.team2}
+            {snapshot.input_snapshot.team2_goals}{" "}
+            {snapshot.input_snapshot.team2_name}
           </p>
         </div>
 
         <div className="rounded-lg border border-pink-400/20 bg-pink-500/10 px-4 py-2 font-semibold text-pink-300">
-          {snapshot.state.minute}
+          {snapshot.input_snapshot.match_minute}
 
-          {snapshot.state.extra_minute
-            ? `+${snapshot.state.extra_minute}`
+          {snapshot.input_snapshot.extra_minute
+            ? `+${snapshot.input_snapshot.extra_minute}`
             : ""}
 
           &apos;
@@ -1914,7 +1598,7 @@ function SnapshotRow({
 function EmptyTrend() {
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-5 text-zinc-400">
-      Save multiple snapshots to
+      Save multiple predictions to
       build this trend.
     </div>
   );
@@ -2033,7 +1717,7 @@ function formatDate(
   value?: string
 ) {
   if (!value) {
-    return "Saved snapshot";
+    return "Saved prediction";
   }
 
   const date =

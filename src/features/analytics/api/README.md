@@ -1,6 +1,6 @@
 # Analytics API
 
-Load saved snapshots through `/api/football/snapshots?team1=…&team2=…`. Add history, backtest, or tournament calls only when that view implements them; availability is not a Phase 1 requirement.
+GET `/api/football/predictions/{id}` loads saved analytics; GET `/api/football/scenarios/{id}/predictions?limit=50&offset=...` loads paginated history. Existing routes accept prediction_id or scenario_id queries. Validated temporary previews may be displayed without fake saved history. Tournament UI remains deferred until explicit strengths and bracket inputs exist. Backtesting remains deferred because there is no approved endpoint. Neither section sends retired prototype requests.
 
 Browser functions use relative `/api/football/*` URLs. Next's existing proxy owns
 the backend address and forwards to Flask `/api/v1/*`. Check HTTP status, validate

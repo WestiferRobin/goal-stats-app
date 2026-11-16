@@ -2,20 +2,14 @@
 
 import React from "react";
 import ViewNavigation from "@/components/view-navigation";
-import { getHttpErrorMessage } from "@/lib/api/error";
-import {
-  getTeams,
-  getTeamInsights,
-  type Team,
-  type HistoryMatch,
-  type InsightsResponse,
-} from "@/features/teams/api/teams-api";
+
+import { parseTeams, parseInsights, type Team, type HistoryMatch, type InsightsResponse } from "@/lib/football";
 
 export default function TeamsView() {
   const [teams, setTeams] = React.useState<Team[]>([]);
 
-  const [team1Name, setTeam1Name] = React.useState("");
-  const [team2Name, setTeam2Name] = React.useState("");
+  const [team1Id, setTeam1Id] = React.useState<number | "">("");
+  const [team2Id, setTeam2Id] = React.useState<number | "">("");
 
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
@@ -30,121 +24,85 @@ export default function TeamsView() {
     React.useState("");
 
   React.useEffect(() => {
+    const controller = new AbortController();
     async function loadTeams() {
-      setLoading(true);
-      setError("");
-
       try {
-        const loadedTeams = await getTeams();
+        const response = await fetch("/api/football/catalog/teams", {signal:controller.signal});
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail || "Unable to load team data."
+          );
+        }
+
+        if (!Array.isArray(data)) {
+          throw new Error(
+            "Team data returned an invalid response."
+          );
+        }
+
+        const loadedTeams = parseTeams(data);
+        if (controller.signal.aborted) return;
 
         setTeams(loadedTeams);
 
         if (loadedTeams.length >= 2) {
-          setTeam1Name(loadedTeams[0].name);
-          setTeam2Name(loadedTeams[1].name);
+          setTeam1Id(loadedTeams[0].team_id);
+          setTeam2Id(loadedTeams[1].team_id);
         }
       } catch (err) {
+        if (controller.signal.aborted) return;
         console.error("TEAM LOAD ERROR:", err);
 
-        if (err instanceof Error) {
-          const status = Number(err.message);
-
-          if (Number.isFinite(status)) {
-            setError(getHttpErrorMessage(status));
-          } else if (err.message === "contract") {
-            setError(
-              "The server returned an unexpected response. Please try again."
-            );
-          } else {
-            setError(
-              "Unable to connect to the server. Please try again."
-            );
-          }
-        } else {
-          setError(
-            "Unable to connect to the server. Please try again."
-          );
-        }
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to load team data."
+        );
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
 
     void loadTeams();
+    return () => controller.abort();
   }, []);
 
+  const [insightsRefresh, setInsightsRefresh] = React.useState(0);
+  function resetInsights() { setInsights(null); setInsightsError(""); setInsightsLoading(true); }
   React.useEffect(() => {
-    if (!team1Name || !team2Name) {
-      return;
+    const controller = new AbortController();
+    async function loadInsights() {
+      if (!team1Id || !team2Id || team1Id === team2Id) return;
+      resetInsights();
+      try {
+        const params = new URLSearchParams({team1_id:String(team1Id),team2_id:String(team2Id)});
+        const response = await fetch(`/api/football/catalog/matches/insights?${params}`, {signal:controller.signal});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.detail || "Unable to load team insights.");
+        const result = parseInsights(data);
+        if (result.team1_id !== team1Id || result.team2_id !== team2Id) throw new Error("Invalid comparison response.");
+        if (!controller.signal.aborted) setInsights(result);
+      } catch (err) {
+        if (!controller.signal.aborted) setInsightsError(err instanceof Error ? err.message : "Unable to load team insights.");
+      } finally { if (!controller.signal.aborted) setInsightsLoading(false); }
     }
-
-    if (team1Name === team2Name) {
-      return;
-    }
-
-    void loadInsights(team1Name, team2Name);
-  }, [team1Name, team2Name]);
-
-  async function loadInsights(
-    firstTeam: string,
-    secondTeam: string
-  ) {
-    setInsightsLoading(true);
-    setInsightsError("");
-
-    try {
-      const data = await getTeamInsights(
-        firstTeam,
-        secondTeam
-      );
-
-      setInsights(data);
-    } catch (err) {
-      console.error("TEAM INSIGHTS ERROR:", err);
-
-      setInsights(null);
-
-      if (err instanceof Error) {
-        const status = Number(err.message);
-
-        if (Number.isFinite(status)) {
-          setInsightsError(
-            getHttpErrorMessage(status)
-          );
-        } else if (err.message === "contract") {
-          setInsightsError(
-            "The server returned an unexpected response. Please try again."
-          );
-        } else {
-          setInsightsError(
-            "Unable to connect to the server. Please try again."
-          );
-        }
-      } else {
-        setInsightsError(
-          "Unable to connect to the server. Please try again."
-        );
-      }
-    } finally {
-      setInsightsLoading(false);
-    }
-  }
+    void loadInsights();
+    return () => controller.abort();
+  }, [team1Id, team2Id, insightsRefresh]);
 
   const team1 =
-    teams.find((team) => team.name === team1Name) ??
-    null;
+    teams.find((team) => team.team_id === team1Id) ?? null;
 
   const team2 =
-    teams.find((team) => team.name === team2Name) ??
-    null;
+    teams.find((team) => team.team_id === team2Id) ?? null;
 
   function displayValue(
     value: number | null | undefined
   ) {
-    if (
-      value === null ||
-      value === undefined
-    ) {
+    if (value === null || value === undefined) {
       return "Unavailable";
     }
 
@@ -201,6 +159,7 @@ export default function TeamsView() {
               </p>
             )}
 
+            {!loading && !error && teams.length === 0 && <p role="status">No teams are available.</p>}
             {!loading && !error && (
               <>
                 <section className="mt-8 rounded-2xl border border-white/10 bg-black/55 p-6">
@@ -222,20 +181,19 @@ export default function TeamsView() {
                       </label>
 
                       <select
-                        value={team1Name}
-                        onChange={(event) =>
-                          setTeam1Name(
-                            event.target.value
-                          )
-                        }
+                        aria-label="Team 1"
+                        value={team1Id}
+                        onChange={(event) => { resetInsights(); setTeam1Id(
+                            Number(event.target.value)
+                          ); }}
                         className="w-full rounded-lg border border-white/20 bg-black/75 p-3 text-white outline-none transition focus:border-pink-400"
                       >
                         {teams.map((team) => (
                           <option
-                            key={team.name}
-                            value={team.name}
+                            key={team.team_id}
+                            value={team.team_id}
                             disabled={
-                              team.name === team2Name
+                              team.team_id === team2Id
                             }
                           >
                             {team.name}
@@ -250,20 +208,19 @@ export default function TeamsView() {
                       </label>
 
                       <select
-                        value={team2Name}
-                        onChange={(event) =>
-                          setTeam2Name(
-                            event.target.value
-                          )
-                        }
+                        aria-label="Team 2"
+                        value={team2Id}
+                        onChange={(event) => { resetInsights(); setTeam2Id(
+                            Number(event.target.value)
+                          ); }}
                         className="w-full rounded-lg border border-white/20 bg-black/75 p-3 text-white outline-none transition focus:border-pink-400"
                       >
                         {teams.map((team) => (
                           <option
-                            key={team.name}
-                            value={team.name}
+                            key={team.team_id}
+                            value={team.team_id}
                             disabled={
-                              team.name === team1Name
+                              team.team_id === team1Id
                             }
                           >
                             {team.name}
@@ -310,15 +267,13 @@ export default function TeamsView() {
                           label="FIFA Rank"
                           team1Value={
                             team1.fifa_rank !== null &&
-                            team1.fifa_rank !==
-                              undefined
+                            team1.fifa_rank !== undefined
                               ? `#${team1.fifa_rank}`
                               : "Unavailable"
                           }
                           team2Value={
                             team2.fifa_rank !== null &&
-                            team2.fifa_rank !==
-                              undefined
+                            team2.fifa_rank !== undefined
                               ? `#${team2.fifa_rank}`
                               : "Unavailable"
                           }
@@ -327,10 +282,10 @@ export default function TeamsView() {
                         <ComparisonRow
                           label="FIFA Points"
                           team1Value={displayValue(
-                            team1.fifa_points
+                            null
                           )}
                           team2Value={displayValue(
-                            team2.fifa_points
+                            null
                           )}
                         />
 
@@ -452,12 +407,7 @@ export default function TeamsView() {
 
                         <button
                           type="button"
-                          onClick={() =>
-                            void loadInsights(
-                              team1.name,
-                              team2.name
-                            )
-                          }
+                          onClick={() => { resetInsights(); setInsightsRefresh(value => value + 1); }}
                           disabled={insightsLoading}
                           className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-50"
                         >
@@ -483,9 +433,9 @@ export default function TeamsView() {
                         !insightsError &&
                         insights && (
                           <>
-                            {insights.note && (
+                            {insights.source && (
                               <p className="mt-4 text-sm text-zinc-400">
-                                {insights.note}
+                                Approved historical results, oldest first. Final scores include extra time and exclude shootouts.
                               </p>
                             )}
 
@@ -522,19 +472,19 @@ export default function TeamsView() {
                         <HistoryCard
                           teamName={team1.name}
                           matches={
-                            insights?.team1_history ??
-                            []
+                            insights?.team1_history ?? []
                           }
-                          loading={insightsLoading}
+                          loading={insightsLoading || (!insights && !insightsError)}
+                          failed={Boolean(insightsError)}
                         />
 
                         <HistoryCard
                           teamName={team2.name}
                           matches={
-                            insights?.team2_history ??
-                            []
+                            insights?.team2_history ?? []
                           }
-                          loading={insightsLoading}
+                          loading={insightsLoading || (!insights && !insightsError)}
+                          failed={Boolean(insightsError)}
                         />
                       </div>
                     </section>
@@ -613,7 +563,7 @@ function TeamCard({
 
         <RatingBox
           label="FIFA Points"
-          value={displayValue(team.fifa_points)}
+          value={displayValue(null)}
         />
       </div>
 
@@ -743,25 +693,26 @@ function MatchList({
 
   return (
     <div className="overflow-hidden rounded-xl border border-white/10">
-      {matches.map((match, index) => (
+      {matches.map((match) => (
         <div
-          key={`${match.team1}-${match.team2}-${index}`}
+          key={match.match_id}
           className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-white/5 px-5 py-4 last:border-b-0"
         >
           <span className="font-semibold">
-            {match.team1}
+            {match.home_team_name}
+            <span className="block text-sm text-zinc-400">{match.match_date} · {match.edition_label} · {match.competition_name}</span>
           </span>
 
           <span className="rounded-lg border border-pink-400/20 bg-pink-500/10 px-4 py-2 text-lg font-bold text-pink-300">
-            {match.final_team1_goals}
+            {match.home_score}
             <span className="mx-2 text-zinc-500">
               –
             </span>
-            {match.final_team2_goals}
+            {match.away_score}
           </span>
 
           <span className="font-semibold">
-            {match.team2}
+            {match.away_team_name}
           </span>
         </div>
       ))}
@@ -773,10 +724,12 @@ function HistoryCard({
   teamName,
   matches,
   loading,
+  failed,
 }: {
   teamName: string;
   matches: HistoryMatch[];
   loading: boolean;
+  failed: boolean;
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/55 p-6">
@@ -792,6 +745,8 @@ function HistoryCard({
         <p className="mt-5 text-zinc-400">
           Loading history...
         </p>
+      ) : failed ? (
+        <p className="mt-5 text-zinc-400">History could not be loaded. Use Refresh to retry.</p>
       ) : (
         <div className="mt-5">
           <MatchList
