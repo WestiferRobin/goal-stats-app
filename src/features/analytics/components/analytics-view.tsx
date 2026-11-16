@@ -3,49 +3,25 @@
 import Link from "next/link";
 import React from "react";
 import ViewNavigation from "@/components/view-navigation";
+import TournamentPanel from "./tournament-panel";
+import BacktestingPanel from "./backtesting-panel";
 
-import {parseTeams,parseSavedPrediction,parsePredictionHistory,parsePreviewSession,previewPredictionView,savedPredictionView,previewStorageKey,routeId,strengthFields,type TeamStats,type Team,type PredictionView as StoredPrediction,type SavedPrediction as SnapshotRecord} from "@/lib/football";
-
-type TournamentResultRow = {
-  team: string;
-  fifa_rank: number;
-  semifinal_probability: number;
-  final_probability: number;
-  champion_probability: number;
-};
-
-type TournamentResult = {
-  simulations: number;
-  probability_unit: string;
-  predicted_champion: string;
-
-  most_common_final: {
-    team1: string;
-    team2: string;
-    probability: number;
-  };
-
-  results: TournamentResultRow[];
-};
-
-type BacktestResultRow = {
-  actual_winner: string;
-  has_snapshot: boolean;
-  id: string;
-  pregame_correct: boolean;
-  snapshot_correct: boolean;
-};
-
-type BacktestResult = {
-  evaluated: number;
-  pregame_correct: number;
-  skipped_unlabeled: number;
-  snapshots_evaluated: number;
-  snapshot_correct: number;
-  results: BacktestResultRow[];
-};
+import {parseSavedPrediction,parsePredictionHistory,parsePreviewSession,previewPredictionView,savedPredictionView,previewStorageKey,routeId,strengthFields,type TeamStats,type PredictionView as StoredPrediction,type SavedPrediction as SnapshotRecord} from "@/lib/football";
 
 export default function AnalyticsView() {
+  return (
+    <main className="min-h-screen bg-cover bg-center bg-fixed text-white" style={{ backgroundImage: "linear-gradient(rgba(3,10,18,0.80), rgba(3,10,18,0.94)), url('/images/matches-bg.png')" }}>
+      <div className="mx-auto w-full max-w-6xl px-6 py-8">
+        <ViewNavigation currentPath="/analytics" />
+        <MatchAnalytics />
+        <TournamentPanel />
+        <BacktestingPanel />
+      </div>
+    </main>
+  );
+}
+
+function MatchAnalytics() {
   const [current, setCurrent] =
     React.useState<StoredPrediction | null>(null);
 
@@ -60,40 +36,6 @@ export default function AnalyticsView() {
 
   const [historyError, setHistoryError] =
     React.useState("");
-
-  const [teams, setTeams] =
-    React.useState<Team[]>([]);
-
-  const [teamsLoading, setTeamsLoading] =
-    React.useState(true);
-
-  const [teamsError, setTeamsError] =
-    React.useState("");
-
-  const [tournamentSize, setTournamentSize] =
-    React.useState(4);
-
-  const [selectedTeams, setSelectedTeams] =
-    React.useState<number[]>([]);
-
-  const [simulations, setSimulations] =
-    React.useState(1000);
-
-  const [tournamentResult, setTournamentResult] =
-    React.useState<TournamentResult | null>(null);
-
-
-  const [tournamentError, setTournamentError] =
-    React.useState("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
-
-  const [backtestResult] =
-    React.useState<BacktestResult | null>(null);
-
-  const [backtestLoading] =
-    React.useState(false);
-
-  const [backtestError, setBacktestError] =
-    React.useState("Backtesting is deferred: the approved backend does not provide an accuracy or backtesting endpoint.");
 
   const [scenarioId, setScenarioId] = React.useState<number | null>(null);
   const [initialLoading, setInitialLoading] = React.useState(true);
@@ -138,23 +80,6 @@ export default function AnalyticsView() {
 
   React.useEffect(() => {
     const controller = new AbortController();
-    async function loadTeams() {
-      try {
-        const response = await fetch("/api/football/catalog/teams",{signal:controller.signal});
-        const data = await response.json();
-        if (!response.ok) throw new Error(data?.detail || "Unable to load tournament teams.");
-        const records = parseTeams(data);
-        if (!controller.signal.aborted) setTeams(records);
-      } catch (err) {
-        if (!controller.signal.aborted) setTeamsError(err instanceof Error ? err.message : "Unable to load tournament teams.");
-      } finally { if (!controller.signal.aborted) setTeamsLoading(false); }
-    }
-    void loadTeams();
-    return () => controller.abort();
-  }, []);
-
-  React.useEffect(() => {
-    const controller = new AbortController();
     async function historyPage() {
       if (!scenarioId) return;
       setLoadingHistory(true); setHistoryError(""); setHistory([]);
@@ -173,92 +98,9 @@ export default function AnalyticsView() {
   }, [scenarioId, historyOffset, historyRefresh]);
 
   function loadHistory() { setHistoryRefresh(value=>value+1); }
-  function loadBacktests() { setBacktestError("Backtesting is deferred: the approved backend does not provide an accuracy or backtesting endpoint."); }
-
-  function toggleTournamentTeam(
-    teamName: number
-  ) {
-    setTournamentResult(null);
-    setTournamentError("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
-
-    setSelectedTeams((previous) => {
-      if (previous.includes(teamName)) {
-        return previous.filter(
-          (name) => name !== teamName
-        );
-      }
-
-      if (
-        previous.length >=
-        tournamentSize
-      ) {
-        return previous;
-      }
-
-      return [
-        ...previous,
-        teamName,
-      ];
-    });
-  }
-
-  function changeTournamentSize(
-    size: number
-  ) {
-    setTournamentSize(size);
-
-    setSelectedTeams(
-      (previous) =>
-        previous.slice(0, size)
-    );
-
-    setTournamentResult(null);
-    setTournamentError("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
-  }
-
-  function selectTopRankedTeams() {
-    const ranked = teams.filter(team=>team.fifa_rank!==null)
-      .sort((a, b) => {
-        const rankA =
-          a.fifa_rank ??
-          Number.MAX_SAFE_INTEGER;
-
-        const rankB =
-          b.fifa_rank ??
-          Number.MAX_SAFE_INTEGER;
-
-        return rankA - rankB;
-      })
-      .slice(0, tournamentSize)
-      .map((team) => team.team_id);
-
-    setSelectedTeams(ranked);
-    setTournamentResult(null);
-    setTournamentError("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
-  }
-
-  function clearTournamentTeams() {
-    setSelectedTeams([]);
-    setTournamentResult(null);
-    setTournamentError("Tournament simulation is deferred: explicit strengths for every participant and bracket ordering are required.");
-  }
-
-  function runTournamentSimulation() { setTournamentError("Tournament simulation is deferred until explicit strengths and bracket inputs are available."); }
 
   if (!current) {
     return (
-      <main
-        className="min-h-screen bg-cover bg-center bg-fixed text-white"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(3,10,18,0.82), rgba(3,10,18,0.94)), url('/images/matches-bg.png')",
-        }}
-      >
-        <div className="mx-auto w-full max-w-6xl px-6 py-8">
-          <ViewNavigation
-            currentPath="/analytics"
-          />
-
           <section className="mt-8 rounded-3xl border border-white/10 bg-[#071522]/90 p-8 shadow-2xl backdrop-blur-md">
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-pink-400">
               Analytics
@@ -269,7 +111,7 @@ export default function AnalyticsView() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-zinc-300">
-              Create a match prediction first.
+              For match charts, create a match prediction first.
               Goal Stats will then use the current
               hypothetical scenario and its saved predictions to
               display model revisions.
@@ -289,8 +131,6 @@ export default function AnalyticsView() {
             </Link>
             <Link href={scenarioId ? `/predictions?scenario_id=${scenarioId}` : "/predictions"}>Browse saved predictions</Link>
           </section>
-        </div>
-      </main>
     );
   }
 
@@ -303,17 +143,7 @@ export default function AnalyticsView() {
     [...history].reverse();
 
   return (
-    <main
-      className="min-h-screen bg-cover bg-center bg-fixed text-white"
-      style={{
-        backgroundImage:
-          "linear-gradient(rgba(3,10,18,0.80), rgba(3,10,18,0.94)), url('/images/matches-bg.png')",
-      }}
-    >
-      <div className="mx-auto w-full max-w-6xl px-6 py-8">
-        <ViewNavigation
-          currentPath="/analytics"
-        />
+    <>
         <p className="mt-4 text-sm text-zinc-400">{current.saved ? `Saved prediction #${current.saved.prediction_id} · ${formatDate(current.saved.generated_at)} · ${current.saved.model_version}` : `Unsaved hypothetical preview · ${current.prediction.model}`}</p>
         <p>Saved Hypothetical Scenario Revisions — not live or historical match telemetry. History follows prediction generation time, which need not follow match-minute order.</p>
         <details><summary>Hypothetical strength assumptions</summary>{(["team1","team2"] as const).map(side=><p key={side}>{current.scenario[side]}: {strengthFields.map(f=>`${f.replace("_"," ")} ${current.scenario.input[`${side}_${f}`]}`).join(" · ")}</p>)}</details>
@@ -576,544 +406,6 @@ export default function AnalyticsView() {
               </div>
             </section>
 
-            {/* MODEL EVALUATION */}
-
-            <section className="mt-10 border-t border-white/10 pt-8">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.25em] text-pink-400">
-                    Model Evaluation
-                  </p>
-
-                  <h2 className="mt-2 text-3xl font-bold">
-                    Backtesting
-                  </h2>
-
-                  <p className="mt-3 max-w-3xl text-zinc-400">
-                    Historical backtesting is deferred in Phase 1. This website does not evaluate prediction accuracy against imported historical results.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    void loadBacktests()
-                  }
-                  disabled={true}
-                  className="rounded-lg border border-white/20 bg-black/30 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-50"
-                >
-                  Backtesting unavailable in Phase 1
-                </button>
-              </div>
-
-              {backtestError && (
-                <p className="mt-6 rounded-xl border border-red-400/30 bg-red-500/20 p-4 text-red-200">
-                  {backtestError}
-                </p>
-              )}
-
-              {backtestLoading &&
-                !backtestResult && (
-                  <div className="mt-6 rounded-2xl border border-white/10 bg-black/55 p-6 text-zinc-300">
-                    Loading historical model
-                    results...
-                  </div>
-                )}
-
-              {backtestResult && (
-                <div className="mt-6 space-y-6">
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <BacktestMetricCard
-                      label="Matches Evaluated"
-                      value={String(
-                        backtestResult.evaluated
-                      )}
-                    />
-
-                    <BacktestMetricCard
-                      label="Pregame Correct"
-                      value={`${backtestResult.pregame_correct} / ${backtestResult.evaluated}`}
-                    />
-
-                    <BacktestMetricCard
-                      label="Pregame Accuracy"
-                      value={formatBacktestAccuracy(
-                        backtestResult.pregame_correct,
-                        backtestResult.evaluated
-                      )}
-                    />
-
-                    <BacktestMetricCard
-                      label="Skipped / Unlabeled"
-                      value={String(
-                        backtestResult.skipped_unlabeled
-                      )}
-                    />
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/55 p-6">
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-pink-400">
-                      Snapshot Evaluation
-                    </p>
-
-                    {backtestResult.snapshots_evaluated >
-                    0 ? (
-                      <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                        <BacktestMetricCard
-                          label="Snapshots Evaluated"
-                          value={String(
-                            backtestResult.snapshots_evaluated
-                          )}
-                        />
-
-                        <BacktestMetricCard
-                          label="Snapshot Correct"
-                          value={`${backtestResult.snapshot_correct} / ${backtestResult.snapshots_evaluated}`}
-                        />
-
-                        <BacktestMetricCard
-                          label="Snapshot Accuracy"
-                          value={formatBacktestAccuracy(
-                            backtestResult.snapshot_correct,
-                            backtestResult.snapshots_evaluated
-                          )}
-                        />
-                      </div>
-                    ) : (
-                      <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-5 text-zinc-400">
-                        No historical snapshots were
-                        evaluated, so snapshot accuracy
-                        is not available yet.
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/55">
-                    <div className="border-b border-white/10 p-6">
-                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-pink-400">
-                        Historical Results
-                      </p>
-
-                      <h3 className="mt-2 text-2xl font-semibold">
-                        Evaluated Matches
-                      </h3>
-
-                      <p className="mt-2 text-sm text-zinc-400">
-                        The table shows the actual
-                        winner and whether the
-                        pregame model was correct
-                        for each labeled match.
-                      </p>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[680px]">
-                        <thead>
-                          <tr className="border-b border-white/10 bg-white/5 text-left text-sm text-zinc-400">
-                            <th className="px-5 py-4">
-                              Actual Winner
-                            </th>
-
-                            <th className="px-5 py-4">
-                              Pregame
-                            </th>
-
-                            <th className="px-5 py-4">
-                              Snapshot
-                            </th>
-
-                            <th className="px-5 py-4">
-                              Record
-                            </th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          {backtestResult.results.map(
-                            (row) => (
-                              <tr
-                                key={row.id}
-                                className="border-b border-white/10 last:border-b-0"
-                              >
-                                <td className="px-5 py-4 font-semibold">
-                                  {row.actual_winner}
-                                </td>
-
-                                <td className="px-5 py-4">
-                                  <ResultStatus
-                                    available={true}
-                                    correct={
-                                      row.pregame_correct
-                                    }
-                                  />
-                                </td>
-
-                                <td className="px-5 py-4">
-                                  <ResultStatus
-                                    available={
-                                      row.has_snapshot
-                                    }
-                                    correct={
-                                      row.snapshot_correct
-                                    }
-                                  />
-                                </td>
-
-                                <td className="px-5 py-4 font-mono text-xs text-zinc-500">
-                                  {shortBacktestId(
-                                    row.id
-                                  )}
-                                </td>
-                              </tr>
-                            )
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <p className="text-xs leading-5 text-zinc-500">
-                    Backtesting reflects only the
-                    historical records currently
-                    available to the backend. A
-                    perfect score on this dataset
-                    does not mean the model will be
-                    perfect on future matches.
-                  </p>
-                </div>
-              )}
-            </section>
-
-            {/* TOURNAMENT ANALYSIS */}
-
-            <section className="mt-10 border-t border-white/10 pt-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-pink-400">
-                Tournament Analysis
-              </p>
-
-              <h2 className="mt-2 text-3xl font-bold">
-                Monte Carlo Tournament Simulation
-              </h2>
-
-              <p className="mt-3 max-w-3xl text-zinc-400">
-                Tournament simulation execution is unavailable through the Phase 1 website. The backend includes a simulator requiring explicit participant strengths and bracket ordering; this interface does not execute it.
-              </p>
-
-              <div className="mt-6 rounded-2xl border border-pink-400/20 bg-pink-500/10 p-6">
-                <p className="text-sm font-semibold uppercase tracking-widest text-pink-300">
-                  Tournament Setup
-                </p>
-
-                <div className="mt-5 grid gap-5 md:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-zinc-300">
-                      Tournament Size
-                    </label>
-
-                    <select
-                      value={tournamentSize}
-                      onChange={(event) =>
-                        changeTournamentSize(
-                          Number(
-                            event.target.value
-                          )
-                        )
-                      }
-                      className="w-full rounded-lg border border-white/20 bg-black/60 p-3 text-white"
-                    >
-                      <option value={4}>
-                        4 Teams
-                      </option>
-
-                      <option value={8}>
-                        8 Teams
-                      </option>
-
-                      <option value={16}>
-                        16 Teams
-                      </option>
-
-                      <option value={32}>
-                        32 Teams
-                      </option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-zinc-300">
-                      Simulations
-                    </label>
-
-                    <input
-                      type="number"
-                      min={1}
-                      step={100}
-                      value={simulations}
-                      onChange={(event) =>
-                        setSimulations(
-                          Number(
-                            event.target.value
-                          )
-                        )
-                      }
-                      className="w-full rounded-lg border border-white/20 bg-black/60 p-3 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-                  <p className="text-sm text-zinc-300">
-                    Selected{" "}
-                    <strong>
-                      {selectedTeams.length}
-                    </strong>{" "}
-                    of{" "}
-                    <strong>
-                      {tournamentSize}
-                    </strong>{" "}
-                    teams
-                  </p>
-
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={
-                        selectTopRankedTeams
-                      }
-                      disabled={teamsLoading || teams.every(team=>team.fifa_rank===null)}
-                      className="rounded-lg border border-white/20 bg-black/30 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-50"
-                    >
-                      Select Top Ranked
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={
-                        clearTournamentTeams
-                      }
-                      className="rounded-lg border border-white/20 bg-black/30 px-4 py-2 text-sm font-semibold transition hover:bg-white/10"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-
-                {teamsLoading && (
-                  <p className="mt-5 rounded-xl border border-white/10 bg-black/30 p-4 text-zinc-300">
-                    Loading teams...
-                  </p>
-                )}
-
-                {teamsError && (
-                  <p className="mt-5 rounded-xl border border-red-400/30 bg-red-500/20 p-4 text-red-200">
-                    {teamsError}
-                  </p>
-                )}
-
-                {!teamsLoading &&
-                  !teamsError && (
-                    <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      {teams.map(
-                        (team) => {
-                          const selected =
-                            selectedTeams.includes(
-                              team.team_id
-                            );
-
-                          const disabled =
-                            !selected &&
-                            selectedTeams.length >=
-                              tournamentSize;
-
-                          return (
-                            <button
-                              key={team.team_id}
-                              type="button"
-                              disabled={
-                                disabled
-                              }
-                              onClick={() =>
-                                toggleTournamentTeam(
-                                  team.team_id
-                                )
-                              }
-                              className={`rounded-xl border p-4 text-left transition ${
-                                selected
-                                  ? "border-pink-400 bg-pink-500/20"
-                                  : "border-white/10 bg-black/30 hover:bg-white/10"
-                              } ${
-                                disabled
-                                  ? "cursor-not-allowed opacity-40"
-                                  : ""
-                              }`}
-                            >
-                              <div className="font-semibold">
-                                {team.name}
-                              </div>
-
-                              <div className="mt-1 text-xs text-zinc-400">
-                                {team.fifa_rank !==
-                                  null &&
-                                team.fifa_rank !==
-                                  undefined
-                                  ? `FIFA #${team.fifa_rank}`
-                                  : "Rank unavailable"}
-                              </div>
-
-                              {selected && (
-                                <div className="mt-2 text-xs font-semibold text-pink-300">
-                                  Selected
-                                </div>
-                              )}
-                            </button>
-                          );
-                        }
-                      )}
-                    </div>
-                  )}
-
-                {tournamentError && (
-                  <p className="mt-5 rounded-xl border border-red-400/30 bg-red-500/20 p-4 text-red-200">
-                    {tournamentError}
-                  </p>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    void runTournamentSimulation()
-                  }
-                  disabled={true}
-                  className="mt-6 rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Tournament execution unavailable in Phase 1
-                </button>
-
-                <p className="mt-3 text-xs text-zinc-400">
-                  These setup controls do not run a simulation or produce tournament results in Phase 1.
-                </p>
-              </div>
-
-              {tournamentResult && (
-                <div className="mt-8 space-y-6">
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <TournamentSummaryCard
-                      label="Predicted Champion"
-                      value={
-                        tournamentResult.predicted_champion
-                      }
-                    />
-
-                    <TournamentSummaryCard
-                      label="Most Common Final"
-                      value={`${tournamentResult.most_common_final.team1} vs ${tournamentResult.most_common_final.team2}`}
-                      secondary={formatTournamentPercent(
-                        tournamentResult
-                          .most_common_final
-                          .probability
-                      )}
-                    />
-
-                    <TournamentSummaryCard
-                      label="Simulations"
-                      value={tournamentResult.simulations.toLocaleString()}
-                    />
-                  </div>
-
-                  <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/55">
-                    <div className="border-b border-white/10 p-6">
-                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-pink-400">
-                        Simulation Results
-                      </p>
-
-                      <h3 className="mt-2 text-2xl font-semibold">
-                        Tournament Probabilities
-                      </h3>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[760px]">
-                        <thead>
-                          <tr className="border-b border-white/10 bg-white/5 text-left text-sm text-zinc-400">
-                            <th className="px-5 py-4">
-                              Team
-                            </th>
-
-                            <th className="px-5 py-4">
-                              FIFA Rank
-                            </th>
-
-                            <th className="px-5 py-4">
-                              Semifinal
-                            </th>
-
-                            <th className="px-5 py-4">
-                              Final
-                            </th>
-
-                            <th className="px-5 py-4">
-                              Champion
-                            </th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          {[
-                            ...tournamentResult.results,
-                          ]
-                            .sort(
-                              (a, b) =>
-                                b.champion_probability -
-                                a.champion_probability
-                            )
-                            .map((row) => (
-                              <tr
-                                key={row.team}
-                                className="border-b border-white/10 last:border-b-0"
-                              >
-                                <td className="px-5 py-4 font-semibold">
-                                  {row.team}
-
-                                  {row.team ===
-                                    tournamentResult.predicted_champion && (
-                                    <span className="ml-3 rounded-full border border-pink-400/30 bg-pink-500/15 px-2 py-1 text-xs text-pink-300">
-                                      Predicted
-                                      Champion
-                                    </span>
-                                  )}
-                                </td>
-
-                                <td className="px-5 py-4 text-zinc-300">
-                                  #{row.fifa_rank}
-                                </td>
-
-                                <td className="px-5 py-4">
-                                  {formatTournamentPercent(
-                                    row.semifinal_probability
-                                  )}
-                                </td>
-
-                                <td className="px-5 py-4">
-                                  {formatTournamentPercent(
-                                    row.final_probability
-                                  )}
-                                </td>
-
-                                <td className="px-5 py-4 font-bold text-pink-400">
-                                  {formatTournamentPercent(
-                                    row.champion_probability
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </section>
-
             <div className="mt-10 flex flex-wrap gap-4 border-t border-white/10 pt-8">
               <Link
                 href={current.saved ? `/predictions?prediction_id=${current.saved.prediction_id}` : "/predictions"}
@@ -1131,8 +423,7 @@ export default function AnalyticsView() {
             </div>
           </div>
         </section>
-      </div>
-    </main>
+    </>
   );
 }
 
@@ -1599,115 +890,6 @@ function EmptyTrend() {
       build this trend.
     </div>
   );
-}
-
-function BacktestMetricCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-      <p className="text-sm text-zinc-400">
-        {label}
-      </p>
-
-      <p className="mt-2 text-2xl font-bold text-pink-400">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function ResultStatus({
-  available,
-  correct,
-}: {
-  available: boolean;
-  correct: boolean;
-}) {
-  if (!available) {
-    return (
-      <span className="text-zinc-500">
-        Not available
-      </span>
-    );
-  }
-
-  return (
-    <span
-      className={
-        correct
-          ? "font-semibold text-emerald-300"
-          : "font-semibold text-red-300"
-      }
-    >
-      {correct ? "Correct" : "Incorrect"}
-    </span>
-  );
-}
-
-function formatBacktestAccuracy(
-  correct: number,
-  evaluated: number
-) {
-  if (evaluated <= 0) {
-    return "Not available";
-  }
-
-  return `${(
-    (correct / evaluated) *
-    100
-  ).toFixed(1)}%`;
-}
-
-function shortBacktestId(
-  id: string
-) {
-  if (id.length <= 14) {
-    return id;
-  }
-
-  return `${id.slice(
-    0,
-    8
-  )}…${id.slice(-6)}`;
-}
-
-function TournamentSummaryCard({
-  label,
-  value,
-  secondary,
-}: {
-  label: string;
-  value: string;
-  secondary?: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-pink-400/20 bg-pink-500/10 p-5">
-      <p className="text-sm uppercase tracking-widest text-pink-300">
-        {label}
-      </p>
-
-      <p className="mt-2 text-2xl font-bold">
-        {value}
-      </p>
-
-      {secondary && (
-        <p className="mt-2 text-sm text-zinc-300">
-          {secondary}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function formatTournamentPercent(
-  value: number
-) {
-  return `${Number(value).toFixed(1)}%`;
 }
 
 function formatDate(

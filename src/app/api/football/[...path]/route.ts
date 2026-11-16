@@ -7,7 +7,7 @@ const routes: Record<string, string[]> = {
   "catalog/teams": ["GET"], "catalog/competitions": ["GET"],
   "catalog/matches": ["GET"], "catalog/matches/insights": ["GET"],
   scenarios: ["GET", "POST"], "predictions/preview": ["POST"],
-  "competitions/simulate": ["POST"],
+  "competitions/simulate": ["POST"], "evaluations/backtests": ["POST"],
 };
 function allowedMethods(path: string) {
   if (Object.hasOwn(routes, path)) return routes[path];

@@ -47,6 +47,38 @@ def get(path):
 
 teams = {team['name']: team['team_id'] for team in get('catalog/teams')}
 assert len(teams) == 44
+# Replay the committed verification values only into this owned disposable database.
+# These are test fixtures, not a new official ranking release or a recomputed cohort.
+import csv
+import hashlib
+from datetime import date
+from decimal import Decimal
+from models.enrichment import RankingRelease, RankingObservation, FifaTeamMapping, RatingRun, TeamRating
+fixture_path = Path('/service/data/verification/teams-enrichment-2026-11-15.csv')
+fixture_hash = hashlib.sha256(fixture_path.read_bytes()).hexdigest()
+with fixture_path.open() as source_file:
+    profiles = list(csv.DictReader(source_file))
+assert len(profiles) == 44 and {row['team'] for row in profiles} == set(teams)
+with database.transaction() as db:
+    db.add(RankingRelease(release_id='owned-verification-fixture', published_on=date(2026, 10, 20),
+        retrieved_at=datetime.now(UTC), source_url='fixture://committed-enrichment-verification',
+        sha256=fixture_hash, index_sha256=fixture_hash, release_metadata={'test_fixture': True}))
+    db.add(RatingRun(run_id=fixture_hash, cutoff=date(2026, 6, 10),
+        model_version='owned-verification-fixture', source_sha256=fixture_hash,
+        source_url='fixture://committed-enrichment-verification', report={'test_fixture': True}))
+    db.flush()
+    for profile in profiles:
+        identity = teams[profile['team']]
+        db.add(FifaTeamMapping(team_id=identity, fifa_team_id=profile['fifa_team_id'], source_name=profile['team']))
+        db.add(RankingObservation(release_id='owned-verification-fixture', fifa_team_id=profile['fifa_team_id'],
+            rank=int(profile['fifa_rank']), points=Decimal(profile['fifa_points']), status=0, raw={'test_fixture': True}))
+        db.add(TeamRating(run_id=fixture_hash, team_id=identity,
+            **{field: float(profile[field]) if profile[field] else None for field in ['offense', 'defense', 'form']},
+            evidence={'reason': None if profile['availability'] == 'available_experimental' else profile['availability'], 'last_match': profile['latest_match'], 'matches': int(profile['matches']), 'form_matches': int(profile['form_matches'])}))
+profiles = get('catalog/teams')
+assert sum(all(row[field] is not None for field in ['offense', 'defense', 'form']) for row in profiles) == 43
+assert all(row['fifa_rank'] is not None and row['fifa_points'] is not None for row in profiles)
+Path('/artifacts/enrichment-fixture.json').write_text(json.dumps({'source': str(fixture_path), 'sha256': fixture_hash, 'teams': 44, 'complete_ratings': 43}))
 assert len(get('catalog/competitions')) == 9
 matches = sum((get(f'catalog/matches?limit=200&offset={offset}') for offset in [0,200]), [])
 assert len(matches) == 348
