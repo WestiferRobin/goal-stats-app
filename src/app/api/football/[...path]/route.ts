@@ -71,7 +71,7 @@ async function forward(request: Request, context: { params: Promise<{ path: stri
       return problem(403, "Cross-origin requests are not allowed.");
     }
     const raw = await request.text();
-    if (raw.length > 32_768) return problem(413, "Request is too large.");
+    if (raw.length > (path === "evaluations/backtests" ? 131_072 : 32_768)) return problem(413, "Request is too large.");
     if (/^scenarios\/[1-9]\d*\/predictions$/.test(path)) {
       if (raw.length || new URL(request.url).search) return problem(400, "Send no body or query parameters when generating a saved prediction.");
     } else {
@@ -79,6 +79,7 @@ async function forward(request: Request, context: { params: Promise<{ path: stri
       try {
         body = JSON.parse(raw);
         if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error();
+        if (raw.length > 32_768 && (!("dataset_id" in body) || body.dataset_id !== "womens-world-cup-full-v1")) return problem(413, "Request is too large.");
       } catch { return problem(400, "Send a valid JSON object."); }
     }
   }

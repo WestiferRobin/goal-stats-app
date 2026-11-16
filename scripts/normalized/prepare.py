@@ -1,5 +1,6 @@
 """Only runs inside the runner's fresh, uniquely named disposable database."""
 import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -10,6 +11,7 @@ from alembic.config import Config
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import make_url
 from infra.resources.db import Database
+from football.team_ratings import SOURCE_SHA
 from settings.environment import load_application
 
 session = os.environ.get('NORMALIZED_SESSION', '')
@@ -28,6 +30,12 @@ for attempt in range(60):
             raise
         time.sleep(1)
 assert inspect(database.engine).get_table_names() == [], 'Refusing nonempty database'
+# Reuse the checksum-verified read-only mount for runtime historical reconstruction.
+# This path exists only inside this disposable runner; no developer data is changed.
+assert hashlib.sha256(Path('/source/results.csv').read_bytes()).hexdigest() == SOURCE_SHA
+bootstrap = Path('/service/data/bootstrap')
+bootstrap.mkdir(exist_ok=True)
+(bootstrap / 'results.csv').symlink_to('/source/results.csv')
 os.chdir('/service')
 config = Config('/service/alembic.ini')
 command.upgrade(config, 'head')
@@ -50,7 +58,6 @@ assert len(teams) == 44
 # Replay the committed verification values only into this owned disposable database.
 # These are test fixtures, not a new official ranking release or a recomputed cohort.
 import csv
-import hashlib
 from datetime import date
 from decimal import Decimal
 from models.enrichment import RankingRelease, RankingObservation, FifaTeamMapping, RatingRun, TeamRating

@@ -251,3 +251,10 @@ it("forwards only POST evaluation through existing authenticated proxy", async (
  expect((await GET(new Request("http://localhost/api/football/evaluations/backtests"),context("evaluations/backtests"))).status).toBe(405);
  expect(JSON.stringify(await response.json())).not.toContain("x".repeat(32));
 });
+
+it("bounds full-cohort assumption requests separately from existing endpoints",async()=>{
+ configure();vi.mocked(request).mockResolvedValue({data:{},status:200,mediaType:'application/json',location:null});
+ for(const [dataset,size,status] of [['womens-world-cup-full-v1',40000,200],['womens-world-cup-recorded-v1',40000,413],['womens-world-cup-full-v1',140000,413]] as const){
+ const response=await POST(new Request('http://localhost/api/football/evaluations/backtests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dataset_id:dataset,assumptions:[],padding:'x'.repeat(size)})}),context('evaluations/backtests'));expect(response.status).toBe(status);
+ }
+});
