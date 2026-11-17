@@ -54,3 +54,41 @@ it("validates full dataset horizons, edition inventories, and summary metrics",(
   expect(()=>decodeBacktest({...data,edition_summaries:data.edition_summaries!.map(s=>({...s,accuracy:0}))},req)).toThrow();
  }
 });
+it("requires the full cohort for recovery and rejects a response from a different source selection", () => {
+ const recovered = buildBacktestRequest({...draft,dataset:fullDatasetId,limit:"1",recovery:true});
+ expect(recovered.recovery_package_id).toBe("international-results-recovery-v1");
+ expect(() => buildBacktestRequest({...draft,recovery:true})).toThrow(/full evidence/);
+ const value = fullFixture(recovered);
+ expect(() => decodeBacktest({...value,recovery_package_id:null},recovered)).toThrow(/Invalid evaluation response/);
+ expect(decodeBacktest({...value,recovery_package_id:recovered.recovery_package_id},recovered).recovery_package_id).toBe(recovered.recovery_package_id);
+ expect(() => decodeBacktest({...value,recovery_package_id:recovered.recovery_package_id},{...recovered,recovery_package_id:undefined})).toThrow();
+});
+
+it("selects the blocked 80-minute interface explicitly and rejects unsupported editions", () => {
+ const selected=buildBacktestRequest({...draft,dataset:fullDatasetId,edition:"1991",durationResearch:true});
+ expect(selected.research_model_version).toBe("odf-exposure-80-evidence-blocked-v1");
+ expect(()=>buildBacktestRequest({...draft,durationResearch:true})).toThrow();
+ expect(()=>buildBacktestRequest({...draft,dataset:fullDatasetId,edition:"2023",durationResearch:true})).toThrow();
+ expect(()=>decodeBacktest(fullFixture(selected),selected)).toThrow();
+ const data=fullFixture(selected);
+ const c=data.cases[0];
+ c.evidence_record={...c.evidence_record,regulation_score:[1,1],research:{model_version:selected.research_model_version,regulation_minutes:80,classification:"research_only",validation_status:"evidence_blocked",eligible:false,rating_duration_compatible:false,rating_complete:c.rating_reconstruction==="complete",probabilities:null,parameter_version:null,training_through:null,calibration_through:null,cutoff:c.cutoff,observed_regulation_outcome:"draw",exclusion_reasons:c.exclusion_reasons}};
+ data.protocol_summaries!.forEach(g=>{g.prediction_model_version=g.regulation_minutes===80?selected.research_model_version:"road-to-the-final-heuristic-v2";if(g.regulation_minutes===80)g.research_protocol={model_version:selected.research_model_version,regulation_minutes:80,classification:"research_only",validation_status:"evidence_blocked",production_eligible:false,parameters:null,probabilities:null,accuracy:null,log_loss:null,brier_score:null};});
+ expect(decodeBacktest(data,selected).accuracy).toBeNull();
+ for(const change of [{eligible:true},{probabilities:[.3,.4,.3]},{observed_regulation_outcome:"home_win"},{rating_duration_compatible:true},{training_through:"2007-12-31"}]) {
+  const bad=structuredClone(data);bad.cases[0].evidence_record!.research={...(c.evidence_record.research as Record<string,unknown>),...change};expect(()=>decodeBacktest(bad,selected)).toThrow();
+ }
+});
+
+it("keeps research replay explicit, recovered, and free of hypothetical inputs",()=>{
+ const base={...draft,dataset:fullDatasetId,predictionModel:"odf-cross-goal-rate-research-v1",recovery:true,mode:"retrospective_replay"};
+ const req=buildBacktestRequest(base);
+ expect(req.prediction_model_version).toBe(base.predictionModel);expect(req.assumptions).toEqual([]);expect(req.assumption_package_id).toBeNull();
+ for(const change of [{recovery:false},{dataset:pilotDatasetId},{predictionModel:"unknown"},{mode:"retrospective_assumptions",packageId:"test"},{packageId:"invented"}])expect(()=>buildBacktestRequest({...base,...change})).toThrow();
+ expect(()=>buildBacktestRequest({...draft,mode:"retrospective_replay"})).toThrow();
+ const strict=buildBacktestRequest({...base,mode:"strict_historical",edition:"2023"});
+ const data={...fullFixture(strict),prediction_model_version:base.predictionModel,research_validation:{classification:"research_only",production_eligible:false,independently_validated:false,package_id:"three-input-validation-v1",manifest_sha256:"a".repeat(64),protocol_hash:"b".repeat(64),data_hash:"c".repeat(64),comparisons:{},period_comparisons:{}}};
+ expect(decodeBacktest(data,strict).eligible_matches).toBe(0);
+ for(const change of [{production_eligible:true},{independently_validated:true},{classification:"validated"},{manifest_sha256:"invalid"},{period_comparisons:{validation:{}}},{comparisons:{fake:{sample_size:1,models:{}}}}])expect(()=>decodeBacktest({...data,research_validation:{...data.research_validation,...change}},strict)).toThrow();
+ expect(()=>decodeBacktest({...data,prediction_model_version:"road-to-the-final-heuristic-v2"},strict)).toThrow();
+});

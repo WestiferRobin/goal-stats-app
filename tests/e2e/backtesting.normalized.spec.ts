@@ -100,3 +100,71 @@ test('all 348 cases and all nine editions retain evidence, exclusions and separa
  const allResponse=await request.post(endpoint,{data:{dataset_id:fullDatasetId,limit:348,mode:'retrospective_assumptions',assumption_package_id:'automated-full-browser-test-only-v1',assumptions:allAssumptions}});
  expect(allResponse.status()).toBe(200);const allScored=await allResponse.json();expect(allScored.eligible_matches).toBe(301);expect(allScored.excluded_matches).toBe(47);expect(allScored.protocol_summaries[0].accuracy).toBeNull();
 });
+
+test('reviewed recovery improves rating coverage without manufacturing historical accuracy',async({page,request})=>{
+ await page.goto('/analytics');
+ await page.getByRole('combobox',{name:'Evaluation dataset',exact:true}).selectOption(fullDatasetId);
+ await page.getByRole('combobox',{name:/Historical results/}).selectOption('recovered');
+ const pending=page.waitForResponse(r=>r.url().endsWith(endpoint));
+ await page.getByRole('button',{name:'Run evaluation',exact:true}).click();
+ const response=await pending;expect(response.status()).toBe(200);const body=await response.json();
+ expect(body.recovery_package_id).toBe('international-results-recovery-v1');
+ expect(body.total_candidate_matches).toBe(348);expect(body.edition_summaries).toHaveLength(9);
+ expect(body.edition_summaries.reduce((n:number,s:{rating_complete:number})=>n+s.rating_complete,0)).toBe(340);
+ expect(body.eligible_matches).toBe(0);expect(body.accuracy).toBeNull();
+ expect(body.exclusion_reasons.historical_star_power_clutch_evidence_missing).toBe(348);
+ expect(body.exclusion_reasons.model_80_minute_horizon_unvalidated).toBe(26);
+ await expect(page.getByText('Historical results: reviewed recovery additions v1.')).toBeVisible();
+ await expect(page.getByText(/Historical accuracy unavailable/)).toBeVisible();
+ const replay=await request.post(endpoint,{data:response.request().postDataJSON()});expect(await replay.json()).toEqual(body);
+ const empty=await request.post(endpoint,{data:{...response.request().postDataJSON(),mode:'retrospective_assumptions',assumption_package_id:'browser-test-no-values-v1'}});
+ const excluded=await empty.json();expect(excluded.excluded_matches).toBe(348);expect(excluded.exclusion_reasons.explicit_star_power_clutch_assumptions_missing).toBe(348);expect(excluded.accuracy).toBeNull();
+ await page.getByRole('combobox',{name:/Historical results/}).selectOption('original');
+ await expect(page.getByLabel('Evaluation results')).toHaveCount(0);
+});
+
+test('1991 exposure protocol reports all cases and preserves horizon separation',async({page})=>{
+ await page.goto('/analytics');
+ await page.getByRole('combobox',{name:'Evaluation dataset',exact:true}).selectOption('womens-world-cup-full-v1');
+ await page.getByRole('combobox',{name:/Historical results/}).selectOption('recovered');
+ await page.getByRole('combobox',{name:/1991 research protocol/}).selectOption('exposure');
+ const pending=page.waitForResponse(r=>r.url().endsWith(endpoint));
+ await page.getByRole('button',{name:'Run evaluation',exact:true}).click();
+ const response=await pending;expect(response.status()).toBe(200);const data=await response.json();
+ expect(data.cases).toHaveLength(348);expect(data.accuracy).toBeNull();expect(data.metrics_horizon_minutes).toBe(90);
+ const group=data.protocol_summaries[0];expect(group.total).toBe(26);expect(group.excluded).toBe(26);expect(group.rating_complete).toBe(20);expect(group.prediction_model_version).toBe('odf-exposure-80-evidence-blocked-v1');
+ await expect(page.getByRole('heading',{name:'80-minute research — evidence blocked'})).toBeVisible();
+ for(const c of data.cases.filter((c:{edition:number})=>c.edition===1991)){expect(c.probabilities).toBeNull();expect(c.evidence_record.research.eligible).toBe(false);}
+ await page.getByRole('combobox',{name:'World Cup edition',exact:true}).selectOption('1991');
+ await page.getByRole('combobox',{name:/1991 research protocol/}).selectOption('exposure');
+ const again=page.waitForResponse(r=>r.url().endsWith(endpoint));await page.getByRole('button',{name:'Run evaluation',exact:true}).click();
+ expect((await (await again).json()).cases).toHaveLength(26);
+});
+
+test('three-input research replay uses real pinned probabilities with strict gates and paired diagnostics',async({page,request})=>{
+ await page.goto('/analytics');
+ await page.getByRole('combobox',{name:'Evaluation dataset',exact:true}).selectOption(fullDatasetId);
+ await page.getByRole('combobox',{name:'Evaluation model',exact:true}).selectOption('odf-cross-goal-rate-research-v1');
+ await expect(page.getByRole('combobox',{name:/Historical results/})).toBeDisabled();
+ let pending=page.waitForResponse(r=>r.url().endsWith(endpoint));await page.getByRole('button',{name:'Run evaluation',exact:true}).click();
+ const strict=await (await pending).json();expect(strict.eligible_matches).toBe(0);expect(strict.research_validation.comparisons).toEqual({});
+ await page.getByRole('combobox',{name:'Evaluation mode',exact:true}).selectOption('retrospective_replay');
+ await page.getByRole('combobox',{name:/1991 research protocol/}).selectOption('exposure');
+ pending=page.waitForResponse(r=>r.url().endsWith(endpoint));await page.getByRole('button',{name:'Run evaluation',exact:true}).click();
+ const response=await pending;expect(response.status()).toBe(200);const data=await response.json();
+ expect(data.cases).toHaveLength(348);expect(data.eligible_matches).toBe(320);expect(data.excluded_matches).toBe(28);expect(data.accuracy).toBe(.553125);
+ await expect(page.getByRole('heading',{name:'Research-only retrospective temporal replay',exact:true})).toBeVisible();
+ await expect(page.getByRole('table',{name:/baseline common — common cohort/})).toBeVisible();
+ await expect(page.getByRole('table',{name:/Confusion matrix/})).toBeVisible();
+ const body=response.request().postDataJSON();
+ for(const [year,count] of Object.entries(editionCounts)){
+  const r=await request.post(endpoint,{data:{...body,edition:Number(year),research_model_version:undefined}});expect(r.status()).toBe(200);const d=await r.json();expect(d.cases).toHaveLength(count);
+  expect(d.eligible_matches).toBe(year==='1991'?0:year==='1999'?30:count);
+  expect(d.cases.every((c:{regulation_minutes:number;status:string})=>c.status!=='eligible'||c.regulation_minutes===90)).toBe(true);
+ }
+ await page.getByRole('combobox',{name:'Evaluation model',exact:true}).selectOption('odf-temperature-research-v1');
+ await expect(page.getByLabel('Evaluation results')).toHaveCount(0);
+ await page.getByRole('combobox',{name:'Evaluation mode',exact:true}).selectOption('retrospective_replay');
+ pending=page.waitForResponse(r=>r.url().endsWith(endpoint));await page.getByRole('button',{name:'Run evaluation',exact:true}).click();
+ const calibrated=await (await pending).json();expect(calibrated.eligible_matches).toBe(200);expect(calibrated.cases.filter((c:{status:string})=>c.status==='eligible').every((c:{edition:number})=>c.edition>2007)).toBe(true);
+});

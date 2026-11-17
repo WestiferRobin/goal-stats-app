@@ -78,3 +78,17 @@ it("selects every edition, distinguishes the 80-minute block, and imports only e
  fireEvent.click(screen.getByRole("button",{name:"Apply explicit assumption package"}));click();await screen.findByText(/Historical accuracy unavailable/);
  const req=JSON.parse(fetch.mock.calls.filter(([u])=>u.includes("backtests")).at(-1)![1]!.body as string);expect(req.edition).toBe(1991);expect(req.assumptions).toEqual([]);expect(req.assumption_package_id).toBe("test-only-empty-v1");
 });
+it("selects recovered results explicitly and clears them when returning to the pilot", async () => {
+ const fetch=setup(async req=>Response.json({...fullFixture(req),recovery_package_id:req.recovery_package_id??null}));
+ fireEvent.change(screen.getByLabelText("Evaluation dataset"),{target:{value:fullDatasetId}});
+ fireEvent.change(screen.getByLabelText("Evaluation limit"),{target:{value:"1"}});
+ fireEvent.change(screen.getByRole("combobox",{name:/Historical results/}),{target:{value:"recovered"}});
+ click();await screen.findByText("Historical results: reviewed recovery additions v1.");
+ const calls=fetch.mock.calls.filter(([u])=>u.includes("backtests"));
+ expect(JSON.parse(calls[0][1]!.body as string).recovery_package_id).toBe("international-results-recovery-v1");
+ fireEvent.change(screen.getByLabelText("Evaluation dataset"),{target:{value:pilotDatasetId}});
+ expect(screen.queryByRole("combobox",{name:/Historical results/})).toBeNull();
+ expect(screen.queryByLabelText("Evaluation results")).toBeNull();
+ fireEvent.change(screen.getByLabelText("Evaluation dataset"),{target:{value:fullDatasetId}});
+ expect((screen.getByRole("combobox",{name:/Historical results/}) as HTMLSelectElement).value).toBe("original");
+});
