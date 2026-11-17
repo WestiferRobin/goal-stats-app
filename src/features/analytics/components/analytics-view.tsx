@@ -468,10 +468,11 @@ export default function AnalyticsView() {
                 !historyError &&
                 history.length === 0 && (
                   <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-5 text-zinc-400">
-                    No saved snapshots are available
-                    for this matchup yet. Save
-                    snapshots from Predictions to
-                    build this trend.
+                    {historyOffset > 0
+                      ? "No predictions on this page. Use Previous predictions to see earlier records."
+                      : scenarioId
+                        ? `No saved predictions exist for scenario #${scenarioId} yet.`
+                        : "This preview has not been saved."}
                   </div>
                 )}
 
@@ -533,11 +534,7 @@ export default function AnalyticsView() {
                 Each snapshot preserves hypothetical inputs and the prediction generated from them.
               </p>
 
-              {history.length === 0 ? (
-                <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-5 text-zinc-400">
-                  No saved match states yet.
-                </div>
-              ) : (
+              {history.length === 0 ? null : (
                 <div className="mt-5 space-y-3">
                   {history.map(
                     (snapshot) => (

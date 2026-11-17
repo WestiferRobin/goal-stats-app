@@ -59,3 +59,153 @@ it("preserves preview on validation failure without generating",async()=>{
 it("paginates scenario discovery and scenario-scoped history",async()=>{
  const fetch=vi.fn(async(url:string)=>{const offset=new URL(url,'http://localhost').searchParams.get('offset');if(url.includes('/7/predictions?'))return Response.json(offset==='50'?[]:Array.from({length:50},(_,i)=>({...saved,prediction_id:i+1})));if(url.includes('/scenarios?'))return Response.json(offset==='50'?[]:Array.from({length:50},(_,i)=>({...scenario,scenario_id:i+1})));return Response.json(scenario);});vi.stubGlobal('fetch',fetch);window.history.replaceState(null,'','/predictions?scenario_id=7');render(<PredictionsView/>);await screen.findByRole('button',{name:/Open prediction #50/});fireEvent.click(screen.getByRole('button',{name:'Next predictions'}));await screen.findByText('Prediction page 2');fireEvent.click(screen.getByRole('button',{name:'Next scenarios'}));await screen.findByText('Scenario page 2');expect(fetch.mock.calls.some(([u])=>u.includes('/7/predictions?limit=50&offset=50'))).toBe(true);expect(fetch.mock.calls.some(([u])=>u.includes('/scenarios?limit=50&offset=50'))).toBe(true);
 });
+it('keeps uncertain generation blocked after reloading an existing prediction URL',async()=>{
+ const fetch=backend(async()=>{throw new Error('Response lost')});window.history.replaceState(null,'','/predictions?prediction_id=9');render(<PredictionsView/>);await screen.findByText(/Saved prediction #9/);
+ fireEvent.click(screen.getByRole('button',{name:'Generate another saved prediction'}));await screen.findByText(/Generation outcome is uncertain/);cleanup();render(<PredictionsView/>);await screen.findByText(/Saved prediction #9/);await screen.findByText(/A prediction generation may have completed/);
+ expect((screen.getByRole('button',{name:'Generate another saved prediction'}) as HTMLButtonElement).disabled).toBe(true);expect(fetch.mock.calls.filter(([,o])=>o?.method)).toHaveLength(1);
+ await waitFor(()=>expect((screen.getByRole('button',{name:'I reviewed the saved records; allow another attempt'}) as HTMLButtonElement).disabled).toBe(false));fireEvent.click(screen.getByRole('button',{name:'I reviewed the saved records; allow another attempt'}));expect((screen.getByRole('button',{name:'Generate another saved prediction'}) as HTMLButtonElement).disabled).toBe(false);expect(fetch.mock.calls.filter(([,o])=>o?.method)).toHaveLength(1);
+});
+it('does not attach another scenario’s pending generation to a reopened prediction',async()=>{
+ const fetch=backend();sessionStorage.setItem('goalstats-pending-save',JSON.stringify({kind:'generate',scenario_id:8}));window.history.replaceState(null,'','/predictions?prediction_id=9');render(<PredictionsView/>);await screen.findByText(/Saved prediction #9/);expect(screen.queryByText(/A prediction generation may have completed/)).toBeNull();expect(fetch.mock.calls.every(([,o])=>!o?.method)).toBe(true);
+});
+
+it.each(["empty", "failure"])("distinguishes initial scenario history %s", async state => {
+ vi.stubGlobal("fetch", vi.fn(async (url:string) => {
+  if (url.includes("/catalog/")) return Response.json([]);
+  if (url.includes("/7/predictions?")) return state === "failure"
+   ? Response.json({detail:"History unavailable"}, {status:503}) : Response.json([]);
+  if (url.includes("/scenarios?")) return Response.json([scenario]);
+  if (url.endsWith("/scenarios/7")) return Response.json(scenario);
+  return Response.json(saved);
+ }));
+ window.history.replaceState(null,"","/predictions?prediction_id=9");
+ render(<PredictionsView/>);
+ await screen.findByText(/Saved prediction #9/);
+ if (state === "empty") {
+  await screen.findByText("No saved predictions exist for scenario #7 yet.");
+  expect(screen.queryByText("History unavailable")).toBeNull();
+ } else {
+  await screen.findByText("History unavailable");
+  expect(screen.queryByText(/No saved predictions exist/)).toBeNull();
+  expect(screen.queryByText(/No predictions on this page/)).toBeNull();
+  expect(screen.queryByText("No saved match states yet.")).toBeNull();
+ }
+});
+it("returns from an empty second history page to all 50 saved predictions", async () => {
+ const records = Array.from({length:50}, (_,i) => ({...saved,prediction_id:i+1}));
+ const fetch = vi.fn(async (url:string) => {
+  if (url.includes("/catalog/")) return Response.json([]);
+  if (url.includes("/7/predictions?")) return Response.json(url.includes("offset=50") ? [] : records);
+  if (url.includes("/scenarios?")) return Response.json([scenario]);
+  if (url.endsWith("/scenarios/7")) return Response.json(scenario);
+  return Response.json(saved);
+ });
+ vi.stubGlobal("fetch",fetch);
+ window.history.replaceState(null,"","/predictions?prediction_id=9");
+ render(<PredictionsView/>);
+ await waitFor(() => expect((screen.getByRole("button",{name:"Next predictions"}) as HTMLButtonElement).disabled).toBe(false));
+ fireEvent.click(screen.getByRole("button",{name:"Next predictions"}));
+ await screen.findByText("No predictions on this page. Use Previous predictions to see earlier records.");
+ expect(screen.queryByText(/No saved predictions exist/)).toBeNull();
+ expect((screen.getByRole("button",{name:"Previous predictions"}) as HTMLButtonElement).disabled).toBe(false);
+ fireEvent.click(screen.getByRole("button",{name:"Previous predictions"}));
+ await waitFor(() => expect((screen.getByRole("button",{name:"Next predictions"}) as HTMLButtonElement).disabled).toBe(false));
+ expect(screen.getByText("Prediction page 1")).toBeTruthy();
+ expect(screen.queryByText(/No predictions on this page/)).toBeNull();
+ expect(fetch.mock.calls.filter(([url]) => url === "/api/football/scenarios/7/predictions?limit=50&offset=0")).toHaveLength(2);
+});
+
+import v2Cases from '@/lib/fixtures/backend-v2-predictions.json';
+import frozenV1 from '@/lib/fixtures/frozen-v1-prediction.json';
+it.each(v2Cases)('reopens real v2 minute $minute with unchanged units and reasoning after scenario editing',async fixture=>{
+ const before=JSON.stringify(fixture.saved);
+ const fetch=vi.fn(async(url:string,options:RequestInit={})=>{
+  if(options.method)throw new Error('Reopening must be read-only');
+  if(url.includes('/scenarios?'))return Response.json([fixture.scenario]);
+  if(url.endsWith('/scenarios/7'))return Response.json({...fixture.scenario,match_minute:45,team1_goals:5});
+  if(url.includes('/7/predictions?'))return Response.json([fixture.saved]);
+  return Response.json(fixture.saved);
+ });
+ vi.stubGlobal('fetch',fetch);
+ window.history.replaceState(null,'',`/predictions?prediction_id=${fixture.saved.prediction_id}`);
+ render(<PredictionsView/>);await screen.findAllByText(`Minute ${fixture.minute}`);
+ expect(screen.queryByText('Minute 45')).toBeNull();
+ for(const reason of fixture.output.reasoning)expect(screen.getByText(reason,{exact:false})).toBeTruthy();
+ for(const value of Object.values(fixture.output.probabilities))expect(screen.getAllByText(`${(value*100).toFixed(1)}%`).length).toBeGreaterThan(0);
+ expect(screen.getAllByText(`${fixture.output.confidence.percent.toFixed(1)}%`).length).toBeGreaterThan(0);
+ expect(screen.queryByText(`${(fixture.output.confidence.percent*100).toFixed(1)}%`)).toBeNull();
+ expect(fetch.mock.calls.every(([,options])=>!options?.method)).toBe(true);
+ expect(JSON.stringify(fixture.saved)).toBe(before);
+});
+it('saves a real v2 preview through create then bodyless generation',async()=>{
+ const fixture=v2Cases[0];
+ const fetch=vi.fn(async(url:string,options:RequestInit={})=>{
+  if(options.method)return Response.json(url==='/api/football/scenarios'?fixture.scenario:fixture.saved,{status:201});
+  if(url.includes('/scenarios?'))return Response.json([fixture.scenario]);
+  if(url.includes('/7/predictions?'))return Response.json([fixture.saved]);
+  return Response.json(fixture.scenario);
+ });vi.stubGlobal('fetch',fetch);
+ sessionStorage.setItem('goalstats-current-prediction',JSON.stringify({version:2,kind:'preview',input:fixture.request,output:fixture.output}));
+ render(<PredictionsView/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Save new scenario and prediction'}));
+ await screen.findByText(`Prediction #${fixture.saved.prediction_id} saved for scenario #7.`);
+ const writes=fetch.mock.calls.filter(([,options])=>options?.method);
+ expect(writes).toHaveLength(2);
+ const {extra_minute,status,...create}=fixture.request;void extra_minute;void status;
+ expect(JSON.parse(writes[0][1]!.body as string)).toEqual(create);
+ expect(writes[1]).toEqual(['/api/football/scenarios/7/predictions',{method:'POST'}]);
+ expect(window.location.search).toBe(`?prediction_id=${fixture.saved.prediction_id}`);
+ expect(sessionStorage.getItem('goalstats-pending-save')).toBeNull();
+});
+it('opens both versions from mixed history without recalculation or rewriting snapshots',async()=>{
+ const fixture=v2Cases[1];
+ const legacy={...frozenV1,prediction_id:8,scenario_id:7,input_snapshot:{...frozenV1.input_snapshot,scenario_id:7}};
+ const records=[fixture.saved,legacy],before=JSON.stringify(records);
+ const fetch=vi.fn(async(url:string,options:RequestInit={})=>{
+  if(options.method)throw new Error('History must be read-only');
+  if(url.includes('/scenarios?'))return Response.json([fixture.scenario]);
+  if(url.endsWith('/scenarios/7'))return Response.json({...fixture.scenario,match_minute:30});
+  if(url.includes('/7/predictions?'))return Response.json(records);
+  return Response.json(url.endsWith('/predictions/8')?legacy:fixture.saved);
+ });vi.stubGlobal('fetch',fetch);vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
+ window.history.replaceState(null,'','/predictions?scenario_id=7');render(<PredictionsView/>);
+ fireEvent.click(await screen.findByRole('button',{name:/Open prediction #8/}));
+ await screen.findByText(/Saved prediction #8/);
+ expect(screen.getAllByText(`Minute ${legacy.output.minute}`).length).toBeGreaterThan(0);
+ expect(screen.getByText(/road-to-the-final-heuristic-v1/)).toBeTruthy();
+ fireEvent.click(screen.getAllByRole('button',{name:'Open saved prediction'})[0]);
+ await screen.findByText(`Saved prediction #${fixture.saved.prediction_id}`,{exact:false});
+ expect(screen.getByText(/road-to-the-final-heuristic-v2/)).toBeTruthy();
+ expect(JSON.stringify(records)).toBe(before);
+ expect(fetch.mock.calls.every(([,options])=>!options?.method)).toBe(true);
+});
+it('restores real v2 history after an empty page without rewriting records',async()=>{
+ const fixture=v2Cases[0],records=Array.from({length:50},(_,i)=>({...fixture.saved,prediction_id:100+i}));
+ const before=JSON.stringify(records);
+ const fetch=vi.fn(async(url:string)=>{
+  if(url.includes('/scenarios?'))return Response.json([fixture.scenario]);
+  if(url.endsWith('/scenarios/7'))return Response.json(fixture.scenario);
+  if(url.includes('/7/predictions?'))return Response.json(url.includes('offset=50')?[]:records);
+  return Response.json(fixture.saved);
+ });vi.stubGlobal('fetch',fetch);window.history.replaceState(null,'','/predictions?scenario_id=7');render(<PredictionsView/>);
+ await screen.findByRole('button',{name:/Open prediction #149/});
+ fireEvent.click(screen.getByRole('button',{name:'Next predictions'}));await screen.findByText(/No predictions on this page/);
+ fireEvent.click(screen.getByRole('button',{name:'Previous predictions'}));await screen.findByRole('button',{name:/Open prediction #149/});
+ expect(JSON.stringify(records)).toBe(before);
+});
+it('preserves v2 preview and blocks automatic retry after uncertain generation',async()=>{
+ const fixture=v2Cases[0];
+ const fetch=vi.fn(async(url:string,options:RequestInit={})=>{
+  if(options.method)return url==='/api/football/scenarios'?Response.json(fixture.scenario,{status:201}):Response.json({detail:'Timed out'},{status:504});
+  if(url.includes('/scenarios?'))return Response.json([fixture.scenario]);
+  if(url.includes('/7/predictions?'))return Response.json([fixture.saved]);
+  return Response.json(fixture.scenario);
+ });vi.stubGlobal('fetch',fetch);
+ const session=JSON.stringify({version:2,kind:'preview',input:fixture.request,output:fixture.output});
+ sessionStorage.setItem('goalstats-current-prediction',session);render(<PredictionsView/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Save new scenario and prediction'}));
+ await screen.findByText(/Generation outcome is uncertain/);
+ expect((screen.getByRole('button',{name:'Generate another saved prediction'}) as HTMLButtonElement).disabled).toBe(true);
+ expect(fetch.mock.calls.filter(([,options])=>options?.method)).toHaveLength(2);
+ expect(sessionStorage.getItem('goalstats-current-prediction')).toBe(session);
+});

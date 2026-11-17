@@ -39,3 +39,49 @@ it("paginates and reverses generation order, independent of match minute",async(
 it("rejects prototype session state and handles retrieval failure",async()=>{
  backend();sessionStorage.setItem('goalstats-current-prediction','{}');render(<AnalyticsView/>);await screen.findByText(/obsolete format/);cleanup();vi.stubGlobal('fetch',vi.fn(async()=>Response.json({detail:'Not found'},{status:404})));window.history.replaceState(null,'','/analytics?prediction_id=9');render(<AnalyticsView/>);await screen.findByText('Not found');
 });
+
+it.each(["empty", "failure"])("distinguishes initial scenario history %s", async state => {
+ vi.stubGlobal("fetch", vi.fn(async (url:string) => {
+  if (url.includes("/catalog/")) return Response.json([]);
+  if (url.includes("/7/predictions?")) return state === "failure"
+   ? Response.json({detail:"History unavailable"}, {status:503}) : Response.json([]);
+  if (url.includes("/scenarios?")) return Response.json([scenario]);
+  if (url.endsWith("/scenarios/7")) return Response.json(scenario);
+  return Response.json(saved);
+ }));
+ window.history.replaceState(null,"","/analytics?prediction_id=9");
+ render(<AnalyticsView/>);
+ await screen.findByText(/Saved prediction #9/);
+ if (state === "empty") {
+  await screen.findByText("No saved predictions exist for scenario #7 yet.");
+  expect(screen.queryByText("History unavailable")).toBeNull();
+ } else {
+  await screen.findByText("History unavailable");
+  expect(screen.queryByText(/No saved predictions exist/)).toBeNull();
+  expect(screen.queryByText(/No predictions on this page/)).toBeNull();
+  expect(screen.queryByText("No saved match states yet.")).toBeNull();
+ }
+});
+it("returns from an empty second history page to all 50 saved predictions", async () => {
+ const records = Array.from({length:50}, (_,i) => ({...saved,prediction_id:i+1}));
+ const fetch = vi.fn(async (url:string) => {
+  if (url.includes("/catalog/")) return Response.json([]);
+  if (url.includes("/7/predictions?")) return Response.json(url.includes("offset=50") ? [] : records);
+  if (url.includes("/scenarios?")) return Response.json([scenario]);
+  if (url.endsWith("/scenarios/7")) return Response.json(scenario);
+  return Response.json(saved);
+ });
+ vi.stubGlobal("fetch",fetch);
+ window.history.replaceState(null,"","/analytics?prediction_id=9");
+ render(<AnalyticsView/>);
+ await waitFor(() => expect((screen.getByRole("button",{name:"Next predictions"}) as HTMLButtonElement).disabled).toBe(false));
+ fireEvent.click(screen.getByRole("button",{name:"Next predictions"}));
+ await screen.findByText("No predictions on this page. Use Previous predictions to see earlier records.");
+ expect(screen.queryByText(/No saved predictions exist/)).toBeNull();
+ expect((screen.getByRole("button",{name:"Previous predictions"}) as HTMLButtonElement).disabled).toBe(false);
+ fireEvent.click(screen.getByRole("button",{name:"Previous predictions"}));
+ await waitFor(() => expect((screen.getByRole("button",{name:"Next predictions"}) as HTMLButtonElement).disabled).toBe(false));
+ expect(screen.getByText("Prediction page 1")).toBeTruthy();
+ expect(screen.queryByText(/No predictions on this page/)).toBeNull();
+ expect(fetch.mock.calls.filter(([url]) => url === "/api/football/scenarios/7/predictions?limit=50&offset=0")).toHaveLength(2);
+});
