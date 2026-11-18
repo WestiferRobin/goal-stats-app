@@ -290,7 +290,6 @@ export default function MatchesView() {
       router.push("/predictions");
     } catch (err) {
       if(previewRequest.current?.signal.aborted)return;
-      console.error("PREDICTION ERROR:", err);
 
       setError(
         err instanceof Error
@@ -636,7 +635,7 @@ export default function MatchesView() {
                 <button
                   type="submit"
                   disabled={loading || catalogLoading || !!catalogError || teams.length < 2}
-                  className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl goalstats-primary px-6 py-3 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? "Generating Preview..." : "Generate Preview →"}
                 </button>

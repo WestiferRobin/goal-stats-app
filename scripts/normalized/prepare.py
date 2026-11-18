@@ -96,7 +96,7 @@ for name, expected in [('United States', [54,41,9,4,142,39,103,9]), ('Germany',[
 # Real backend contract checks against the generated numerical fixtures.
 cases = json.loads(Path('/app/src/lib/fixtures/backend-v2-predictions.json').read_text())
 for case in cases:
-    body = {**case['request'], 'team1_id':teams['China'], 'team2_id':teams['Norway']}
+    body = {**case['request'], 'team1_shots': 4, 'team1_id':teams['China'], 'team2_id':teams['Norway']}
     response = client.post('/api/v1/predictions/preview', json=body)
     assert response.status_code == 200
     assert response.json == case['output']

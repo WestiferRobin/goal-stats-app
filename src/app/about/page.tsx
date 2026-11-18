@@ -55,7 +55,7 @@ export default function AboutPage() {
                 Value to Users
             </h2>
             <p className="leading-relaxed text-gray-300">
-                Users can compare available team information and historical Women’s World Cup results, create hypothetical match scenarios, view predicted win/draw/loss probabilities and model-generated expected goals remaining and momentum estimates, and explicitly save predictions with their input snapshots for later review. Historical backtesting and tournament simulation are not available in Phase 1.
+                Users can compare available team information and historical Women’s World Cup results, create hypothetical match scenarios, view predicted win/draw/loss probabilities and model-generated expected goals remaining and momentum estimates, and explicitly save predictions with their input snapshots for later review. The current application also provides FIFA rankings, experimental offense/defense/form (O/D/F) ratings, Monte Carlo tournament simulations, and retrospective model Backtesting. These research diagnostics are not validated prospective forecasts; strict historical evaluation does not currently produce validated accuracy.
             </p>
             </section>
 
@@ -77,7 +77,7 @@ export default function AboutPage() {
                 Future Direction
             </h2>
             <p className="leading-relaxed text-gray-300">
-                The 2027 FIFA Women’s World Cup is a future direction for Goal Stats. Phase 1 focuses on historical tournament results and user-defined scenarios. Future development may include additional leagues, tournaments, larger datasets, backtesting, and tournament simulation.
+                The 2027 FIFA Women’s World Cup is a future direction for Goal Stats. Phase 1 focuses on historical tournament results and user-defined scenarios. Future development may include additional leagues, tournaments, larger datasets, and independent prospective validation. Monte Carlo simulation and retrospective Backtesting are already available in Analytics.
             </p>
             </section>
 

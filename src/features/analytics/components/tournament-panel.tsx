@@ -128,11 +128,12 @@ export default function TournamentPanel() {
     </ol>
     {validation && <p className="mt-4 text-amber-200" aria-live="polite">{validation}</p>}
     {error && <p role="alert" className="mt-4 rounded-xl border border-red-400/30 bg-red-500/20 p-4">{error}</p>}
-    <button type="button" className="mt-6 rounded-xl bg-pink-500 px-6 py-3 font-semibold hover:bg-pink-600 disabled:opacity-50" disabled={loading || catalogLoading || !!catalogError} onClick={() => void run()}>{loading ? "Running simulation..." : error && !validation ? "Retry simulation" : "Run simulation"}</button>
+    <button type="button" className="mt-6 rounded-xl goalstats-primary px-6 py-3 font-semibold disabled:opacity-50" disabled={loading || catalogLoading || !!catalogError} onClick={() => void run()}>{loading ? "Running simulation..." : error && !validation ? "Retry simulation" : "Run simulation"}</button>
     {loading && <p role="status" className="mt-3">Running hypothetical tournament simulation...</p>}
     {!result && !loading && <p className="mt-4 text-zinc-300">No simulation results for this configuration.</p>}
     {result && <div className="mt-8 space-y-4" aria-live="polite">
       <h3 className="text-2xl font-bold">Hypothetical Monte Carlo simulation results</h3>
+      <p>Simulation model: {result.data.model_version ?? "Not provided by this backend"}</p>
       <p>Simulations executed: {result.data.simulations.toLocaleString()} · Random seed used: {result.data.seed}</p>
       <p>Most likely champion: {result.data.predicted_champion} (team #{result.data.predicted_champion_id})</p>
       <p>Most common final: {result.data.most_common_final ? `${result.data.most_common_final.team1} vs ${result.data.most_common_final.team2} (${result.data.most_common_final.probability.toFixed(2)}%)` : "Unavailable"}</p>

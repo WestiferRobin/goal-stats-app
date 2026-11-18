@@ -13,6 +13,7 @@ export type TournamentRow = {
   semifinal_probability: number; final_probability: number; champion_probability: number;
 };
 export type TournamentResult = {
+  model_version?: string | null;
   kind: "hypothetical_knockout"; probability_unit: "percent"; simulations: number; seed: number;
   predicted_champion_id: number; predicted_champion: string; results: TournamentRow[];
   most_common_final: { team1_id: number; team2_id: number; team1: string; team2: string; probability: number } | null;
@@ -71,6 +72,8 @@ export function decodeTournament(value: unknown, request: TournamentRequest): To
   if (data.kind !== "hypothetical_knockout" || data.probability_unit !== "percent" || data.simulations !== request.simulations ||
     typeof data.seed !== "number" || !Number.isInteger(data.seed) || data.seed < 0 || data.seed > 4294967295 ||
     (request.seed !== undefined && data.seed !== request.seed) || !Array.isArray(data.results) || data.results.length !== request.teams.length) return fail();
+  if (data.model_version !== undefined && data.model_version !== null &&
+      (typeof data.model_version !== "string" || !/^[a-z0-9][a-z0-9.-]{0,79}$/.test(data.model_version))) return fail();
   const ids = new Set(request.teams.map(t => t.team_id)), seen = new Set<number>();
   const names = new Map<number, string>();
   for (const value of data.results) {

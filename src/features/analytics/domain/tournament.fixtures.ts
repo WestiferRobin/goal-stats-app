@@ -12,7 +12,7 @@ export function validDraft(size = 4): TournamentDraft {
 }
 export function responseFor(draft = validDraft()) {
   const req = buildTournamentRequest(draft);
-  return { kind: "hypothetical_knockout", probability_unit: "percent", simulations: req.simulations, seed: req.seed ?? 123,
+  return { model_version: "five-input-poisson-knockout-v1", kind: "hypothetical_knockout", probability_unit: "percent", simulations: req.simulations, seed: req.seed ?? 123,
     predicted_champion_id: req.teams[0].team_id, predicted_champion: draft.participants[0].team.name,
     most_common_final: null,
     results: draft.participants.map(p => ({ team_id: p.team.team_id, team: p.team.name, fifa_rank: p.team.fifa_rank, semifinal_probability: 400 / req.teams.length, final_probability: 200 / req.teams.length, champion_probability: 100 / req.teams.length })),

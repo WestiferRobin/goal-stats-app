@@ -46,12 +46,13 @@ async function preview(page:Page,fixture=fixtures[0]){
  await page.getByRole('spinbutton',{name:'Minute',exact:true}).fill(String(fixture.minute));
  await page.getByRole('spinbutton',{name:'China Score',exact:true}).fill(String(fixture.request.team1_goals));
  await page.getByRole('spinbutton',{name:'Norway Score',exact:true}).fill(String(fixture.request.team2_goals));
+ await page.getByRole('spinbutton',{name:'China Total Shots',exact:true}).fill('4');
  await page.getByRole('spinbutton',{name:'China Shots on Target',exact:true}).fill('4');
  const result=page.waitForResponse(r=>r.url().endsWith('/api/football/predictions/preview')&&r.request().method()==='POST');
  const navigation=page.waitForURL(/\/predictions$/);
  await page.getByRole('button',{name:'Generate Preview →'}).click();
  const response=await result;expect(response.status()).toBe(200);
- const sent=response.request().postDataJSON();expect(sent.team1_shots).toBe(0);expect(sent.team1_shots_on_target).toBe(4);
+ const sent=response.request().postDataJSON();expect(sent.team1_shots).toBe(4);expect(sent.team1_shots_on_target).toBe(4);
  await navigation;
  await expect(page).toHaveURL(/\/predictions$/);
  return response.json();
@@ -138,7 +139,7 @@ test('save, durable reopen, PATCH and regenerate preserve immutable prior predic
  expect(response.status()).toBe(201);expect(response.request().postData()).toBeNull();const saved=await response.json();
  expect(posts).toEqual(['/api/football/scenarios',`/api/football/scenarios/${saved.scenario_id}/predictions`]);
  await expect(page).toHaveURL(new RegExp(`prediction_id=${saved.prediction_id}$`));await page.reload();await expect(page.getByText(`Saved prediction #${saved.prediction_id}`,{exact:false})).toBeVisible();
- const originalScenario=await api(request,`scenarios/${saved.scenario_id}`);expect(originalScenario.team1_shots).toBe(0);expect(saved.input_snapshot.team1_shots).toBe(4);
+ const originalScenario=await api(request,`scenarios/${saved.scenario_id}`);expect(originalScenario.team1_shots).toBe(4);expect(saved.input_snapshot.team1_shots).toBe(4);
  await page.goto(`/matches?scenario_id=${saved.scenario_id}`);await expect(page.getByText(`Editing scenario #${saved.scenario_id}.`,{exact:false})).toBeVisible();
  await page.getByRole('spinbutton',{name:'Minute',exact:true}).fill('90');const patched=page.waitForResponse(r=>r.request().method()==='PATCH');
  await page.getByRole('button',{name:'Save scenario changes'}).click();const patch=await patched;expect(patch.request().postDataJSON()).toEqual({match_minute:90});expect(patch.status()).toBe(200);
@@ -198,7 +199,7 @@ test('backend outage recovers without empty-data claims; invalid inputs are reje
 });
 
 test('an owned scenario with no predictions has a truthful initial empty history',async({page,request})=>{
- const {extra_minute,status,...input}=fixtures[0].request;void extra_minute;void status;
+ const {extra_minute,status,...input}={...fixtures[0].request,team1_shots:4};void extra_minute;void status;
  const response=await request.post('/api/football/scenarios',{data:{...input,team1_id:owned.teams.China,team2_id:owned.teams.Norway}});
  expect(response.status()).toBe(201);const scenario=await response.json();
  await page.goto(`/predictions?scenario_id=${scenario.scenario_id}`);
@@ -216,4 +217,27 @@ test('invalid browser minute cannot submit a preview',async({page})=>{
  await page.getByRole('button',{name:'Generate Preview →'}).click();
  expect(await page.getByRole('spinbutton',{name:'Minute',exact:true}).evaluate((element:HTMLInputElement)=>element.validity.rangeOverflow)).toBe(true);
  expect(posts).toEqual([]);await expect(page).toHaveURL(/\/matches$/);
+});
+
+test('shared pink actions meet normal-text contrast in every enabled state',async({page})=>{
+ for(const width of [375,1440]) {
+  await page.setViewportSize({width,height:900});
+  for(const route of ['/','/project','/matches','/predictions','/analytics']) {
+   await page.goto(route);
+   for(const action of await page.locator('.goalstats-primary:visible').all()) {
+    if(await action.isDisabled()) continue; // Inactive controls are exempt; existing disabled opacity is intentional.
+    const check=async()=>{
+     await expect.poll(()=>action.evaluate(el=>{
+      const s=getComputedStyle(el);const luminance=(color:string)=>{const rgb=color.match(/[\d.]+/g)!.slice(0,3).map(Number).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;});return .2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];};
+      const a=luminance(s.color),b=luminance(s.backgroundColor);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+     })).toBeGreaterThanOrEqual(4.5);
+    };
+    await page.mouse.move(0,0);await check();
+    await action.hover();await check();
+    await page.mouse.down();try{await check();}finally{await page.mouse.move(0,0);await page.mouse.up();}
+    await action.focus();await page.keyboard.press('Tab');await page.keyboard.press('Shift+Tab');await expect(action).toBeFocused();await check();
+    expect(await action.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('none');
+   }
+  }
+ }
 });

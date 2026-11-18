@@ -141,7 +141,7 @@ test('1991 exposure protocol reports all cases and preserves horizon separation'
  expect((await (await again).json()).cases).toHaveLength(26);
 });
 
-test('three-input research replay uses real pinned probabilities with strict gates and paired diagnostics',async({page,request})=>{
+test('three-input research replay uses real pinned probabilities with strict gates and paired diagnostics',async({page})=>{
  await page.goto('/analytics');
  await page.getByRole('combobox',{name:'Evaluation dataset',exact:true}).selectOption(fullDatasetId);
  await page.getByRole('combobox',{name:'Evaluation model',exact:true}).selectOption('odf-cross-goal-rate-research-v1');
@@ -156,15 +156,48 @@ test('three-input research replay uses real pinned probabilities with strict gat
  await expect(page.getByRole('heading',{name:'Research-only retrospective temporal replay',exact:true})).toBeVisible();
  await expect(page.getByRole('table',{name:/baseline common — common cohort/})).toBeVisible();
  await expect(page.getByRole('table',{name:/Confusion matrix/})).toBeVisible();
- const body=response.request().postDataJSON();
- for(const [year,count] of Object.entries(editionCounts)){
-  const r=await request.post(endpoint,{data:{...body,edition:Number(year),research_model_version:undefined}});expect(r.status()).toBe(200);const d=await r.json();expect(d.cases).toHaveLength(count);
-  expect(d.eligible_matches).toBe(year==='1991'?0:year==='1999'?30:count);
-  expect(d.cases.every((c:{regulation_minutes:number;status:string})=>c.status!=='eligible'||c.regulation_minutes===90)).toBe(true);
- }
+ await page.getByText('Evaluation identity and reproducibility',{exact:true}).click();
+ await expect(page.getByText('Assumption package: None — retrospective replay uses pinned inputs',{exact:true})).toBeVisible();
+ await expect(page.getByText('Recovery package: international-results-recovery-v1',{exact:true})).toBeVisible();
  await page.getByRole('combobox',{name:'Evaluation model',exact:true}).selectOption('odf-temperature-research-v1');
  await expect(page.getByLabel('Evaluation results')).toHaveCount(0);
  await page.getByRole('combobox',{name:'Evaluation mode',exact:true}).selectOption('retrospective_replay');
  pending=page.waitForResponse(r=>r.url().endsWith(endpoint));await page.getByRole('button',{name:'Run evaluation',exact:true}).click();
  const calibrated=await (await pending).json();expect(calibrated.eligible_matches).toBe(200);expect(calibrated.cases.filter((c:{status:string})=>c.status==='eligible').every((c:{edition:number})=>c.edition>2007)).toBe(true);
 });
+
+// Keep responsive checks separate from the edition/model replay contract budget.
+test('research tables preserve numeric lines and keyboard scrolling at all three widths',async({page})=>{
+ await page.goto('/analytics');
+ await page.getByRole('combobox',{name:'Evaluation dataset',exact:true}).selectOption(fullDatasetId);
+ await page.getByRole('combobox',{name:'Evaluation model',exact:true}).selectOption('odf-cross-goal-rate-research-v1');
+ await page.getByRole('combobox',{name:'Evaluation mode',exact:true}).selectOption('retrospective_replay');
+ const pending=page.waitForResponse(r=>r.url().endsWith(endpoint));
+ await page.getByRole('button',{name:'Run evaluation',exact:true}).click();
+ const response=await pending;expect(response.status()).toBe(200);
+ await expect(page.getByRole('table',{name:/Confusion matrix/})).toBeVisible();
+ for(const width of [375,768,1440]) {
+  await page.setViewportSize({width,height:900});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  for(const region of await page.locator('.evaluation-table-scroll').all()) {
+   await region.focus();await expect(region).toBeFocused();
+   const geometry=await region.evaluate(el=>{
+    const cells=Array.from(el.querySelectorAll('td')).filter(td=>el.getAttribute('data-numeric')==='true'||td.classList.contains('evaluation-number'));
+    return {overflow:el.scrollWidth>el.clientWidth, intact:cells.every(td=>{const range=document.createRange();range.selectNodeContents(td);return new Set(Array.from(range.getClientRects()).map(rect=>rect.top)).size<=1 && getComputedStyle(td).whiteSpace==='nowrap';})};
+   });
+   expect(geometry.intact).toBe(true);
+   if(geometry.overflow){await page.keyboard.press('ArrowRight');await expect.poll(()=>region.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);}
+  }
+ }
+
+});
+
+// Each edition retains every replay assertion with an independent bounded timeout.
+for(const [year,count] of Object.entries(editionCounts)) {
+ test(`three-input research replay preserves the ${year} cohort and eligible horizon`,async({request})=>{
+  const r=await request.post(endpoint,{data:{dataset_id:fullDatasetId,mode:'retrospective_replay',offset:0,limit:348,assumption_package_id:null,assumptions:[],prediction_model_version:'odf-cross-goal-rate-research-v1',recovery_package_id:'international-results-recovery-v1',edition:Number(year)}});
+  expect(r.status()).toBe(200);const d=await r.json();expect(d.cases).toHaveLength(count);
+  expect(d.eligible_matches).toBe(year==='1991'?0:year==='1999'?30:count);
+  expect(d.cases.every((c:{regulation_minutes:number;status:string})=>c.status!=='eligible'||c.regulation_minutes===90)).toBe(true);
+ });
+}

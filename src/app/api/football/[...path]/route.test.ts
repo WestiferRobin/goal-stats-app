@@ -258,3 +258,14 @@ it("bounds full-cohort assumption requests separately from existing endpoints",a
  const response=await POST(new Request('http://localhost/api/football/evaluations/backtests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dataset_id:dataset,assumptions:[],padding:'x'.repeat(size)})}),context('evaluations/backtests'));expect(response.status).toBe(status);
  }
 });
+
+it('preserves the approved asset reason with a safe 503 message',async()=>{
+ configure();vi.mocked(request).mockRejectedValue(new ApiError('http',503,{type:'about:blank',title:'Service Unavailable',status:503,detail:'/private/credentials SECRET',reason:'evaluation_asset_unavailable'}));
+ const response=await POST(new Request('http://localhost/api/football/evaluations/backtests',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),context('evaluations/backtests'));
+ expect(response.status).toBe(503);const data=await response.json();expect(data.reason).toBe('evaluation_asset_unavailable');expect(data.detail).toContain('approved historical asset');expect(JSON.stringify(data)).not.toMatch(/private|credentials|SECRET/);
+});
+it.each(['predictions/preview','scenarios','scenarios/7'])('preserves safe shot-field diagnostics for %s',async path=>{
+ configure();vi.mocked(request).mockRejectedValue(new ApiError('http',400,{type:'about:blank',title:'Bad Request',status:400,detail:'secret',reason:'shots_on_target_exceeds_total',field_errors:{team1_shots_on_target:'private detail',credentials:'secret'}}));
+ const response=await (path==='scenarios/7'?PATCH:POST)(new Request(`http://localhost/api/football/${path}`,{method:path==='scenarios/7'?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:'{}'}),context(path));
+ expect(response.status).toBe(400);expect(await response.json()).toMatchObject({reason:'shots_on_target_exceeds_total',field_errors:{team1_shots_on_target:'Shots on target cannot exceed total shots.'}});
+});

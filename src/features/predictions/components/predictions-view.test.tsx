@@ -145,13 +145,13 @@ it('saves a real v2 preview through create then bodyless generation',async()=>{
   if(url.includes('/7/predictions?'))return Response.json([fixture.saved]);
   return Response.json(fixture.scenario);
  });vi.stubGlobal('fetch',fetch);
- sessionStorage.setItem('goalstats-current-prediction',JSON.stringify({version:2,kind:'preview',input:fixture.request,output:fixture.output}));
+ sessionStorage.setItem('goalstats-current-prediction',JSON.stringify({version:2,kind:'preview',input:{...fixture.request,team1_shots:4},output:fixture.output}));
  render(<PredictionsView/>);
  fireEvent.click(await screen.findByRole('button',{name:'Save new scenario and prediction'}));
  await screen.findByText(`Prediction #${fixture.saved.prediction_id} saved for scenario #7.`);
  const writes=fetch.mock.calls.filter(([,options])=>options?.method);
  expect(writes).toHaveLength(2);
- const {extra_minute,status,...create}=fixture.request;void extra_minute;void status;
+ const {extra_minute,status,...create}={...fixture.request,team1_shots:4};void extra_minute;void status;
  expect(JSON.parse(writes[0][1]!.body as string)).toEqual(create);
  expect(writes[1]).toEqual(['/api/football/scenarios/7/predictions',{method:'POST'}]);
  expect(window.location.search).toBe(`?prediction_id=${fixture.saved.prediction_id}`);
@@ -201,7 +201,7 @@ it('preserves v2 preview and blocks automatic retry after uncertain generation',
   if(url.includes('/7/predictions?'))return Response.json([fixture.saved]);
   return Response.json(fixture.scenario);
  });vi.stubGlobal('fetch',fetch);
- const session=JSON.stringify({version:2,kind:'preview',input:fixture.request,output:fixture.output});
+ const session=JSON.stringify({version:2,kind:'preview',input:{...fixture.request,team1_shots:4},output:fixture.output});
  sessionStorage.setItem('goalstats-current-prediction',session);render(<PredictionsView/>);
  fireEvent.click(await screen.findByRole('button',{name:'Save new scenario and prediction'}));
  await screen.findByText(/Generation outcome is uncertain/);

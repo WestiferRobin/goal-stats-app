@@ -60,3 +60,11 @@ describe("tournament response decoding", () => {
   });
   it("requires a supplied seed to be echoed exactly", () => expect(() => decodeTournament(responseFor(), buildTournamentRequest({ ...validDraft(), seed: "0" }))).toThrow());
 });
+
+it.each([4,8,16,32])('preserves model metadata and accepts missing legacy metadata for %i teams',size=>{
+ const draft=validDraft(size),request=buildTournamentRequest(draft),data=responseFor(draft);
+ expect(decodeTournament(data,request).model_version).toBe('five-input-poisson-knockout-v1');
+ const legacy={...data,model_version:undefined};expect(decodeTournament(legacy,request).model_version).toBeUndefined();
+ expect(decodeTournament({...data,model_version:null},request).model_version).toBeNull();
+ for(const invalid of ['',12,'/private/path','x'.repeat(81)]) expect(()=>decodeTournament({...data,model_version:invalid},request)).toThrow();
+});

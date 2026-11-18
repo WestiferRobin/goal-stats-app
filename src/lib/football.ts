@@ -162,7 +162,7 @@ export function routeId(value:string|null):number|null {
   if(!/^[1-9]\d*$/.test(value)||!isCatalogId(Number(value)))throw new Error("Invalid saved record ID.");
   return Number(value);
 }
-export function parseScenarioInput(value:unknown):ScenarioInput {
+function parseStoredScenarioInput(value:unknown):ScenarioInput {
   const row=object(value),input:Record<string,unknown>={};
   if(!isCatalogId(row.team1_id)||!isCatalogId(row.team2_id)||row.team1_id===row.team2_id)throw new Error("Select two different catalog teams.");
   if(!integerRange(row.match_minute,120))throw new Error("Match minute must be an integer from 0 to 120.");
@@ -178,13 +178,22 @@ export function parseScenarioInput(value:unknown):ScenarioInput {
   if(row.match_id!==undefined){if(row.match_id!==null&&!isCatalogId(row.match_id))throw new Error("Invalid historical match ID.");input.match_id=row.match_id;}
   return input as ScenarioInput;
 }
+export function parseScenarioInput(value:unknown):ScenarioInput {
+  const input=parseStoredScenarioInput(value);
+  for(const side of ["team1","team2"] as const) {
+    if(input[`${side}_shots_on_target`]>input[`${side}_shots`]) {
+      throw new Error(`${side === "team1" ? "Team 1" : "Team 2"} shots on target cannot exceed total shots.`);
+    }
+  }
+  return input;
+}
 export function previewInput(value:unknown):PreviewInput {
   const row=object(value),input=parseScenarioInput(row),extra=row.extra_minute===undefined?0:row.extra_minute,status=row.status===undefined?"":row.status;
   if(!integerRange(extra,30)||typeof status!=="string"||status.length>10)throw new Error("Invalid extra minute or status.");
   const {title,match_id,...state}=input;void title;void match_id;return {...state,extra_minute:extra as number,status};
 }
 export function parseScenario(value:unknown):ScenarioRecord {
-  const input=parseScenarioInput(value),row=object(value);
+  const input=parseStoredScenarioInput(value),row=object(value);
   if(!isCatalogId(row.scenario_id)||!timestamp(row.created_at)||!string(row.team1_name)||!string(row.team2_name)||row.prediction_ready!==true)throw new Error("Invalid saved scenario response.");
   return {...input,scenario_id:row.scenario_id,created_at:row.created_at as string,team1_name:row.team1_name as string,team2_name:row.team2_name as string,prediction_ready:true};
 }
@@ -214,6 +223,7 @@ export function savedPredictionView(record:SavedPrediction):PredictionView{retur
 export function parsePreviewSession(value:unknown):PreviewSession {const row=object(value);if(row.version!==2||row.kind!=="preview")throw new Error("This stored preview uses an obsolete format. Generate a new preview.");const input=previewInput(row.input),output=parsePredictionOutput(row.output);if(output.minute!==input.match_minute)throw new Error("Preview inputs do not match its output.");return {version:2,kind:"preview",input,output};}
 export function previewPredictionView(session:PreviewSession):PredictionView{return {prediction:session.output,scenario:displayScenario(session.input,session.output.team1,session.output.team2,session.input.extra_minute,session.input.status),saved:null};}
 export function scenarioPatch(before:ScenarioInput,after:ScenarioInput):Partial<ScenarioInput>{
+ parseScenarioInput(after);
  for(const key of ["team1_id","team2_id","title","match_id",...(["team1","team2"] as const).flatMap(side=>[`${side}_fifa_rank`,...strengthFields.map(f=>`${side}_${f}`)])] as (keyof ScenarioInput)[])if((before[key]??null)!==(after[key]??null))throw new Error("Teams and strength assumptions cannot be changed on a saved scenario. Generate a preview and explicitly save a new scenario instead.");
  const patch:Record<string,number>={};for(const key of ["match_minute",...(["team1","team2"] as const).flatMap(side=>[`${side}_modifier_total`,...statFields.map(f=>`${side}_${f}`)])] as (keyof ScenarioInput)[])if(before[key]!==after[key])patch[key]=after[key] as number;return patch;
 }

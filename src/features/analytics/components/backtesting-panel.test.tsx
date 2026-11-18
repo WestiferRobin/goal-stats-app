@@ -92,3 +92,28 @@ it("selects recovered results explicitly and clears them when returning to the p
  fireEvent.change(screen.getByLabelText("Evaluation dataset"),{target:{value:fullDatasetId}});
  expect((screen.getByRole("combobox",{name:/Historical results/}) as HTMLSelectElement).value).toBe("original");
 });
+
+it("labels missing packages by returned mode without inventing provenance", async () => {
+ const { assumptionPackageLabel } = await import("./backtesting-panel");
+ expect(assumptionPackageLabel({mode:"strict_historical",assumption_package_id:null})).toBe("None — strict historical evaluation");
+ expect(assumptionPackageLabel({mode:"retrospective_replay",assumption_package_id:null})).toBe("None — retrospective replay uses pinned inputs");
+ expect(assumptionPackageLabel({mode:"retrospective_assumptions",assumption_package_id:null})).toBe("Not provided");
+ expect(assumptionPackageLabel({mode:"retrospective_assumptions",assumption_package_id:"explicit-v2"})).toBe("explicit-v2");
+ setup();click();await screen.findByText(/Historical accuracy unavailable/);
+ expect(screen.getByText("mode").nextElementSibling?.textContent).toBe("strict_historical");
+ expect(screen.getByText("Assumption package: None — strict historical evaluation")).toBeTruthy();
+ expect(screen.getByText("Recovery package: Not provided")).toBeTruthy();
+});
+it("keeps tables semantic inside named keyboard-accessible scroll regions", async () => {
+ setup(async()=>Response.json(fixture(true)));click();await screen.findByText("100.0%");
+ for (const table of screen.getAllByRole("table")) {
+  const region=table.parentElement!;
+  expect(region.getAttribute("role")).toBe("region");expect(region.getAttribute("aria-label")).toBeTruthy();expect(region.tabIndex).toBe(0);
+ }
+ expect(screen.getByText("20.0% / 50.0% / 30.0%").className).toContain("evaluation-number");
+});
+
+it('shows temporary server-asset unavailability without blaming user inputs',async()=>{
+ setup(async()=>Response.json({reason:'evaluation_asset_unavailable',detail:'Backtesting is temporarily unavailable because an approved historical asset could not be loaded. Please try again later.'},{status:503}));click();
+ const alert=await screen.findByRole('alert');expect(alert.textContent).toContain('approved historical asset');expect(alert.textContent).not.toContain('selected IDs');
+});

@@ -114,3 +114,10 @@ it("retries catalog errors and keeps missing enrichment manually editable", asyn
   expect((screen.getByLabelText("Team 1 Offense") as HTMLInputElement).value).toBe("0");
   await waitFor(() => expect(screen.queryByText("Catalog unavailable")).toBeNull());
 });
+
+it.each(['five-input-poisson-knockout-v1',null])('displays supplied model identity without inventing legacy metadata: %s',async version=>{
+ backend(async()=>Response.json({...responseFor(),model_version:version}));await ready();
+ fireEvent.click(screen.getByRole('button',{name:'Run simulation'}));
+ await screen.findByText(`Simulation model: ${version ?? 'Not provided by this backend'}`);
+ expect(screen.getByText(/Random seed used: 123/)).toBeTruthy();
+});

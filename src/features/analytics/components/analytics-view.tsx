@@ -125,7 +125,7 @@ function MatchAnalytics() {
 
             <Link
               href={scenarioId ? `/matches?scenario_id=${scenarioId}` : "/matches?preview=1"}
-              className="mt-6 inline-block rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600"
+              className="mt-6 inline-block rounded-xl goalstats-primary px-6 py-3 font-semibold text-white transition"
             >
               Build a Match Scenario →
             </Link>
@@ -409,7 +409,7 @@ function MatchAnalytics() {
             <div className="mt-10 flex flex-wrap gap-4 border-t border-white/10 pt-8">
               <Link
                 href={current.saved ? `/predictions?prediction_id=${current.saved.prediction_id}` : "/predictions"}
-                className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600"
+                className="rounded-xl goalstats-primary px-6 py-3 font-semibold text-white transition"
               >
                 Back to Prediction
               </Link>

@@ -35,7 +35,7 @@ export default function ProjectPage() {
           Women&apos;s World Cup is a future direction.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-4">
-          <Link className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white hover:bg-pink-600" href="/">
+          <Link className="rounded-xl goalstats-primary px-6 py-3 font-semibold text-white" href="/">
             Launch Goal Stats
           </Link>
           <a className="text-pink-400 underline" href="#phase-1-deliverables">
@@ -176,8 +176,12 @@ export default function ProjectPage() {
             Editing a scenario does not change earlier prediction snapshots or results.
           </p>
           <p className="mt-6 leading-relaxed text-gray-300">
-            Saved scenarios and predictions are shared classroom-prototype records. Tournament simulation
-            and backtesting execution are future work and are not available through the current interface.
+            Saved scenarios and predictions are shared classroom-prototype records. The current application
+            includes the historical Women’s World Cup catalog, team comparisons with FIFA rankings and
+            experimental offense/defense/form (O/D/F) ratings, hypothetical match predictions,
+            Monte Carlo tournament simulations, and retrospective model Backtesting in Analytics.
+            Retrospective research metrics are not validated prospective forecasts. Strict historical
+            evaluation does not currently produce validated accuracy.
           </p>
         </section>
 
