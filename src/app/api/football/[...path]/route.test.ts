@@ -241,3 +241,31 @@ it("keeps remote mutation authentication enabled inside local Docker", async () 
   remote();vi.stubEnv("NODE_ENV","development");vi.stubEnv("GOALSTATS_LOCAL_DOCKER","1");vi.stubEnv("SERVICE_API_TOKEN","");
   expect((await POST(mutation(),context("scenarios"))).status).toBe(503);expect(request).not.toHaveBeenCalled();
 });
+
+it("forwards only POST evaluation through existing authenticated proxy", async () => {
+ configure(); vi.stubEnv("FOOTBALL_API_BASE_URL", "https://football.example.com");vi.stubEnv("SERVICE_API_TOKEN", "x".repeat(32));
+ vi.mocked(request).mockResolvedValue({data:{status:"unavailable"},status:200,mediaType:"application/json",location:null});
+ const body={dataset_id:"womens-world-cup-recorded-v1",mode:"strict_historical",limit:1};
+ const response=await POST(new Request("http://localhost/api/football/evaluations/backtests",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),context("evaluations/backtests"));
+ expect(response.status).toBe(200);expect(request).toHaveBeenCalledWith("https://football.example.com/api/v1/evaluations/backtests",expect.objectContaining({body,headers:{Authorization:`Bearer ${"x".repeat(32)}`},timeoutMs:30000}));
+ expect((await GET(new Request("http://localhost/api/football/evaluations/backtests"),context("evaluations/backtests"))).status).toBe(405);
+ expect(JSON.stringify(await response.json())).not.toContain("x".repeat(32));
+});
+
+it("bounds full-cohort assumption requests separately from existing endpoints",async()=>{
+ configure();vi.mocked(request).mockResolvedValue({data:{},status:200,mediaType:'application/json',location:null});
+ for(const [dataset,size,status] of [['womens-world-cup-full-v1',40000,200],['womens-world-cup-recorded-v1',40000,413],['womens-world-cup-full-v1',140000,413]] as const){
+ const response=await POST(new Request('http://localhost/api/football/evaluations/backtests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dataset_id:dataset,assumptions:[],padding:'x'.repeat(size)})}),context('evaluations/backtests'));expect(response.status).toBe(status);
+ }
+});
+
+it('preserves the approved asset reason with a safe 503 message',async()=>{
+ configure();vi.mocked(request).mockRejectedValue(new ApiError('http',503,{type:'about:blank',title:'Service Unavailable',status:503,detail:'/private/credentials SECRET',reason:'evaluation_asset_unavailable'}));
+ const response=await POST(new Request('http://localhost/api/football/evaluations/backtests',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),context('evaluations/backtests'));
+ expect(response.status).toBe(503);const data=await response.json();expect(data.reason).toBe('evaluation_asset_unavailable');expect(data.detail).toContain('approved historical asset');expect(JSON.stringify(data)).not.toMatch(/private|credentials|SECRET/);
+});
+it.each(['predictions/preview','scenarios','scenarios/7'])('preserves safe shot-field diagnostics for %s',async path=>{
+ configure();vi.mocked(request).mockRejectedValue(new ApiError('http',400,{type:'about:blank',title:'Bad Request',status:400,detail:'secret',reason:'shots_on_target_exceeds_total',field_errors:{team1_shots_on_target:'private detail',credentials:'secret'}}));
+ const response=await (path==='scenarios/7'?PATCH:POST)(new Request(`http://localhost/api/football/${path}`,{method:path==='scenarios/7'?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:'{}'}),context(path));
+ expect(response.status).toBe(400);expect(await response.json()).toMatchObject({reason:'shots_on_target_exceeds_total',field_errors:{team1_shots_on_target:'Shots on target cannot exceed total shots.'}});
+});

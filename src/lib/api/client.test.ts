@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { request } from "./client";
+import { ApiError, getApiErrorMessage } from "./error";
 
 const fetchMock = vi.fn<typeof fetch>();
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
@@ -24,10 +25,16 @@ describe("HTTP boundary", () => {
     respond("[]"); await request("http://backend/resource", { cache: "no-cache" });
     expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: "GET", cache: "no-cache" });
   });
-  it("decodes Problem Details without using them as the public error message", async () => {
-    const problem = { type: "about:blank", title: "Bad Request", status: 400, detail: "private upstream detail" };
-    respond(JSON.stringify(problem), 400, "application/problem+json");
-    await expect(request("http://backend/resource")).rejects.toMatchObject({ kind: "http", status: 400, problem, message: "API http failure" });
+  it.each([
+    { status: 400, reason: "shots_on_target_exceeds_total", field_errors: { team1_shots_on_target: "private field diagnostic" }, message: "The request could not be completed. Please check your information." },
+    { status: 503, reason: "evaluation_asset_unavailable", field_errors: undefined, message: "The server is temporarily unavailable. Please try again later." },
+  ])("preserves structured HTTP $status metadata without exposing diagnostics through message helpers", async ({ status, reason, field_errors, message }) => {
+    const problem = { type: "about:blank", title: "private upstream title", status, detail: "private upstream detail", reason, ...(field_errors ? { field_errors } : {}) };
+    respond(JSON.stringify(problem), status, "application/problem+json");
+    const error: unknown = await request("http://backend/resource").catch(error => error);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ kind: "http", status, problem, message: "API http failure" });
+    expect(getApiErrorMessage(error)).toBe(message);
   });
   it.each([["<html>private</html>", "text/html"], ["{", "application/problem+json"], ['{"status":500}', "application/problem+json"]])("handles malformed/non-JSON errors", async (body, media) => {
     respond(body, 500, media);

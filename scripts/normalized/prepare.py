@@ -1,5 +1,6 @@
 """Only runs inside the runner's fresh, uniquely named disposable database."""
 import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -10,6 +11,7 @@ from alembic.config import Config
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import make_url
 from infra.resources.db import Database
+from football.team_ratings import SOURCE_SHA
 from settings.environment import load_application
 
 session = os.environ.get('NORMALIZED_SESSION', '')
@@ -28,6 +30,12 @@ for attempt in range(60):
             raise
         time.sleep(1)
 assert inspect(database.engine).get_table_names() == [], 'Refusing nonempty database'
+# Reuse the checksum-verified read-only mount for runtime historical reconstruction.
+# This path exists only inside this disposable runner; no developer data is changed.
+assert hashlib.sha256(Path('/source/results.csv').read_bytes()).hexdigest() == SOURCE_SHA
+bootstrap = Path('/service/data/bootstrap')
+bootstrap.mkdir(exist_ok=True)
+(bootstrap / 'results.csv').symlink_to('/source/results.csv')
 os.chdir('/service')
 config = Config('/service/alembic.ini')
 command.upgrade(config, 'head')
@@ -47,6 +55,37 @@ def get(path):
 
 teams = {team['name']: team['team_id'] for team in get('catalog/teams')}
 assert len(teams) == 44
+# Replay the committed verification values only into this owned disposable database.
+# These are test fixtures, not a new official ranking release or a recomputed cohort.
+import csv
+from datetime import date
+from decimal import Decimal
+from models.enrichment import RankingRelease, RankingObservation, FifaTeamMapping, RatingRun, TeamRating
+fixture_path = Path('/service/data/verification/teams-enrichment-2026-11-15.csv')
+fixture_hash = hashlib.sha256(fixture_path.read_bytes()).hexdigest()
+with fixture_path.open() as source_file:
+    profiles = list(csv.DictReader(source_file))
+assert len(profiles) == 44 and {row['team'] for row in profiles} == set(teams)
+with database.transaction() as db:
+    db.add(RankingRelease(release_id='owned-verification-fixture', published_on=date(2026, 10, 20),
+        retrieved_at=datetime.now(UTC), source_url='fixture://committed-enrichment-verification',
+        sha256=fixture_hash, index_sha256=fixture_hash, release_metadata={'test_fixture': True}))
+    db.add(RatingRun(run_id=fixture_hash, cutoff=date(2026, 6, 10),
+        model_version='owned-verification-fixture', source_sha256=fixture_hash,
+        source_url='fixture://committed-enrichment-verification', report={'test_fixture': True}))
+    db.flush()
+    for profile in profiles:
+        identity = teams[profile['team']]
+        db.add(FifaTeamMapping(team_id=identity, fifa_team_id=profile['fifa_team_id'], source_name=profile['team']))
+        db.add(RankingObservation(release_id='owned-verification-fixture', fifa_team_id=profile['fifa_team_id'],
+            rank=int(profile['fifa_rank']), points=Decimal(profile['fifa_points']), status=0, raw={'test_fixture': True}))
+        db.add(TeamRating(run_id=fixture_hash, team_id=identity,
+            **{field: float(profile[field]) if profile[field] else None for field in ['offense', 'defense', 'form']},
+            evidence={'reason': None if profile['availability'] == 'available_experimental' else profile['availability'], 'last_match': profile['latest_match'], 'matches': int(profile['matches']), 'form_matches': int(profile['form_matches'])}))
+profiles = get('catalog/teams')
+assert sum(all(row[field] is not None for field in ['offense', 'defense', 'form']) for row in profiles) == 43
+assert all(row['fifa_rank'] is not None and row['fifa_points'] is not None for row in profiles)
+Path('/artifacts/enrichment-fixture.json').write_text(json.dumps({'source': str(fixture_path), 'sha256': fixture_hash, 'teams': 44, 'complete_ratings': 43}))
 assert len(get('catalog/competitions')) == 9
 matches = sum((get(f'catalog/matches?limit=200&offset={offset}') for offset in [0,200]), [])
 assert len(matches) == 348
@@ -57,7 +96,7 @@ for name, expected in [('United States', [54,41,9,4,142,39,103,9]), ('Germany',[
 # Real backend contract checks against the generated numerical fixtures.
 cases = json.loads(Path('/app/src/lib/fixtures/backend-v2-predictions.json').read_text())
 for case in cases:
-    body = {**case['request'], 'team1_id':teams['China'], 'team2_id':teams['Norway']}
+    body = {**case['request'], 'team1_shots': 4, 'team1_id':teams['China'], 'team2_id':teams['Norway']}
     response = client.post('/api/v1/predictions/preview', json=body)
     assert response.status_code == 200
     assert response.json == case['output']

@@ -309,7 +309,7 @@ export default function PredictionsView() {
 
             <Link
               href={scenarioId ? `/matches?scenario_id=${scenarioId}` : "/matches?preview=1"}
-              className="mt-6 inline-block rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600"
+              className="mt-6 inline-block rounded-xl goalstats-primary px-6 py-3 font-semibold text-white transition"
             >
               {selectedScenario ? "Reopen Scenario →" : "Build a Match Scenario →"}
             </Link>
@@ -396,7 +396,7 @@ export default function PredictionsView() {
                 type="button"
                 onClick={saveSnapshot}
                 disabled={saving || !!uncertain}
-                className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl goalstats-primary px-6 py-3 font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? "Saving..." : (scenarioId ? "Generate another saved prediction" : "Save new scenario and prediction")}
               </button>
@@ -791,7 +791,7 @@ export default function PredictionsView() {
                             onClick={() =>
                               loadSnapshot(snapshot)
                             }
-                            className="rounded-lg bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-600"
+                            className="rounded-lg goalstats-primary px-4 py-2 text-sm font-semibold text-white transition"
                           >
                             Open saved prediction
                           </button>
@@ -832,7 +832,7 @@ export default function PredictionsView() {
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
                 href={scenarioId ? `/matches?scenario_id=${scenarioId}` : "/matches?preview=1"}
-                className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600"
+                className="rounded-xl goalstats-primary px-6 py-3 font-semibold text-white transition"
               >
                 Edit Match Scenario
               </Link>

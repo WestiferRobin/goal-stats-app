@@ -11,6 +11,8 @@ export type ProblemDetails = {
   title: string;
   status: number;
   detail: string;
+  reason?: string;
+  field_errors?: Record<string, string>;
 };
 
 // Server diagnostic data must never be serialized directly into form state.

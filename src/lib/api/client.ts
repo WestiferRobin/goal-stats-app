@@ -38,6 +38,10 @@ export async function request(url: string, options: Options = {}): Promise<ApiRe
             "status" in value && "detail" in value && typeof value.type === "string" &&
             typeof value.title === "string" && value.status === response.status && typeof value.detail === "string") {
             problem = { type: value.type, title: value.title, status: response.status, detail: value.detail };
+            if ("reason" in value && typeof value.reason === "string") problem.reason = value.reason;
+            if ("field_errors" in value && value.field_errors && typeof value.field_errors === "object" && !Array.isArray(value.field_errors)) {
+              problem.field_errors = Object.fromEntries(Object.entries(value.field_errors).filter((entry): entry is [string,string] => typeof entry[1] === "string"));
+            }
           }
         } catch (error) { if (controller.signal.aborted) throw error; }
       }

@@ -69,7 +69,7 @@ export default function HomeView(_props: HomeViewProps = {}) {
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link
                   href="/matches"
-                  className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600"
+                  className="rounded-xl goalstats-primary px-6 py-3 font-semibold text-white transition"
                 >
                   Explore Matches
                 </Link>
@@ -179,7 +179,7 @@ export default function HomeView(_props: HomeViewProps = {}) {
             <div className="mt-7 flex flex-wrap gap-4">
               <Link
                 href="/matches"
-                className="rounded-xl bg-pink-500 px-6 py-3 font-semibold text-white transition hover:bg-pink-600"
+                className="rounded-xl goalstats-primary px-6 py-3 font-semibold text-white transition"
               >
                 Build Match Scenario →
               </Link>
@@ -218,7 +218,7 @@ export default function HomeView(_props: HomeViewProps = {}) {
 
               <Link
                 href="/about"
-                className="mt-6 w-fit rounded-lg bg-pink-500 px-5 py-3 font-semibold hover:bg-pink-600"
+                className="mt-6 w-fit rounded-lg goalstats-primary px-5 py-3 font-semibold"
               >
                 Learn More
               </Link>

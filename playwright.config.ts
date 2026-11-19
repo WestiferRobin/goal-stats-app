@@ -12,7 +12,7 @@ if (mode === "normalized" && (!/^[a-f0-9]{32}$/.test(process.env.NORMALIZED_SESS
 export default defineConfig({
   outputDir: mode === "normalized" ? "/artifacts/test-results" : "test-results",
   testDir: "./tests/e2e",
-  testMatch: mode === "normalized" ? "normalized.spec.ts" : process.env.APP_E2E_MODE === "demo" ? "demo.spec.ts" : process.env.APP_E2E_MODE === "football-live" ? "live-football.spec.ts" : ["home.spec.ts", "demo.spec.ts"],
+  testMatch: mode === "normalized" ? ["normalized.spec.ts", "tournament.normalized.spec.ts", "backtesting.normalized.spec.ts"] : process.env.APP_E2E_MODE === "demo" ? "demo.spec.ts" : process.env.APP_E2E_MODE === "football-live" ? "live-football.spec.ts" : ["home.spec.ts", "demo.spec.ts"],
   forbidOnly: true,
   retries: 0,
   workers: 1,

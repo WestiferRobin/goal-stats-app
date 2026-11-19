@@ -1,6 +1,6 @@
 import React from "react";
 import {afterEach,expect,it,vi} from "vitest";
-import {cleanup,fireEvent,render,screen,waitFor,within} from "@testing-library/react";
+import {act,cleanup,fireEvent,render,screen,waitFor,within} from "@testing-library/react";
 import AnalyticsView from "./analytics-view";
 const input = {
   team1_id:1,team2_id:2,match_minute:65,
@@ -24,7 +24,7 @@ const preview = {version:2,kind:"preview",input:{...input,extra_minute:0,status:
 afterEach(()=>{cleanup();vi.unstubAllGlobals();vi.restoreAllMocks();sessionStorage.clear();window.history.replaceState(null,'','/analytics');});
 function backend(records:unknown[]=[saved]){const fetch=vi.fn(async(url:string)=>Response.json(url.includes('/catalog/teams')?[]:url.includes('/predictions?')?records:saved));vi.stubGlobal('fetch',fetch);return fetch;}
 it("renders stored output and immutable inputs with generation timestamps",async()=>{
- const fetch=backend();window.history.replaceState(null,'','/analytics?prediction_id=9');render(<AnalyticsView/>);await screen.findByText(/Saved prediction #9/);expect(screen.getByText(/Saved Hypothetical Scenario Revisions/)).toBeTruthy();expect(screen.getAllByText(/60\.0%/).length).toBeGreaterThan(0);expect(screen.getAllByText(/65/).length).toBeGreaterThan(0);expect(screen.getByText(/explicit strengths for every participant/)).toBeTruthy();expect((screen.getByRole('button',{name:'Tournament execution unavailable in Phase 1'}) as HTMLButtonElement).disabled).toBe(true);expect((screen.getByRole('button',{name:'Backtesting unavailable in Phase 1'}) as HTMLButtonElement).disabled).toBe(true);expect(fetch.mock.calls.every(([u])=>!u.includes('snapshots')&&!u.includes('backtests'))).toBe(true);
+ const fetch=backend();window.history.replaceState(null,'','/analytics?prediction_id=9');render(<AnalyticsView/>);await screen.findByText(/Saved prediction #9/);expect(screen.getByText(/Saved Hypothetical Scenario Revisions/)).toBeTruthy();expect(screen.getAllByText(/60\.0%/).length).toBeGreaterThan(0);expect(screen.getAllByText(/65/).length).toBeGreaterThan(0);expect(screen.getByRole("heading",{name:"Monte Carlo Tournament Simulation"})).toBeTruthy();expect(screen.getByRole("button",{name:"Run simulation"})).toBeTruthy();expect(screen.getByRole('heading',{name:'Model Evaluation — Backtesting'})).toBeTruthy();expect(fetch.mock.calls.every(([u])=>!u.includes('snapshots')&&!u.includes('backtests'))).toBe(true);
 });
 it("supports validated unsaved previews with no fake saved history",async()=>{
  const fetch=backend([]);sessionStorage.setItem('goalstats-current-prediction',JSON.stringify(preview));render(<AnalyticsView/>);await screen.findByText(/Unsaved hypothetical preview/);expect(fetch.mock.calls.every(([u])=>u.includes('/catalog/teams'))).toBe(true);
@@ -37,7 +37,7 @@ it("paginates and reverses generation order, independent of match minute",async(
  const fetch=vi.fn(async(url:string)=>Response.json(url.includes('/catalog/')?[]:url.includes('offset=50')?[]:url.includes('/predictions?')?[later,...Array.from({length:49},(_,i)=>({...saved,prediction_id:i+20}))]:saved));vi.stubGlobal('fetch',fetch);window.history.replaceState(null,'','/analytics?prediction_id=9');render(<AnalyticsView/>);await screen.findByText(/Saved prediction #9/);await waitFor(()=>expect((screen.getByRole('button',{name:'Next predictions'}) as HTMLButtonElement).disabled).toBe(false));const chart=screen.getByRole('heading',{name:'Probability History'}).closest('section')!;const minutes=within(chart).getAllByText(/^(65|60)'$/).map(e=>e.textContent);expect(minutes[0]).toBe("65'");expect(minutes[minutes.length-1]).toBe("60'");fireEvent.click(screen.getByRole('button',{name:'Next predictions'}));await screen.findByText('Prediction page 2');expect(fetch.mock.calls.some(([u])=>u.includes('offset=50'))).toBe(true);
 });
 it("rejects prototype session state and handles retrieval failure",async()=>{
- backend();sessionStorage.setItem('goalstats-current-prediction','{}');render(<AnalyticsView/>);await screen.findByText(/obsolete format/);cleanup();vi.stubGlobal('fetch',vi.fn(async()=>Response.json({detail:'Not found'},{status:404})));window.history.replaceState(null,'','/analytics?prediction_id=9');render(<AnalyticsView/>);await screen.findByText('Not found');
+ backend();sessionStorage.setItem('goalstats-current-prediction','{}');render(<AnalyticsView/>);await screen.findByText(/obsolete format/);cleanup();vi.stubGlobal('fetch',vi.fn(async()=>Response.json({detail:'Not found'},{status:404})));window.history.replaceState(null,'','/analytics?prediction_id=9');render(<AnalyticsView/>);await waitFor(()=>expect(within(screen.getByRole('heading',{name:'No Match Loaded'}).closest('section')!).getByText('Not found')).toBeTruthy());
 });
 
 it.each(["empty", "failure"])("distinguishes initial scenario history %s", async state => {
@@ -84,4 +84,25 @@ it("returns from an empty second history page to all 50 saved predictions", asyn
  expect(screen.getByText("Prediction page 1")).toBeTruthy();
  expect(screen.queryByText(/No predictions on this page/)).toBeNull();
  expect(fetch.mock.calls.filter(([url]) => url === "/api/football/scenarios/7/predictions?limit=50&offset=0")).toHaveLength(2);
+});
+
+it("makes tournament setup accessible without a prediction", async () => {
+ backend(); render(<AnalyticsView/>); await screen.findByText("No Match Loaded"); expect(screen.getByRole("heading",{name:"Monte Carlo Tournament Simulation"})).toBeTruthy(); expect(screen.getByLabelText("Tournament size")).toBeTruthy(); expect(screen.getByRole("button",{name:"Run simulation"})).toBeTruthy();
+});
+
+it("preserves tournament settings when a slow saved prediction finishes loading", async () => {
+ let resolve!: (response: Response) => void;
+ const pending = new Promise<Response>(r => { resolve = r; });
+ vi.stubGlobal("fetch", vi.fn((url:string) => url.includes("/catalog/") || url.includes("/predictions?") ? Promise.resolve(Response.json([])) : pending));
+ window.history.replaceState(null,"","/analytics?prediction_id=9"); render(<AnalyticsView/>);
+ fireEvent.change(screen.getByLabelText("Random seed (optional)"),{target:{value:"0"}});
+ fireEvent.change(screen.getByLabelText("Tournament size"),{target:{value:"8"}});
+ await act(async () => resolve(Response.json(saved)));
+ await screen.findByText(/Saved prediction #9/);
+ expect((screen.getByLabelText("Random seed (optional)") as HTMLInputElement).value).toBe("0");
+ expect((screen.getByLabelText("Tournament size") as HTMLSelectElement).value).toBe("8");
+});
+
+it("makes backtesting accessible without a prediction and never auto-evaluates", async () => {
+ const fetch=backend();render(<AnalyticsView/>);await screen.findByText("No Match Loaded");expect(screen.getByRole("heading",{name:"Model Evaluation — Backtesting"})).toBeTruthy();expect(screen.getByLabelText("Evaluation mode")).toBeTruthy();expect(fetch.mock.calls.every(([url])=>!url.includes("backtests"))).toBe(true);
 });

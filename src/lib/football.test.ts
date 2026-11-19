@@ -70,7 +70,7 @@ it("PATCHes only changed state and rejects immutable changes",()=>{
 });
 it("rejects noncanonical saved IDs",()=>{expect(routeId(null)).toBeNull();expect(routeId('2147483647')).toBe(2147483647);for(const value of ['0','-1','01','1.1','abc','2147483648',''])expect(()=>routeId(value)).toThrow();});
 it('retains supplied shots and rejects nonnumeric values without normalization',()=>{
- const original={...input,team1_shots:0,team1_shots_on_target:4};expect(previewInput(original)).toMatchObject(original);expect(scenarioPatch(input,parseScenarioInput(original))).toEqual({team1_shots:0});
+ const original={...input,team1_shots:0,team1_shots_on_target:4};expect(()=>previewInput(original)).toThrow('Team 1 shots on target cannot exceed total shots.');expect(()=>scenarioPatch(input,original)).toThrow('shots on target');
  for(const value of [NaN,Infinity,'abc',-1,0.5])expect(()=>parseScenarioInput({...input,team1_shots:value})).toThrow();
 });
 it.each(['road-to-the-final-heuristic-v1','road-to-the-final-heuristic-v2'])('preserves %s snapshot outputs without recalculation',model=>{
@@ -89,7 +89,7 @@ it.each(v2Cases)('preserves real backend v2 output and effective snapshot at min
  const before = JSON.stringify(fixture);
  expect(parsePredictionOutput(fixture.output)).toEqual(fixture.output);
  expect(parseSavedPrediction(fixture.saved)).toEqual(fixture.saved);
- expect(parsePreviewSession({version:2,kind:'preview',input:fixture.request,output:fixture.output}).output).toEqual(fixture.output);
+ expect(parsePreviewSession({version:2,kind:'preview',input:{...fixture.request,team1_shots:4},output:fixture.output}).output).toEqual(fixture.output);
  expect(fixture.request.team1_shots).toBe(0);
  expect(fixture.saved.input_snapshot.team1_shots).toBe(4);
  expect(Object.values(fixture.output.probabilities).reduce((a,b)=>a+b,0)).toBeCloseTo(1,12);
@@ -123,4 +123,15 @@ it('preserves a mixed backend v1/v2 history and rejects a foreign scenario',()=>
  expect(parsePredictionHistory(history,7)).toEqual(history);
  expect(JSON.stringify(history)).toBe(before);
  expect(()=>parsePredictionHistory(history,8)).toThrow();
+});
+
+it.each([[0,4,false],[4,4,true],[4,0,true],[0,0,true],[-1,0,false],[4,-1,false]])('validates shots %s and target %s explicitly', (shots,target,valid)=>{
+ for(const side of ['team1','team2']) {
+  const body={...input,[`${side}_shots`]:shots,[`${side}_shots_on_target`]:target};
+  if(valid)expect(parseScenarioInput(body)).toMatchObject(body);else expect(()=>parseScenarioInput(body)).toThrow();
+ }
+});
+it('reads legacy contradictory saved inputs without applying new write validation',()=>{
+ const legacy={...saved,input_snapshot:{...saved.input_snapshot,team1_shots:0,team1_shots_on_target:4}};
+ expect(parseSavedPrediction(legacy)).toEqual(legacy);
 });

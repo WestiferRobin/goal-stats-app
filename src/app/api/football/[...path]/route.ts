@@ -7,7 +7,7 @@ const routes: Record<string, string[]> = {
   "catalog/teams": ["GET"], "catalog/competitions": ["GET"],
   "catalog/matches": ["GET"], "catalog/matches/insights": ["GET"],
   scenarios: ["GET", "POST"], "predictions/preview": ["POST"],
-  "competitions/simulate": ["POST"],
+  "competitions/simulate": ["POST"], "evaluations/backtests": ["POST"],
 };
 function allowedMethods(path: string) {
   if (Object.hasOwn(routes, path)) return routes[path];
@@ -37,8 +37,8 @@ function validateDestination(base: URL) {
       !host.includes(".") || /(?:^|\.)(?:localhost|local|internal)$/.test(host)) throw new Error();
 }
 const titles: Record<number, string> = {400:"Bad Request",401:"Unauthorized",429:"Too Many Requests",403:"Forbidden",404:"Not Found",405:"Method Not Allowed",409:"Conflict",413:"Content Too Large",415:"Unsupported Media Type",500:"Internal Server Error",502:"Bad Gateway",503:"Service Unavailable",504:"Gateway Timeout"};
-function problem(status: number, detail: string) {
-  return Response.json({ type:"about:blank", title:titles[status] ?? "Request failed", status, detail }, { status, headers: { "Content-Type":"application/problem+json", "Cache-Control": "no-store" } });
+function problem(status: number, detail: string, metadata: {reason?: string; field_errors?: Record<string,string>} = {}) {
+  return Response.json({ type:"about:blank", title:titles[status] ?? "Request failed", status, detail, ...metadata }, { status, headers: { "Content-Type":"application/problem+json", "Cache-Control": "no-store" } });
 }
 async function forward(request: Request, context: { params: Promise<{ path: string[] }> }) {
   const segments = (await context.params).path;
@@ -71,7 +71,7 @@ async function forward(request: Request, context: { params: Promise<{ path: stri
       return problem(403, "Cross-origin requests are not allowed.");
     }
     const raw = await request.text();
-    if (raw.length > 32_768) return problem(413, "Request is too large.");
+    if (raw.length > (path === "evaluations/backtests" ? 131_072 : 32_768)) return problem(413, "Request is too large.");
     if (/^scenarios\/[1-9]\d*\/predictions$/.test(path)) {
       if (raw.length || new URL(request.url).search) return problem(400, "Send no body or query parameters when generating a saved prediction.");
     } else {
@@ -79,6 +79,7 @@ async function forward(request: Request, context: { params: Promise<{ path: stri
       try {
         body = JSON.parse(raw);
         if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error();
+        if (raw.length > 32_768 && (!("dataset_id" in body) || body.dataset_id !== "womens-world-cup-full-v1")) return problem(413, "Request is too large.");
       } catch { return problem(400, "Send a valid JSON object."); }
     }
   }
@@ -98,6 +99,15 @@ async function forward(request: Request, context: { params: Promise<{ path: stri
     if (!(error instanceof ApiError)) throw error;
     if (error.kind === "http") {
       const status = error.status ?? 502;
+      if (status === 503 && path === "evaluations/backtests" && error.problem?.reason === "evaluation_asset_unavailable") {
+        return problem(503, "Backtesting is temporarily unavailable because an approved historical asset could not be loaded. Please try again later.", {reason:"evaluation_asset_unavailable"});
+      }
+      if (status === 400 && error.problem?.reason === "shots_on_target_exceeds_total" &&
+          (path === "predictions/preview" || path === "scenarios" || /^scenarios\/[1-9]\d*$/.test(path))) {
+        const fields = ["team1_shots_on_target", "team2_shots_on_target"].filter(field => Object.hasOwn(error.problem?.field_errors ?? {}, field));
+        const detail = "Shots on target cannot exceed total shots.";
+        return problem(400, detail, {reason:"shots_on_target_exceeds_total", field_errors:Object.fromEntries(fields.map(field=>[field,detail]))});
+      }
       if (status === 401) return problem(401, "Football service could not authorize this request.");
       if (status === 403) return problem(403, "Football service does not permit this request.");
       if (status === 429) return problem(429, "Too many requests. Wait before trying again; check saved history before repeating a save.");

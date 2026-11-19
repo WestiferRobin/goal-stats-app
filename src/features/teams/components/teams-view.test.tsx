@@ -91,3 +91,24 @@ it("explains a one-team catalog without requesting comparisons", async () => {
  expect(screen.queryByRole("button", {name:"Refresh"})).toBeNull();
  expect(fetch).toHaveBeenCalledTimes(1);
 });
+
+it("renders enriched values, preserves zero and hides only Teams star/clutch displays", async () => {
+ const metadata={run_id:'a'.repeat(64),model:'test-v1',cutoff:'2026-06-10',source:'https://example.test/results',source_sha256:'b'.repeat(64),status:'experimental',evidence:{last_match:'2026-06-09'}};
+ const enriched=teams.map((team,i)=>({...team,offense:i?20:0,defense:70,form:60,star_power:90,clutch:80,fifa_rank:i+1,fifa_points:2000.125+i,ranking_date:'2026-10-20',ratings_metadata:metadata}));
+ stubFetch(vi.fn(async(url:string)=>Response.json(url.endsWith('/teams')?enriched:insights)));
+ render(<TeamsView/>);await screen.findAllByText('2000.125');
+ expect(screen.queryByText('Star Power')).toBeNull();expect(screen.queryByText('Clutch')).toBeNull();
+ expect(screen.getAllByText('0').length).toBeGreaterThan(0);
+ expect(screen.getByText('Norway +20')).toBeTruthy();
+ expect(screen.getAllByText(/results through 2026-06-10/)).toHaveLength(2);
+ expect(screen.getAllByText('2026-10-20')).toHaveLength(2);
+ expect(screen.getAllByText('60').length).toBeGreaterThan(0);
+});
+
+it("refuses rating advantages across different cohorts", async () => {
+ const enriched=teams.map((team,i)=>({...team,offense:i?20:0,defense:70,form:60,ratings_metadata:{run_id:(i?'a':'b').repeat(64),model:'test-v1',cutoff:'2026-06-10',source:'source',source_sha256:'c'.repeat(64),status:'experimental',evidence:{}}}));
+ stubFetch(vi.fn(async(url:string)=>Response.json(url.endsWith('/teams')?enriched:insights)));
+ render(<TeamsView/>);await screen.findAllByText('Not comparable');
+ expect(screen.getAllByText('Not comparable')).toHaveLength(3);
+ expect(screen.queryByText('Norway +20')).toBeNull();
+});
